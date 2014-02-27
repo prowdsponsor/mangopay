@@ -30,10 +30,17 @@ module Web.Mangopay (
         ,fetchLegalUser
         ,getUser
         ,listUsers
+        
+        -- Events
+        ,Event(..)
+        ,EventType(..)
+        ,EventSearchParams(..)
+        ,searchEvents
 )
 where
 
 import Web.Mangopay.Access
+import Web.Mangopay.Events
 import Web.Mangopay.Monad
 import Web.Mangopay.Users
 import Web.Mangopay.Types
