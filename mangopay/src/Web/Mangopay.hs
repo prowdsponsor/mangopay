@@ -24,12 +24,29 @@ module Web.Mangopay (
         ,LegalUserType(..)
         ,LegalUserID
         ,UserRef(..)
+        ,AnyUserID
         ,storeNaturalUser
         ,fetchNaturalUser
         ,storeLegalUser
         ,fetchLegalUser
         ,getUser
         ,listUsers
+        
+        -- Wallets
+        ,Wallet(..)
+        ,Amount(..)
+        ,WalletID
+        ,Currency
+        ,storeWallet
+        ,fetchWallet
+        ,listWallets
+        ,Transfer(..)
+        ,TransferID
+        ,TransferStatus(..)
+        ,createTransfer
+        ,fetchTransfer
+        ,listTransfers
+        ,listTransfersForUser
         
         -- Events
         ,Event(..)
@@ -44,3 +61,4 @@ import Web.Mangopay.Events
 import Web.Mangopay.Monad
 import Web.Mangopay.Users
 import Web.Mangopay.Types
+import Web.Mangopay.Wallets

@@ -10,8 +10,8 @@ import Test.HUnit (Assertion)
 import Data.Maybe (fromJust, isJust)
 
 testNaturalUser :: NaturalUser
-testNaturalUser=NaturalUser "jpmoresmau@gmail.com" "JP" "Moresmau" Nothing 11111 "FR" "FR" 
-        (Just "Haskell contractor") Nothing Nothing Nothing Nothing Nothing Nothing
+testNaturalUser=NaturalUser Nothing Nothing "jpmoresmau@gmail.com" "JP" "Moresmau" Nothing 11111 "FR" "FR" 
+        (Just "Haskell contractor") Nothing Nothing Nothing Nothing 
 --"1642966"
 test_NaturalUser :: Assertion
 test_NaturalUser = do
@@ -29,8 +29,8 @@ test_NaturalUser = do
         assertEqual 1 (length $ filter (((fromJust $ uId u)==) . urId) us)
 
 testLegalUser :: LegalUser
-testLegalUser = LegalUser "jpmoresmau@gmail.com" "JP Moresmau" Business Nothing
-        "JP" "Moresmau" Nothing Nothing 222222 "FR" "FR" Nothing Nothing Nothing Nothing Nothing Nothing
+testLegalUser = LegalUser Nothing Nothing "jpmoresmau@gmail.com" "JP Moresmau" Business Nothing
+        "JP" "Moresmau" Nothing Nothing 222222 "FR" "FR" Nothing Nothing Nothing Nothing 
         
 test_LegalUser :: Assertion
 test_LegalUser = do

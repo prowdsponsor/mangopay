@@ -52,7 +52,7 @@ fetchLegalUser uid at=do
         getJSONResponse req 
 
 -- | get a user, natural or legal
-getUser :: (MonadBaseControl IO m, MonadResource m) => Text -> AccessToken -> MangopayT m (Either NaturalUser LegalUser)
+getUser :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> AccessToken -> MangopayT m (Either NaturalUser LegalUser)
 getUser uid at=do
         url<-getClientURLMultiple ["/users/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
@@ -80,6 +80,9 @@ instance FromJSON (Either NaturalUser LegalUser) where
 --        req<-getDeleteRequest url (Just at) ([]::HT.Query)
 --        _::Object<- getJSONResponse req 
 --        return ()
+
+-- | ID for any kind of user
+type AnyUserID = Text
 
 -- | User ID
 type NaturalUserID = Text
@@ -110,7 +113,9 @@ instance FromJSON IncomeRange where
 -- | a natural user
 -- <http://docs.mangopay.com/api-references/users/natural-users/>
 data NaturalUser=NaturalUser {
-        uEmail :: Text -- ^ User’s e-mail
+        uId      :: Maybe NaturalUserID -- ^  The Id of the object
+        ,uCreationDate   :: Maybe POSIXTime -- ^  The creation date of the user object
+        ,uEmail :: Text -- ^ User’s e-mail
         ,uFirstName :: Text -- ^ User’s firstname
         ,uLastName :: Text -- ^  User’s lastname
         ,uAddress :: Maybe Text -- ^  User’s address
@@ -122,8 +127,6 @@ data NaturalUser=NaturalUser {
         ,uTag :: Maybe Text -- ^  Custom data
         ,uProofOfIdentity :: Maybe Text -- ^  
         ,uProofOfAddress  :: Maybe Text -- ^  
-        ,uCreationDate   :: Maybe POSIXTime -- ^  The creation date of the user object
-        ,uId      :: Maybe NaturalUserID -- ^  The Id of the object
         }
      deriving (Show,Eq,Ord,Typeable)
      
@@ -136,6 +139,8 @@ instance ToJSON NaturalUser  where
 -- | from json as per Mangopay format
 instance FromJSON NaturalUser where
     parseJSON (Object v) =NaturalUser <$>
+                         v .: "Id"  <*>
+                         v .: "CreationDate" <*>
                          v .: "Email" <*>
                          v .: "FirstName" <*>
                          v .: "LastName" <*>
@@ -147,9 +152,7 @@ instance FromJSON NaturalUser where
                          v .:? "IncomeRange" <*>
                          v .:? "Tag" <*>
                          v .:? "ProofOfIdentity" <*>
-                         v .:? "ProofOfAddress" <*>
-                         v .: "CreationDate" <*>
-                         v .: "Id" 
+                         v .:? "ProofOfAddress" 
     parseJSON _= fail "NaturalUser"  
 
 -- | User ID
@@ -173,7 +176,9 @@ instance FromJSON LegalUserType where
 -- | a legal user
 -- <http://docs.mangopay.com/api-references/users/legal-users/>    
 data LegalUser=LegalUser {
-        lEmail :: Text -- ^ The email of the company or the organization
+        lId       :: Maybe Text -- ^   The Id of the object
+        ,lCreationDate    :: Maybe POSIXTime -- ^ The creation date of the user object
+        ,lEmail :: Text -- ^ The email of the company or the organization
         ,lName :: Text -- ^ The name of the company or the organization
         ,lLegalPersonType :: LegalUserType -- ^ The type of the legal user (‘BUSINESS’ or ’ORGANIZATION’)
         ,lHeadquartersAddress  :: Maybe Text -- ^ The address of the company’s headquarters
@@ -188,8 +193,6 @@ data LegalUser=LegalUser {
         ,lTag   :: Maybe Text -- ^  Custom data
         ,lProofOfRegistration :: Maybe Text -- ^   The proof of registration of the company
         ,lShareholderDeclaration   :: Maybe Text -- ^   The shareholder declaration of the company
-        ,lCreationDate    :: Maybe POSIXTime -- ^ The creation date of the user object
-        ,lId       :: Maybe Text -- ^   The Id of the object
         }
         deriving (Show,Eq,Ord,Typeable)
         
@@ -202,6 +205,8 @@ instance ToJSON LegalUser  where
 -- | from json as per Mangopay format
 instance FromJSON LegalUser where
     parseJSON (Object v) =LegalUser <$>
+                         v .: "Id"  <*>
+                         v .: "CreationDate" <*>
                          v .: "Email" <*>
                          v .: "Name" <*>
                          v .: "LegalPersonType" <*>
@@ -216,9 +221,7 @@ instance FromJSON LegalUser where
                          v .:? "Statute" <*>
                          v .:? "Tag" <*>
                          v .:? "ProofOfRegistration" <*>
-                         v .:? "ShareholderDeclaration" <*>
-                         v .: "CreationDate" <*>
-                         v .: "Id" 
+                         v .:? "ShareholderDeclaration" 
     parseJSON _= fail "NaturalUser" 
      
 data PersonType =  Natural | Legal
@@ -237,11 +240,11 @@ instance FromJSON PersonType where
       
 -- | a short user reference
 data UserRef=UserRef {
-        urPersonType :: PersonType
-        , urEmail :: Text
-        , urId :: Text
-        , urTag :: Maybe Text
+        urId :: AnyUserID
         , urCreationDate :: POSIXTime
+        , urPersonType :: PersonType
+        , urEmail :: Text
+        , urTag :: Maybe Text
         } 
         deriving (Show,Eq,Ord,Typeable)
      
@@ -254,10 +257,10 @@ instance ToJSON UserRef  where
 -- | from json as per Mangopay format
 instance FromJSON UserRef where
     parseJSON (Object v) =UserRef <$>
+          v .: "Id" <*>
+          v .: "CreationDate"<*>
           v .: "PersonType" <*>
           v .: "Email" <*>
-          v .: "Id" <*>
-          v .:? "Tag" <*>
-          v .: "CreationDate"   
+          v .:? "Tag"    
     parseJSON _=fail "UserRef"
     

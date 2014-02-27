@@ -47,7 +47,8 @@ library
                    Web.Mangopay.Monad,
                    Web.Mangopay.Access,
                    Web.Mangopay.Users,
-                   Web.Mangopay.Events
+                   Web.Mangopay.Events,
+                   Web.Mangopay.Wallets
   exposed-modules:  Web.Mangopay
 
   if flag(debug)
@@ -111,7 +112,9 @@ test-suite mangopay-tests
                   Web.Mangopay.Users,
                   Web.Mangopay.UsersTest,
                   Web.Mangopay.TestUtils,
-                  Web.Mangopay.Events
+                  Web.Mangopay.Events,
+                  Web.Mangopay.Wallets,
+                  Web.Mangopay.WalletsTest
   hs-source-dirs:  
                   test,
                   src
