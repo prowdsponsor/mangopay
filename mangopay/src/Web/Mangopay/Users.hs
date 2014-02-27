@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
 -- | handle users
 module Web.Mangopay.Users where
 
@@ -50,6 +50,28 @@ fetchLegalUser uid at=do
         url<-getClientURLMultiple ["/users/legal/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
+
+-- | get a user, natural or legal
+getUser :: (MonadBaseControl IO m, MonadResource m) => Text -> AccessToken -> MangopayT m (Either NaturalUser LegalUser)
+getUser uid at=do
+        url<-getClientURLMultiple ["/users/",uid]
+        req<-getGetRequest url (Just at) ([]::HT.Query)
+        getJSONResponse req
+
+-- | list all user references
+listUsers :: (MonadBaseControl IO m, MonadResource m) => Maybe Pagination -> AccessToken -> MangopayT m [UserRef]
+listUsers mp at=do
+        url<-getClientURL "/users/"
+        req<-getGetRequest url (Just at) (paginationAttributes mp)
+        getJSONResponse req        
+
+instance FromJSON (Either NaturalUser LegalUser) where
+        parseJSON o@(Object v)=do
+                pt::PersonType<-v .: "PersonType"
+                case pt of
+                        Natural->Left <$> parseJSON o
+                        Legal->Right <$> parseJSON o
+        parseJSON _=fail "EitherUsers"
 
 -- not supported
 --deleteNaturalUser :: (MonadBaseControl IO m, MonadResource m) => UserID -> AccessToken -> MangopayT m ()
@@ -109,7 +131,7 @@ data NaturalUser=NaturalUser {
 instance ToJSON NaturalUser  where
     toJSON u=object ["Tag" .= uTag u,"Email" .= uEmail u,"FirstName".= uFirstName u,"LastName" .= uLastName u,"Address" .= uAddress u, "Birthday" .=  uBirthday u
       ,"Nationality" .= uNationality u,"CountryOfResidence" .= uCountryOfResidence u,"Occupation" .= uOccupation u, "IncomeRange" .= uIncomeRange u,"ProofOfIdentity" .= uProofOfIdentity u
-      ,"ProofOfAddress" .= uProofOfAddress u,"PersonType" .= String "NATURAL"] 
+      ,"ProofOfAddress" .= uProofOfAddress u,"PersonType" .= Natural] 
 
 -- | from json as per Mangopay format
 instance FromJSON NaturalUser where
@@ -175,7 +197,7 @@ data LegalUser=LegalUser {
 instance ToJSON LegalUser  where
     toJSON u=object ["Tag" .= lTag u,"Email" .= lEmail u,"Name".= lName u,"LegalPersonType" .= lLegalPersonType u,"HeadquartersAddress" .= lHeadquartersAddress u, "LegalRepresentativeFirstName" .=  lLegalRepresentativeFirstName u
       ,"LegalRepresentativeLastName" .= lLegalRepresentativeLastName u,"LegalRepresentativeAdress" .= lLegalRepresentativeAdress u,"LegalRepresentativeEmail" .= lLegalRepresentativeEmail u, "LegalRepresentativeBirthday" .= lLegalRepresentativeBirthday u,"LegalRepresentativeNationality" .= lLegalRepresentativeNationality u
-      ,"LegalRepresentativeCountryOfResidence" .= lLegalRepresentativeCountryOfResidence u,"Statute" .= lStatute u,"ProofOfRegistration" .=lProofOfRegistration u,"ShareholderDeclaration" .=lShareholderDeclaration u,"PersonType" .= String "LEGAL"]        
+      ,"LegalRepresentativeCountryOfResidence" .= lLegalRepresentativeCountryOfResidence u,"Statute" .= lStatute u,"ProofOfRegistration" .=lProofOfRegistration u,"ShareholderDeclaration" .=lShareholderDeclaration u,"PersonType" .= Legal]        
       
 -- | from json as per Mangopay format
 instance FromJSON LegalUser where
@@ -199,3 +221,43 @@ instance FromJSON LegalUser where
                          v .: "Id" 
     parseJSON _= fail "NaturalUser" 
      
+data PersonType =  Natural | Legal
+        deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
+     
+-- | to json as per Mangopay format
+instance ToJSON PersonType  where
+    toJSON Natural="NATURAL"
+    toJSON Legal="LEGAL"
+ 
+-- | from json as per Mangopay format
+instance FromJSON PersonType where
+    parseJSON (String "NATURAL") =pure Natural                  
+    parseJSON (String "LEGAL") =pure Legal                
+    parseJSON _= fail "PersonType"       
+      
+-- | a short user reference
+data UserRef=UserRef {
+        urPersonType :: PersonType
+        , urEmail :: Text
+        , urId :: Text
+        , urTag :: Maybe Text
+        , urCreationDate :: POSIXTime
+        } 
+        deriving (Show,Eq,Ord,Typeable)
+     
+-- | to json as per Mangopay format    
+instance ToJSON UserRef  where
+    toJSON ur=object [ "PersonType" .= urPersonType ur, "Email" .= urEmail ur,"Id" .= urId ur,
+        "Tag" .= urTag ur,"CreationDate" .= urCreationDate ur]
+     
+      
+-- | from json as per Mangopay format
+instance FromJSON UserRef where
+    parseJSON (Object v) =UserRef <$>
+          v .: "PersonType" <*>
+          v .: "Email" <*>
+          v .: "Id" <*>
+          v .:? "Tag" <*>
+          v .: "CreationDate"   
+    parseJSON _=fail "UserRef"
+    

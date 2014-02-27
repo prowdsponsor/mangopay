@@ -10,6 +10,7 @@ module Web.Mangopay (
         ,Credentials(..)
         ,AccessPoint(..)
         ,AccessToken(..)
+        ,Pagination(..)
         
         -- access
         ,getPassphrase
@@ -22,10 +23,13 @@ module Web.Mangopay (
         ,LegalUser(..)
         ,LegalUserType(..)
         ,LegalUserID
+        ,UserRef(..)
         ,storeNaturalUser
         ,fetchNaturalUser
         ,storeLegalUser
         ,fetchLegalUser
+        ,getUser
+        ,listUsers
 )
 where
 

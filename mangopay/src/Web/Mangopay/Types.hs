@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
 -- | useful types and simple accessor functions
 module Web.Mangopay.Types where
 
@@ -10,8 +10,10 @@ import Data.Typeable (Typeable)
 import Data.ByteString (ByteString)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Aeson
+import Data.Default
 
 import qualified Data.Text.Encoding as TE
+import qualified Data.ByteString.UTF8 as UTF8
 
 -- | the Mangopay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
@@ -119,3 +121,51 @@ instance FromJSON POSIXTime where
 instance ToJSON POSIXTime  where
     toJSON pt=toJSON (round pt :: Integer)
     
+-- | Pagination info for searches
+-- <http://docs.mangopay.com/api-references/pagination/>
+data Pagination = Pagination {
+        pPage :: Integer
+        ,pPerPage :: Integer
+        }
+        deriving (Show,Read,Eq,Ord,Typeable)
+        
+instance Default Pagination where
+        def=Pagination 1 10
+
+-- | get pagination attributes for query 
+paginationAttributes :: Maybe Pagination -> [(ByteString,Maybe ByteString)]
+paginationAttributes (Just p)=["page" ?+ pPage p, "per_page" ?+ pPerPage p]
+paginationAttributes _=[]
+
+
+-- | simple class used to hide the serialization of parameters ansd simplify the calling code  
+class ToHtQuery a where
+  (?+) :: ByteString -> a -> (ByteString,Maybe ByteString)
+
+instance ToHtQuery Double where
+  n ?+ d=n ?+ show d
+
+instance ToHtQuery (Maybe Double) where
+  n ?+ d=n ?+ fmap show d
+
+instance ToHtQuery Integer where
+  n ?+ d=n ?+ show d
+ 
+instance ToHtQuery (Maybe Integer) where
+  n ?+ d=n ?+ fmap show d
+    
+instance ToHtQuery (Maybe POSIXTime) where
+  n ?+ d=n ?+ fmap (show . (round :: POSIXTime -> Integer)) d
+  
+instance ToHtQuery (Maybe T.Text) where
+  n ?+ d=(n,fmap TE.encodeUtf8 d)
+
+instance ToHtQuery T.Text where
+  n ?+ d=(n,Just $ TE.encodeUtf8 d)
+  
+
+instance ToHtQuery (Maybe String) where
+  n ?+ d=(n,fmap UTF8.fromString d)  
+
+instance ToHtQuery String where
+  n ?+ d=(n,Just $ UTF8.fromString d)  
