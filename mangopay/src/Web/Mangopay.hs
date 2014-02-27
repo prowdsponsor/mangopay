@@ -1,0 +1,35 @@
+-- | API entry point
+module Web.Mangopay (
+        -- generic functions
+        MangopayT
+        ,runMangopayT
+        ,runResourceInMp
+        ,MpException
+        
+        -- useful types
+        ,Credentials(..)
+        ,AccessPoint(..)
+        ,AccessToken(..)
+        
+        -- access
+        ,getPassphrase
+        ,oauthLogin
+        
+        -- Users
+        ,NaturalUser(..)
+        ,IncomeRange(..)
+        ,NaturalUserID
+        ,LegalUser(..)
+        ,LegalUserType(..)
+        ,LegalUserID
+        ,storeNaturalUser
+        ,fetchNaturalUser
+        ,storeLegalUser
+        ,fetchLegalUser
+)
+where
+
+import Web.Mangopay.Access
+import Web.Mangopay.Monad
+import Web.Mangopay.Users
+import Web.Mangopay.Types
