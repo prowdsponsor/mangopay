@@ -4,8 +4,8 @@ module Main where
 
 import Test.Framework
 
-import {-@ HTF_TESTS @-} Web.Mangopay.UsersTest
-import {-@ HTF_TESTS @-} Web.Mangopay.WalletsTest
+import {-@ HTF_TESTS @-} Web.MangoPay.UsersTest
+import {-@ HTF_TESTS @-} Web.MangoPay.WalletsTest
 
 -- | test entry point
 main :: IO()

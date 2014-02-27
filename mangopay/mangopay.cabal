@@ -8,7 +8,7 @@ license-file:   LICENSE
 copyright:      (c) 2014 ProwdFunder
 category:       Web
 homepage:       https://github.com/loyful/mangopay
-synopsis:       Bindings to the mangopay API
+synopsis:       Bindings to the MangoPay API
 
 source-repository head
   type:      git
@@ -43,16 +43,16 @@ library
      , utf8-string >=0.3.7 && <0.4
   ghc-options:      -Wall
   other-modules:    
-                   Web.Mangopay.Types,
-                   Web.Mangopay.Monad,
-                   Web.Mangopay.Access,
-                   Web.Mangopay.Users,
-                   Web.Mangopay.Events,
-                   Web.Mangopay.Wallets
-  exposed-modules:  Web.Mangopay
+                    Web.MangoPay.Access,
+                    Web.MangoPay.Events,
+                    Web.MangoPay.Monad,
+                    Web.MangoPay.Types,
+                    Web.MangoPay.Users,
+                    Web.MangoPay.Wallets
 
   if flag(debug)
     cpp-options:  -DDEBUG
+  exposed-modules:  Web.MangoPay
 
 executable mangopay-passphrase
   build-depends:   
@@ -109,12 +109,9 @@ test-suite mangopay-tests
      , HUnit >=1.2.5 && <1.3
      , utf8-string >=0.3.7 && <0.4
   other-modules:   
-                  Web.Mangopay.Users,
-                  Web.Mangopay.UsersTest,
-                  Web.Mangopay.TestUtils,
-                  Web.Mangopay.Events,
-                  Web.Mangopay.Wallets,
-                  Web.Mangopay.WalletsTest
+                  Web.MangoPay.UsersTest,
+                  Web.MangoPay.TestUtils,
+                  Web.MangoPay.WalletsTest
   hs-source-dirs:  
                   test,
                   src

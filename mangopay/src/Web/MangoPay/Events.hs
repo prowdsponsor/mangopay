@@ -1,10 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
 -- | handle events
 -- <http://docs.mangopay.com/api-references/events/>
-module Web.Mangopay.Events where
+module Web.MangoPay.Events where
 
-import Web.Mangopay.Monad
-import Web.Mangopay.Types
+import Web.MangoPay.Monad
+import Web.MangoPay.Types
 
 import Data.Conduit
 import Data.Text hiding (filter)
@@ -18,7 +18,7 @@ import Data.Maybe (isJust)
 
 
 -- | create or edit a natural user
-searchEvents ::  (MonadBaseControl IO m, MonadResource m) => EventSearchParams -> AccessToken -> MangopayT m  [Event]
+searchEvents ::  (MonadBaseControl IO m, MonadResource m) => EventSearchParams -> AccessToken -> MangoPayT m  [Event]
 searchEvents esp at=do
         url<-getClientURL "/events"
         req<-getGetRequest url (Just at) esp
@@ -48,16 +48,16 @@ data EventType=PAYIN_NORMAL_CREATED
 instance ToHtQuery (Maybe EventType) where
   n ?+ d=n ?+ fmap show d
 
--- | to json as per Mangopay format
+-- | to json as per MangoPay format
 instance ToJSON EventType where
         toJSON =toJSON . show
 
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON EventType where
         parseJSON (String s)=pure $ read $ unpack s
         parseJSON _ =fail "EventType"
 
--- | search parameters for evets        
+-- | search parameters for events        
 data EventSearchParams=EventSearchParams{
         espEventType :: Maybe EventType
         ,espBeforeDate :: Maybe POSIXTime
@@ -89,11 +89,11 @@ data Event=Event {
         }
         deriving (Show,Eq,Ord,Typeable)
  
--- | to json as per Mangopay format        
+-- | to json as per MangoPay format        
 instance ToJSON Event where
         toJSON e=object ["RessourceID"  .= eResourceId e,"EventType" .= eEventType e,"Date" .= eDate e]
 
--- | from json as per Mangopay format 
+-- | from json as per MangoPay format 
 instance FromJSON Event where
         parseJSON (Object v) =Event <$>
                          v .: "RessourceID" <*>

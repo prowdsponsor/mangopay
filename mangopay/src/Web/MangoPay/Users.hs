@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
 -- | handle users
-module Web.Mangopay.Users where
+module Web.MangoPay.Users where
 
-import Web.Mangopay.Monad
-import Web.Mangopay.Types
+import Web.MangoPay.Monad
+import Web.MangoPay.Types
 
 import Data.Conduit
 import Data.Text
@@ -14,7 +14,7 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 -- | create or edit a natural user
-storeNaturalUser ::  (MonadBaseControl IO m, MonadResource m) => NaturalUser -> AccessToken -> MangopayT m NaturalUser
+storeNaturalUser ::  (MonadBaseControl IO m, MonadResource m) => NaturalUser -> AccessToken -> MangoPayT m NaturalUser
 storeNaturalUser u at= 
         case uId u of
                 Nothing-> do
@@ -26,14 +26,14 @@ storeNaturalUser u at=
                 
 
 -- | fetch a natural user from her ID
-fetchNaturalUser :: (MonadBaseControl IO m, MonadResource m) => NaturalUserID -> AccessToken -> MangopayT m NaturalUser
+fetchNaturalUser :: (MonadBaseControl IO m, MonadResource m) => NaturalUserID -> AccessToken -> MangoPayT m NaturalUser
 fetchNaturalUser uid at=do
         url<-getClientURLMultiple ["/users/natural/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
 -- | create or edit a natural user
-storeLegalUser ::  (MonadBaseControl IO m, MonadResource m) => LegalUser -> AccessToken -> MangopayT m LegalUser
+storeLegalUser ::  (MonadBaseControl IO m, MonadResource m) => LegalUser -> AccessToken -> MangoPayT m LegalUser
 storeLegalUser u at= 
         case lId u of
                 Nothing-> do
@@ -45,21 +45,21 @@ storeLegalUser u at=
                 
 
 -- | fetch a natural user from her ID
-fetchLegalUser :: (MonadBaseControl IO m, MonadResource m) => LegalUserID -> AccessToken -> MangopayT m LegalUser
+fetchLegalUser :: (MonadBaseControl IO m, MonadResource m) => LegalUserID -> AccessToken -> MangoPayT m LegalUser
 fetchLegalUser uid at=do
         url<-getClientURLMultiple ["/users/legal/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
 -- | get a user, natural or legal
-getUser :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> AccessToken -> MangopayT m (Either NaturalUser LegalUser)
+getUser :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> AccessToken -> MangoPayT m (Either NaturalUser LegalUser)
 getUser uid at=do
         url<-getClientURLMultiple ["/users/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req
 
 -- | list all user references
-listUsers :: (MonadBaseControl IO m, MonadResource m) => Maybe Pagination -> AccessToken -> MangopayT m [UserRef]
+listUsers :: (MonadBaseControl IO m, MonadResource m) => Maybe Pagination -> AccessToken -> MangoPayT m [UserRef]
 listUsers mp at=do
         url<-getClientURL "/users/"
         req<-getGetRequest url (Just at) (paginationAttributes mp)
@@ -74,7 +74,7 @@ instance FromJSON (Either NaturalUser LegalUser) where
         parseJSON _=fail "EitherUsers"
 
 -- not supported
---deleteNaturalUser :: (MonadBaseControl IO m, MonadResource m) => UserID -> AccessToken -> MangopayT m ()
+--deleteNaturalUser :: (MonadBaseControl IO m, MonadResource m) => UserID -> AccessToken -> MangoPayT m ()
 --deleteNaturalUser uid at=do
 --        url<-getClientURL (TE.encodeUtf8 $ Data.Text.concat ["/users/natural/",uid])
 --        req<-getDeleteRequest url (Just at) ([]::HT.Query)
@@ -91,7 +91,7 @@ type NaturalUserID = Text
 data IncomeRange=IncomeRange1 | IncomeRange2 | IncomeRange3 | IncomeRange4 | IncomeRange5 | IncomeRange6
       deriving (Show,Read,Eq,Ord,Typeable)   
 
--- | to json as per Mangopay format
+-- | to json as per MangoPay format
 instance ToJSON IncomeRange  where
     toJSON IncomeRange1="1"
     toJSON IncomeRange2="2"
@@ -100,7 +100,7 @@ instance ToJSON IncomeRange  where
     toJSON IncomeRange5="5"
     toJSON IncomeRange6="6"
  
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON IncomeRange where
     parseJSON (String "1") =pure IncomeRange1                  
     parseJSON (String "2") =pure IncomeRange2 
@@ -130,13 +130,13 @@ data NaturalUser=NaturalUser {
         }
      deriving (Show,Eq,Ord,Typeable)
      
--- | to json as per Mangopay format    
+-- | to json as per MangoPay format    
 instance ToJSON NaturalUser  where
     toJSON u=object ["Tag" .= uTag u,"Email" .= uEmail u,"FirstName".= uFirstName u,"LastName" .= uLastName u,"Address" .= uAddress u, "Birthday" .=  uBirthday u
       ,"Nationality" .= uNationality u,"CountryOfResidence" .= uCountryOfResidence u,"Occupation" .= uOccupation u, "IncomeRange" .= uIncomeRange u,"ProofOfIdentity" .= uProofOfIdentity u
       ,"ProofOfAddress" .= uProofOfAddress u,"PersonType" .= Natural] 
 
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON NaturalUser where
     parseJSON (Object v) =NaturalUser <$>
                          v .: "Id"  <*>
@@ -162,12 +162,12 @@ type LegalUserID = Text
 data LegalUserType = Business | Organization
       deriving (Show,Read,Eq,Ord,Typeable)   
     
--- | to json as per Mangopay format
+-- | to json as per MangoPay format
 instance ToJSON LegalUserType  where
     toJSON Business="BUSINESS"
     toJSON Organization="ORGANIZATION"
  
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON LegalUserType where
     parseJSON (String "BUSINESS") =pure Business                  
     parseJSON (String "ORGANIZATION") =pure Organization                
@@ -196,13 +196,13 @@ data LegalUser=LegalUser {
         }
         deriving (Show,Eq,Ord,Typeable)
         
--- | to json as per Mangopay format    
+-- | to json as per MangoPay format    
 instance ToJSON LegalUser  where
     toJSON u=object ["Tag" .= lTag u,"Email" .= lEmail u,"Name".= lName u,"LegalPersonType" .= lLegalPersonType u,"HeadquartersAddress" .= lHeadquartersAddress u, "LegalRepresentativeFirstName" .=  lLegalRepresentativeFirstName u
       ,"LegalRepresentativeLastName" .= lLegalRepresentativeLastName u,"LegalRepresentativeAdress" .= lLegalRepresentativeAdress u,"LegalRepresentativeEmail" .= lLegalRepresentativeEmail u, "LegalRepresentativeBirthday" .= lLegalRepresentativeBirthday u,"LegalRepresentativeNationality" .= lLegalRepresentativeNationality u
       ,"LegalRepresentativeCountryOfResidence" .= lLegalRepresentativeCountryOfResidence u,"Statute" .= lStatute u,"ProofOfRegistration" .=lProofOfRegistration u,"ShareholderDeclaration" .=lShareholderDeclaration u,"PersonType" .= Legal]        
       
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON LegalUser where
     parseJSON (Object v) =LegalUser <$>
                          v .: "Id"  <*>
@@ -227,12 +227,12 @@ instance FromJSON LegalUser where
 data PersonType =  Natural | Legal
         deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
      
--- | to json as per Mangopay format
+-- | to json as per MangoPay format
 instance ToJSON PersonType  where
     toJSON Natural="NATURAL"
     toJSON Legal="LEGAL"
  
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON PersonType where
     parseJSON (String "NATURAL") =pure Natural                  
     parseJSON (String "LEGAL") =pure Legal                
@@ -248,13 +248,13 @@ data UserRef=UserRef {
         } 
         deriving (Show,Eq,Ord,Typeable)
      
--- | to json as per Mangopay format    
+-- | to json as per MangoPay format    
 instance ToJSON UserRef  where
     toJSON ur=object [ "PersonType" .= urPersonType ur, "Email" .= urEmail ur,"Id" .= urId ur,
         "Tag" .= urTag ur,"CreationDate" .= urCreationDate ur]
      
       
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON UserRef where
     parseJSON (Object v) =UserRef <$>
           v .: "Id" <*>

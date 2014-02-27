@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
 -- | useful types and simple accessor functions
-module Web.Mangopay.Types where
+module Web.MangoPay.Types where
 
 
 import Control.Applicative
@@ -15,7 +15,7 @@ import Data.Default
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.UTF8 as UTF8
 
--- | the Mangopay access point
+-- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
         deriving (Show,Read,Eq,Ord,Typeable)
         
@@ -34,11 +34,11 @@ data Credentials = Credentials {
   }
   deriving (Show,Read,Eq,Ord,Typeable)
       
--- | to json as per Mangopay format    
+-- | to json as per MangoPay format    
 instance ToJSON Credentials  where
     toJSON c=object ["ClientId" .= cClientID c, "Name" .= cName c , "Email" .= cEmail c] 
 
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON Credentials where
     parseJSON (Object v) =Credentials <$>
                          v .: "ClientId" <*>
@@ -65,11 +65,11 @@ data OAuthToken = OAuthToken {
   }
   deriving (Show,Read,Eq,Ord,Typeable)
 
--- | to json as per Mangopay format
+-- | to json as per MangoPay format
 instance ToJSON OAuthToken  where
     toJSON oa=object ["access_token" .= oaAccessToken oa, "token_type" .= oaTokenType oa, "expires_in" .= oaExpires oa] 
 
--- | from json as per Mangopay format        
+-- | from json as per MangoPay format        
 instance FromJSON OAuthToken where
     parseJSON (Object v) =OAuthToken <$>
                          v .: "access_token" <*>
@@ -81,7 +81,7 @@ instance FromJSON OAuthToken where
 toAccessToken ::  OAuthToken -> AccessToken
 toAccessToken  oa=AccessToken $ TE.encodeUtf8 $ T.concat [oaTokenType oa, " ",oaAccessToken oa]
         
--- | an exception that a call to Mangopay may throw
+-- | an exception that a call to MangoPay may throw
 data MpException = JSONException String -- ^ JSON parsingError
   | MpAppException MpError -- ^ application exception
   deriving (Show,Typeable)
@@ -90,7 +90,7 @@ data MpException = JSONException String -- ^ JSON parsingError
 instance Exception MpException 
 
 
--- | an error returned to us by Mangopay
+-- | an error returned to us by MangoPay
 data MpError = MpError {
   igeID :: Text
   ,igeType :: Text
@@ -101,7 +101,7 @@ data MpError = MpError {
  
  
   
--- | from json as per Mangopay format
+-- | from json as per MangoPay format
 instance FromJSON MpError where
     parseJSON (Object v) = MpError <$>
                          v .: "Id" <*>
@@ -114,7 +114,7 @@ instance FromJSON POSIXTime where
     parseJSON n@(Number _)=(fromIntegral . (round::Double -> Integer)) <$> parseJSON n
     parseJSON _ = fail "POSIXTime"
     
--- | to json as per Mangopay format
+-- | to json as per MangoPay format
 instance ToJSON POSIXTime  where
     toJSON pt=toJSON (round pt :: Integer)
     

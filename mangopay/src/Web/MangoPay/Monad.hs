@@ -3,9 +3,9 @@
   MultiParamTypeClasses, UndecidableInstances, TypeFamilies,
   FlexibleContexts, RankNTypes,CPP #-}
 -- | the utility monad and related functions, taking care of the HTTP, JSON, etc.
-module Web.Mangopay.Monad where
+module Web.MangoPay.Monad where
 
-import Web.Mangopay.Types
+import Web.MangoPay.Types
 
 import Control.Applicative 
 import Control.Monad (MonadPlus, liftM)
@@ -44,47 +44,47 @@ import Data.Conduit.Util (zipSinks)
 
 -- | the mangopay monad transformer
 -- this encapsulates the data necessary to pass the app credentials, etc
-newtype MangopayT m a = Mp { unIs :: ReaderT MpData m a }
+newtype MangoPayT m a = Mp { unIs :: ReaderT MpData m a }
     deriving ( Functor, Applicative, Alternative, Monad
              , MonadFix, MonadPlus, MonadIO, MonadTrans
              , R.MonadThrow, R.MonadActive, R.MonadResource )
              
-instance MonadBase b m => MonadBase b (MangopayT m) where
+instance MonadBase b m => MonadBase b (MangoPayT m) where
     liftBase = lift . liftBase
 
-instance MonadTransControl MangopayT where
-    newtype StT MangopayT a = MpStT { unMpStT :: StT (ReaderT MpData) a }
+instance MonadTransControl MangoPayT where
+    newtype StT MangoPayT a = MpStT { unMpStT :: StT (ReaderT MpData) a }
     liftWith f = Mp $ liftWith (\run -> f (liftM MpStT . run . unIs))
     restoreT = Mp . restoreT . liftM unMpStT
 
-instance MonadBaseControl b m => MonadBaseControl b (MangopayT m) where
-    newtype StM (MangopayT m) a = StMT {unStMT :: ComposeSt MangopayT m a}
+instance MonadBaseControl b m => MonadBaseControl b (MangoPayT m) where
+    newtype StM (MangoPayT m) a = StMT {unStMT :: ComposeSt MangoPayT m a}
     liftBaseWith = defaultLiftBaseWith StMT
     restoreM = defaultRestoreM unStMT
     
--- | Run a computation in the 'MangopayT' monad transformer with
+-- | Run a computation in the 'MangoPayT' monad transformer with
 -- your credentials.
-runMangopayT :: Credentials -- ^ Your app's credentials.
+runMangoPayT :: Credentials -- ^ Your app's credentials.
              -> H.Manager -- ^ Connection manager (see 'H.withManager').
              -> AccessPoint
-             -> MangopayT m a -- ^ the action to run
+             -> MangoPayT m a -- ^ the action to run
              -> m a -- ^ the result
-runMangopayT creds manager ap (Mp act) =
+runMangoPayT creds manager ap (Mp act) =
     runReaderT act (MpData creds manager ap) 
     
 -- | Get the user's credentials.
-getCreds :: Monad m => MangopayT m Credentials
+getCreds :: Monad m => MangoPayT m Credentials
 getCreds = mpCreds `liftM` Mp ask
 
--- | Get the Mangopay host
-getHost :: Monad m => MangopayT m ByteString
+-- | Get the MangoPay host
+getHost :: Monad m => MangoPayT m ByteString
 getHost = (getAccessPointURL . mpAccessPoint) `liftM` Mp ask
 
--- | build a post request to Mangopay
+-- | build a post request to MangoPay
 getPostRequest :: (Monad m,MonadIO m,HT.QueryLike q) => ByteString -- ^ the url path
   -> Maybe AccessToken
   -> q -- ^ the query parameters
-  -> MangopayT m H.Request -- ^ the properly configured request
+  -> MangoPayT m H.Request -- ^ the properly configured request
 getPostRequest path mat query=do
   host<-getHost
   let b=HT.renderQuery False $ HT.toQuery query      
@@ -105,11 +105,11 @@ getPostRequest path mat query=do
                      , H.requestBody=H.RequestBodyBS b
                 }
 
--- | build a get request to Mangopay
+-- | build a get request to MangoPay
 getGetRequest :: (Monad m,MonadIO m,HT.QueryLike q) => ByteString -- ^ the url path
   -> Maybe AccessToken
   -> q -- ^ the query parameters
-  -> MangopayT m H.Request -- ^ the properly configured request
+  -> MangoPayT m H.Request -- ^ the properly configured request
 getGetRequest path mat query=do
   host<-getHost
   let qs=HT.renderQuery True $ HT.toQuery query
@@ -126,25 +126,25 @@ getGetRequest path mat query=do
                      , H.requestHeaders=getJSONHeaders mat
                 }
    
--- | build a delete request  to Mangopay
+-- | build a delete request  to MangoPay
 getDeleteRequest :: (Monad m,MonadIO m,HT.QueryLike q) => ByteString -- ^ the url path
   -> Maybe AccessToken
   -> q -- ^ the query parameters
-  -> MangopayT m H.Request -- ^ the properly configured request
+  -> MangoPayT m H.Request -- ^ the properly configured request
 getDeleteRequest path mat query=do
   get<-getGetRequest path mat query
   return $ get {H.method=HT.methodDelete}
 
 -- | get the url to use for our clientId
 getClientURL :: (Monad m)=> ByteString -- ^ the url path
-        -> MangopayT m ByteString  -- ^ the URL
+        -> MangoPayT m ByteString  -- ^ the URL
 getClientURL path=do
         cid<- liftM clientIDBS getCreds
         return $ BS.concat ["/v2/",cid,path]
 
 -- | get the url to use for our clientId
 getClientURLMultiple :: (Monad m)=> [T.Text] -- ^ the url components
-        -> MangopayT m ByteString  -- ^ the URL
+        -> MangoPayT m ByteString  -- ^ the URL
 getClientURLMultiple path=do
         cid<- liftM clientIDBS getCreds
         return $ BS.concat $ ["/v2/",cid] ++ map TE.encodeUtf8 path
@@ -152,7 +152,7 @@ getClientURLMultiple path=do
 -- | build a URL for a get operation with a single query
 getQueryURL :: (Monad m,HT.QueryLike q) => ByteString -- ^ the url path
   -> q -- ^ the query parameters 
-  -> MangopayT m ByteString  -- ^ the URL
+  -> MangoPayT m ByteString  -- ^ the URL
 getQueryURL path query=do
   host<-getHost
   return $ BS.concat ["https://",host,path,HT.renderQuery True  $ HT.toQuery query]
@@ -162,7 +162,7 @@ igReq :: forall b (m :: * -> *) wrappedErr .
                     (MonadBaseControl IO m, C.MonadResource m,FromJSON b,FromJSON wrappedErr) =>
                     H.Request
                     -> (wrappedErr -> MpError) -- ^ extract the error from the JSON
-                    -> MangopayT m b
+                    -> MangoPayT m b
 igReq req extractError=do
    -- we check the status ourselves
   let req' = req { H.checkStatus = \_ _ _ -> Nothing }
@@ -193,12 +193,12 @@ igReq req extractError=do
             _ -> throw err -- we can't even parse the error, throw the HTTP error
     ) (\(_::ParseError)->throw err) -- the error body wasn't even json   
  
--- | get a JSON response from a request to Mangopay
--- Mangopay returns either a result, or an error
+-- | get a JSON response from a request to MangoPay
+-- MangoPay returns either a result, or an error
 getJSONResponse :: forall (m :: * -> *) v.
                                  (MonadBaseControl IO m, C.MonadResource m,FromJSON v) =>
                                  H.Request
-                                 -> MangopayT
+                                 -> MangoPayT
                                       m v
 getJSONResponse req=igReq req id 
  
@@ -216,7 +216,7 @@ postExchange :: forall (m :: * -> *) v p.
                  ByteString
                  -> Maybe AccessToken
                  -> p
-                 -> MangopayT
+                 -> MangoPayT
                       m v        
 postExchange=jsonExchange HT.methodPost
 
@@ -226,7 +226,7 @@ putExchange :: forall (m :: * -> *) v p.
                  ByteString
                  -> Maybe AccessToken
                  -> p
-                 -> MangopayT
+                 -> MangoPayT
                       m v        
 putExchange=jsonExchange HT.methodPut
    
@@ -237,7 +237,7 @@ jsonExchange :: forall (m :: * -> *) v p.
                  -> ByteString
                  -> Maybe AccessToken
                  -> p
-                 -> MangopayT
+                 -> MangoPayT
                       m v        
 jsonExchange meth path mat p= do
   host<-getHost
@@ -257,18 +257,18 @@ jsonExchange meth path mat p= do
   getJSONResponse req    
                 
 -- | Get the 'H.Manager'.
-getManager :: Monad m => MangopayT m H.Manager
+getManager :: Monad m => MangoPayT m H.Manager
 getManager = mpManager `liftM` Mp ask
 
--- | Run a 'ResourceT' inside a 'MangopayT'.
+-- | Run a 'ResourceT' inside a 'MangoPayT'.
 runResourceInMp :: (C.MonadResource m, MonadBaseControl IO m) =>
-                   MangopayT (C.ResourceT m) a
-                -> MangopayT m a
+                   MangoPayT (C.ResourceT m) a
+                -> MangoPayT m a
 runResourceInMp (Mp inner) = Mp $ ask >>= lift . C.runResourceT . runReaderT inner    
     
--- | Transform the computation inside a 'MangopayT'.
-mapMangopayT :: (m a -> n b) -> MangopayT m a -> MangopayT n b
-mapMangopayT f = Mp . mapReaderT f . unIs    
+-- | Transform the computation inside a 'MangoPayT'.
+mapMangoPayT :: (m a -> n b) -> MangoPayT m a -> MangoPayT n b
+mapMangoPayT f = Mp . mapReaderT f . unIs    
     
 -- | the data kept through the computations
 data MpData = MpData {

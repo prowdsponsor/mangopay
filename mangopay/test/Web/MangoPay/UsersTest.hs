@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
-module Web.Mangopay.UsersTest where
+module Web.MangoPay.UsersTest where
 
-import Web.Mangopay
-import Web.Mangopay.TestUtils
+import Web.MangoPay
+import Web.MangoPay.TestUtils
 
 import Test.Framework
 import Test.HUnit (Assertion)

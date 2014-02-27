@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 -- | test wallets and transfers
-module Web.Mangopay.WalletsTest where
+module Web.MangoPay.WalletsTest where
 
-import Web.Mangopay
-import Web.Mangopay.TestUtils
+import Web.MangoPay
+import Web.MangoPay.TestUtils
 
 import Test.Framework
 import Test.HUnit (Assertion)
@@ -26,7 +26,7 @@ test_Wallet = do
         assertEqual (Just "custom2") (wTag w4)
         assertEqual (wId w2) (wId w4)
         assertEqual (Just $ Amount "EUR" 0) (wBalance w4)
-        ws<-testMP $ listWallets uid Nothing
+        ws<-testMP $ listWallets uid (Just $ Pagination 1 100)
         assertBool (not (null ws))
         assertEqual 1 (length $ filter ((wId w3 ==) . wId) ws)
         

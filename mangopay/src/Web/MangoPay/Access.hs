@@ -1,14 +1,14 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 -- | access methods for login, creating clients...
-module Web.Mangopay.Access 
+module Web.MangoPay.Access 
 (
 createCredentialsSecret
 ,oauthLogin
 )
 where
 
-import Web.Mangopay.Monad
-import Web.Mangopay.Types
+import Web.MangoPay.Monad
+import Web.MangoPay.Types
 
 import Data.Conduit
 import Data.Text
@@ -20,7 +20,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Maybe (isNothing)
 
 -- | populate the passphrase for our clientId IFF we don't have one
-createCredentialsSecret ::  (MonadBaseControl IO m, MonadResource m) => MangopayT m Credentials
+createCredentialsSecret ::  (MonadBaseControl IO m, MonadResource m) => MangoPayT m Credentials
 createCredentialsSecret =do
         creds<- getCreds 
         if isNothing $ cClientSecret creds 
@@ -28,7 +28,7 @@ createCredentialsSecret =do
                 else return creds
 
 -- | login with given user name and password
-oauthLogin :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> MangopayT m AccessToken
+oauthLogin :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> MangoPayT m AccessToken
 oauthLogin user pass = do
         req<- liftM (applyBasicAuth (TE.encodeUtf8 user) (TE.encodeUtf8 pass)) $ getPostRequest "/v2/oauth/token" Nothing ([("grant_type",Just "client_credentials")]::HT.Query)
         t<-getJSONResponse req

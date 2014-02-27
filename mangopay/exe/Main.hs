@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Web.Mangopay
+import Web.MangoPay
 
 import Data.Aeson
 import Data.Text
@@ -21,8 +21,8 @@ main = do
                 [cid,name,email]->do
                        let cred=Credentials (pack cid) (pack name) (pack email) Nothing
                        cred2<-withManager (\mgr->
-                                runMangopayT cred mgr Sandbox createCredentialsSecret)
+                                runMangoPayT cred mgr Sandbox createCredentialsSecret)
                        putStrLn $ unpack $ fromJust $ cClientSecret cred2
                        BS.writeFile "client.conf" $ encode cred2
                        return ()
-                _ -> putStrLn "Usage: mangopay clientid name email"
+                _ -> putStrLn "Usage: mangopay-passphrase clientid name email"

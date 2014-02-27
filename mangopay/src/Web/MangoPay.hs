@@ -1,8 +1,8 @@
 -- | API entry point
-module Web.Mangopay (
+module Web.MangoPay (
         -- generic functions
-        MangopayT
-        ,runMangopayT
+        MangoPayT
+        ,runMangoPayT
         ,runResourceInMp
         ,MpException
         
@@ -56,9 +56,9 @@ module Web.Mangopay (
 )
 where
 
-import Web.Mangopay.Access
-import Web.Mangopay.Events
-import Web.Mangopay.Monad
-import Web.Mangopay.Users
-import Web.Mangopay.Types
-import Web.Mangopay.Wallets
+import Web.MangoPay.Access
+import Web.MangoPay.Events
+import Web.MangoPay.Monad
+import Web.MangoPay.Users
+import Web.MangoPay.Types
+import Web.MangoPay.Wallets
