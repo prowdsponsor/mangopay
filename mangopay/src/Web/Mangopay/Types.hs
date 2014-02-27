@@ -30,7 +30,7 @@ data Credentials = Credentials {
   cClientID :: Text -- ^ client id
   ,cName :: Text -- ^ the name
   ,cEmail :: Text -- ^ the email
-  ,cClientSecret :: Text -- ^ client secret
+  ,cClientSecret :: Maybe Text -- ^ client secret, maybe be Nothing if we haven't generated it
   }
   deriving (Show,Read,Eq,Ord,Typeable)
       
@@ -51,9 +51,6 @@ instance FromJSON Credentials where
 clientIDBS :: Credentials -> ByteString
 clientIDBS=TE.encodeUtf8 . cClientID
 
--- | get client secret in ByteString form
-clientSecretBS :: Credentials -> ByteString
-clientSecretBS=TE.encodeUtf8 . cClientSecret
 
 -- | the access token is simply a Text
 newtype AccessToken=AccessToken ByteString

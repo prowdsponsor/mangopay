@@ -13,7 +13,7 @@ module Web.Mangopay (
         ,Pagination(..)
         
         -- access
-        ,getPassphrase
+        ,createCredentialsSecret
         ,oauthLogin
         
         -- Users
