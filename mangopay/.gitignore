@@ -4,3 +4,4 @@
 /.cabal-sandbox
 /.settings
 /.project
+/client.test.conf

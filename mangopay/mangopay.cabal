@@ -111,7 +111,8 @@ test-suite mangopay-tests
   other-modules:   
                   Web.MangoPay.UsersTest,
                   Web.MangoPay.TestUtils,
-                  Web.MangoPay.WalletsTest
+                  Web.MangoPay.WalletsTest,
+                  Web.MangoPay.AccessTest
   hs-source-dirs:  
                   test,
                   src

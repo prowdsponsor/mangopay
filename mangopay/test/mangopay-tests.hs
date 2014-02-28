@@ -4,6 +4,7 @@ module Main where
 
 import Test.Framework
 
+import {-@ HTF_TESTS @-} Web.MangoPay.AccessTest
 import {-@ HTF_TESTS @-} Web.MangoPay.UsersTest
 import {-@ HTF_TESTS @-} Web.MangoPay.WalletsTest
 

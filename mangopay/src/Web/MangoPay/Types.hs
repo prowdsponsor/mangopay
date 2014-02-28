@@ -36,7 +36,7 @@ data Credentials = Credentials {
       
 -- | to json as per MangoPay format    
 instance ToJSON Credentials  where
-    toJSON c=object ["ClientId" .= cClientID c, "Name" .= cName c , "Email" .= cEmail c] 
+    toJSON c=object ["ClientId" .= cClientID c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c] 
 
 -- | from json as per MangoPay format
 instance FromJSON Credentials where
