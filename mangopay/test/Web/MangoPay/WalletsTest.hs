@@ -9,6 +9,7 @@ import Web.MangoPay.TestUtils
 import Test.Framework
 import Test.HUnit (Assertion)
 import Data.Maybe (isJust, fromJust)
+import Data.Default (def)
 
 test_Wallet :: Assertion
 test_Wallet = do
@@ -56,7 +57,12 @@ test_Transfer = do
         assertEqual 1 (length $ filter ((tId t1'==) . tId) ts2)
         uts1 <- testMP $ listTransfersForUser uid1 Nothing
         assertEqual 1 (length $ filter ((tId t1'==) . tId) uts1)
+        -- transfer has failed since I have no money
         -- uts2 <- testMP $ listTransfersForUser uid2 Nothing
         -- assertEqual 1 (length $ filter ((tId t1'==) . tId) uts2)
+        es<-testMP $ searchEvents (def{espEventType=Just TRANSFER_NORMAL_FAILED})
+        assertBool (not $ null es)
+        assertBool (any ((tId t1' ==) . Just . eResourceId) es)
+
         
         

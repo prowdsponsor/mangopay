@@ -91,12 +91,12 @@ data Event=Event {
  
 -- | to json as per MangoPay format        
 instance ToJSON Event where
-        toJSON e=object ["RessourceID"  .= eResourceId e,"EventType" .= eEventType e,"Date" .= eDate e]
+        toJSON e=object ["ResourceId"  .= eResourceId e,"EventType" .= eEventType e,"Date" .= eDate e]
 
 -- | from json as per MangoPay format 
 instance FromJSON Event where
         parseJSON (Object v) =Event <$>
-                         v .: "RessourceID" <*>
+                         v .: "ResourceId" <*>
                          v .: "EventType" <*>
                          v .: "Date"
         parseJSON _=fail "Event"
