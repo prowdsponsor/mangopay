@@ -158,12 +158,12 @@ getQueryURL path query=do
   return $ BS.concat ["https://",host,path,HT.renderQuery True  $ HT.toQuery query]
 
 -- | perform a HTTP request and deal with the JSON result
-igReq :: forall b (m :: * -> *) wrappedErr .
+mpReq :: forall b (m :: * -> *) wrappedErr .
                     (MonadBaseControl IO m, C.MonadResource m,FromJSON b,FromJSON wrappedErr) =>
                     H.Request
                     -> (wrappedErr -> MpError) -- ^ extract the error from the JSON
                     -> MangoPayT m b
-igReq req extractError=do
+mpReq req extractError=do
    -- we check the status ourselves
   let req' = req { H.checkStatus = \_ _ _ -> Nothing }
   mgr<-getManager
@@ -200,7 +200,7 @@ getJSONResponse :: forall (m :: * -> *) v.
                                  H.Request
                                  -> MangoPayT
                                       m v
-getJSONResponse req=igReq req id 
+getJSONResponse req=mpReq req id 
  
 -- | get the headers necessary for a JSON call              
 getJSONHeaders ::  Maybe AccessToken -> HT.RequestHeaders
