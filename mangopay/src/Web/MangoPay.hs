@@ -81,10 +81,20 @@ module Web.MangoPay (
         ,storeBankWire
         ,fetchBankWire
         ,mkBankWire
+        
+        -- Cards
+        ,CardRegistration(..)
+        ,CardRegistrationID
+        ,CardID
+        ,CardInfo(..)
+        ,mkCardRegistration
+        ,storeCardRegistration
+        ,registerCard
 )
 where
 
 import Web.MangoPay.Access
+import Web.MangoPay.Cards
 import Web.MangoPay.Documents
 import Web.MangoPay.Events
 import Web.MangoPay.Monad
