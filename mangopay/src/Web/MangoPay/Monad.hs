@@ -8,7 +8,7 @@ module Web.MangoPay.Monad where
 import Web.MangoPay.Types
 
 import Control.Applicative 
-import Control.Monad (MonadPlus, liftM)
+import Control.Monad (MonadPlus, liftM, void)
 import Control.Monad.Base (MonadBase(..))
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -239,13 +239,23 @@ jsonExchange :: forall (m :: * -> *) v p.
                  -> p
                  -> MangoPayT
                       m v        
-jsonExchange meth path mat p= do
+jsonExchange meth path mat p= getJSONRequest meth path mat p >>= getJSONResponse
+  
+-- | get JSON request                
+getJSONRequest :: forall (m :: * -> *) p.
+                 (MonadBaseControl IO m, C.MonadResource m,ToJSON p) =>
+                 HT.Method
+                 -> ByteString
+                 -> Maybe AccessToken
+                 -> p
+                 ->  MangoPayT m H.Request -- ^ the properly configured request            
+getJSONRequest meth path mat p=    do
   host<-getHost
 #if DEBUG
   liftIO $ BSC.putStrLn path
   liftIO $ BSLC.putStrLn $ encode p
 #endif  
-  let req= def {
+  return def {
                      H.secure=True
                      , H.host = host
                      , H.port = 443
@@ -253,8 +263,20 @@ jsonExchange meth path mat p= do
                      , H.method=meth
                      , H.requestHeaders=getJSONHeaders mat
                      , H.requestBody=H.RequestBodyLBS $ encode p
-                }              
-  getJSONResponse req    
+                }      
+                         
+-- | post JSON content and ignore the reply                
+postNoReply :: forall (m :: * -> *) p.
+                 (MonadBaseControl IO m, C.MonadResource m,ToJSON p) =>
+                  ByteString
+                 -> Maybe AccessToken
+                 -> p
+                 -> MangoPayT
+                      m ()                        
+postNoReply path mat p= do
+  req<- getJSONRequest HT.methodPost path mat p
+  mgr<-getManager
+  void $ H.http req mgr        
                 
 -- | Get the 'H.Manager'.
 getManager :: Monad m => MangoPayT m H.Manager

@@ -7,6 +7,7 @@ import Test.Framework
 import {-@ HTF_TESTS @-} Web.MangoPay.AccessTest
 import {-@ HTF_TESTS @-} Web.MangoPay.UsersTest
 import {-@ HTF_TESTS @-} Web.MangoPay.WalletsTest
+import {-@ HTF_TESTS @-} Web.MangoPay.DocumentsTest
 
 -- | test entry point
 main :: IO()

@@ -61,10 +61,20 @@ module Web.MangoPay (
         ,fetchHook
         ,listHooks
         ,eventFromQueryString
+        
+        -- Documents and pages
+        ,Document(..)
+        ,DocumentID
+        ,DocumentType(..)
+        ,DocumentStatus(..)
+        ,storeDocument
+        ,fetchDocument
+        ,storePage
 )
 where
 
 import Web.MangoPay.Access
+import Web.MangoPay.Documents
 import Web.MangoPay.Events
 import Web.MangoPay.Monad
 import Web.MangoPay.Users
