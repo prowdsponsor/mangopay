@@ -14,8 +14,11 @@ import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Default
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
-import Data.Maybe (isJust)
-
+import Data.Maybe (isJust, listToMaybe)
+import qualified Data.HashMap.Lazy as HM (delete)
+import qualified Data.Text.Encoding as TE
+import Control.Monad (join)
+import qualified Data.ByteString.Char8 as BS
 
 -- | create or edit a natural user
 searchEvents ::  (MonadBaseControl IO m, MonadResource m) => EventSearchParams -> AccessToken -> MangoPayT m  [Event]
@@ -23,6 +26,32 @@ searchEvents esp at=do
         url<-getClientURL "/events"
         req<-getGetRequest url (Just at) esp
         getJSONResponse req
+
+-- | create or edit a hook
+storeHook ::  (MonadBaseControl IO m, MonadResource m) => Hook -> AccessToken -> MangoPayT m Hook
+storeHook h at= 
+        case hId h of
+                Nothing-> do
+                        url<-getClientURL "/hooks"
+                        postExchange url (Just at) h
+                Just i-> do
+                        url<-getClientURLMultiple ["/hooks/",i]
+                        let Object m=toJSON h
+                        putExchange url (Just at) (Object $ HM.delete "EventType" m)
+                
+-- | fetch a wallet from its ID
+fetchHook :: (MonadBaseControl IO m, MonadResource m) => HookID -> AccessToken -> MangoPayT m Hook
+fetchHook wid at=do
+        url<-getClientURLMultiple ["/hooks/",wid]
+        req<-getGetRequest url (Just at) ([]::HT.Query)
+        getJSONResponse req 
+
+-- | list all wallets for a given user   
+listHooks :: (MonadBaseControl IO m, MonadResource m) =>  Maybe Pagination -> AccessToken -> MangoPayT m [Hook]
+listHooks mp at=do
+        url<-getClientURL "/hooks"
+        req<-getGetRequest url (Just at) (paginationAttributes mp)
+        getJSONResponse req 
 
 -- | Event type
 data EventType=PAYIN_NORMAL_CREATED
@@ -100,4 +129,79 @@ instance FromJSON Event where
                          v .: "EventType" <*>
                          v .: "Date"
         parseJSON _=fail "Event"
-                       
+
+-- | parse an event from the query string
+-- the MangoPay is not very clear on notifications, but see v1 <http://docs.mangopay.com/v1-api-references/notifications/>
+-- v2 works the same, the event is passed via parameters of the query string   
+eventFromQueryString :: HT.Query -> Maybe Event
+eventFromQueryString q=do
+  rid<-fmap TE.decodeUtf8 $ get "RessourceId" -- yes, two ss here
+  et<-join $ fmap (maybeRead . BS.unpack) $ get "EventType"
+  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). BS.unpack) $ get "Date"
+  return $ Event rid et d
+  where
+    get :: BS.ByteString -> Maybe BS.ByteString 
+    get n=join $ listToMaybe $ Prelude.map snd $ filter ((n==) . fst) q
+    maybeRead :: Read a => String -> Maybe a
+    maybeRead = fmap fst . listToMaybe . reads                  
+
+-- | status of notification hook                       
+data HookStatus=Enabled | Disabled
+       deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
+     
+-- | to json as per MangoPay format
+instance ToJSON HookStatus  where
+    toJSON Enabled="ENABLED"
+    toJSON Disabled="DISABLED"
+ 
+-- | from json as per MangoPay format
+instance FromJSON HookStatus where
+    parseJSON (String "ENABLED") =pure Enabled                  
+    parseJSON (String "DISABLED") =pure Disabled            
+    parseJSON _= fail "HookStatus"      
+
+-- | validity of notification hook                   
+data HookValidity=Valid | Invalid
+       deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
+     
+-- | to json as per MangoPay format
+instance ToJSON HookValidity  where
+    toJSON Valid="VALID"
+    toJSON Invalid="INVALID"
+ 
+-- | from json as per MangoPay format
+instance FromJSON HookValidity where
+    parseJSON (String "VALID") =pure Valid                  
+    parseJSON (String "INVALID") =pure Invalid            
+    parseJSON _= fail "HookValidity"   
+ 
+-- | id for hook   
+type HookID=Text   
+
+-- | a notification hook    
+data Hook=Hook {
+        hId :: Maybe HookID -- ^ The Id of the hook details
+        ,hCreationDate :: Maybe POSIXTime
+        ,hTag :: Maybe Text -- ^ Custom data
+        ,hUrl :: Text -- ^This is the URL where you receive notification for each EventType
+        ,hStatus :: HookStatus
+        ,hValidity :: Maybe HookValidity
+        ,hEventType :: EventType
+        }              
+        deriving (Show,Eq,Ord,Typeable)
+  
+-- | to json as per MangoPay format        
+instance ToJSON Hook where
+        toJSON h=object ["Tag"  .= hTag h,"EventType" .= hEventType h,"Url" .= hUrl h,"Status" .= hStatus h]
+
+-- | from json as per MangoPay format 
+instance FromJSON Hook where
+        parseJSON (Object v) =Hook <$>
+                         v .: "Id" <*>
+                         v .: "CreationDate" <*>
+                         v .: "Tag" <*>
+                         v .: "Url" <*>
+                         v .: "Status" <*>
+                         v .: "Validity" <*>
+                         v .: "EventType" 
+        parseJSON _=fail "Hook"        

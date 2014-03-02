@@ -48,11 +48,19 @@ module Web.MangoPay (
         ,listTransfers
         ,listTransfersForUser
         
-        -- Events
+        -- Events and Hooks
         ,Event(..)
         ,EventType(..)
         ,EventSearchParams(..)
         ,searchEvents
+        ,HookStatus(..)
+        ,HookValidity(..)
+        ,HookID
+        ,Hook(..)
+        ,storeHook
+        ,fetchHook
+        ,listHooks
+        ,eventFromQueryString
 )
 where
 
