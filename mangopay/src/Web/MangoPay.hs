@@ -70,6 +70,17 @@ module Web.MangoPay (
         ,storeDocument
         ,fetchDocument
         ,storePage
+        
+        -- Payins
+        ,BankAccount(..)
+        ,PaymentExecution(..)
+        ,TransactionType(..)
+        ,TransactionNature(..)
+        ,BankWireID
+        ,BankWire(..)
+        ,storeBankWire
+        ,fetchBankWire
+        ,mkBankWire
 )
 where
 
@@ -77,6 +88,7 @@ import Web.MangoPay.Access
 import Web.MangoPay.Documents
 import Web.MangoPay.Events
 import Web.MangoPay.Monad
+import Web.MangoPay.Payins
 import Web.MangoPay.Users
 import Web.MangoPay.Types
 import Web.MangoPay.Wallets

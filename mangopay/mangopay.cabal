@@ -50,7 +50,8 @@ library
                     Web.MangoPay.Types,
                     Web.MangoPay.Users,
                     Web.MangoPay.Wallets,
-                    Web.MangoPay.Documents
+                    Web.MangoPay.Documents,
+                    Web.MangoPay.Payins
 
   if flag(debug)
     cpp-options:  -DDEBUG
@@ -119,8 +120,8 @@ test-suite mangopay-tests
                   Web.MangoPay.TestUtils,
                   Web.MangoPay.WalletsTest,
                   Web.MangoPay.AccessTest,
-                  Web.MangoPay.Documents,
-                  Web.MangoPay.DocumentsTest
+                  Web.MangoPay.DocumentsTest,
+                  Web.MangoPay.PayinsTest
   hs-source-dirs:  
                   test,
                   src
