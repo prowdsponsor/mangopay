@@ -65,7 +65,7 @@ instance ToJSON DocumentType where
 -- | from json as per MangoPay format
 instance FromJSON DocumentType where
         parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "EventType"
+        parseJSON _ =fail "DocumentType"
 
 -- | status of a document
 data DocumentStatus=CREATED
@@ -81,7 +81,7 @@ instance ToJSON DocumentStatus where
 -- | from json as per MangoPay format
 instance FromJSON DocumentStatus where
         parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "EventType"
+        parseJSON _ =fail "DocumentStatus"
 
 -- | a document
 data Document = Document {
