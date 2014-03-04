@@ -21,12 +21,25 @@ storeBankWire bw at= do
   url<-getClientURL "/payins/bankwire/direct" 
   postExchange url (Just at) bw
    
--- | fetch a wallet from its ID
+-- | fetch a bank wire from its ID
 fetchBankWire :: (MonadBaseControl IO m, MonadResource m) => BankWireID -> AccessToken -> MangoPayT m BankWire
 fetchBankWire bwid at=do
         url<-getClientURLMultiple ["/payins/",bwid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req    
+
+-- | create or edit a direct card pay in
+storeCardPayin ::  (MonadBaseControl IO m, MonadResource m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
+storeCardPayin cp at= do
+  url<-getClientURL "/payins/card/direct" 
+  postExchange url (Just at) cp
+   
+-- | fetch a direct pay in from its ID
+fetchCardPayin :: (MonadBaseControl IO m, MonadResource m) => CardPayinID -> AccessToken -> MangoPayT m CardPayin
+fetchCardPayin cpid at=do
+        url<-getClientURLMultiple ["/payins/",cpid]
+        req<-getGetRequest url (Just at) ([]::HT.Query)
+        getJSONResponse req   
      
 -- | bank account details
 data BankAccount = BankAccount {
@@ -128,7 +141,7 @@ data BankWire=BankWire {
   ,bwNature  :: Maybe TransactionNature -- ^  The nature of the transaction:
   ,bwPaymentType :: Maybe Text -- ^  The type of the payment (which type of mean of payment is used).
   ,bwExecutionType :: Maybe PaymentExecution -- ^  How the payment has been executed:
-  }
+  } deriving (Show,Eq,Ord,Typeable)
 
 -- | to json as per MangoPay format        
 instance ToJSON BankWire where
@@ -162,4 +175,74 @@ instance FromJSON BankWire where
                          v .:? "PaymentType" <*>
                          v .:? "ExecutionType" 
         parseJSON _=fail "BankWire"  
+ 
+-- | ID of a direct pay in
+type CardPayinID=Text 
   
+-- | helper function to create a new direct payin with the needed information
+mkCardPayin :: AnyUserID -> AnyUserID -> WalletID -> Amount -> Amount -> Text -> CardID -> CardPayin
+mkCardPayin aid uid wid amount fees url cid= CardPayin Nothing Nothing Nothing aid uid fees
+  wid Nothing amount Nothing (Just url) Nothing Nothing cid Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+  
+  
+-- | direct pay in via registered card
+data CardPayin=CardPayin {
+  cpId :: Maybe CardPayinID
+  ,cpCreationDate :: Maybe POSIXTime
+  ,cpTag :: Maybe Text -- ^  custom data
+  ,cpAuthorId  :: AnyUserID -- ^   The user ID of the author
+  ,cpCreditedUserId  :: AnyUserID -- ^  It represents the amount credited on the targeted e-wallet.
+  ,cpFees :: Amount -- ^  It represents your fees taken on the DebitedFundsDebitedFunds – Fees = CreditedFunds (amount received on wallet)
+  ,cpCreditedWalletId :: WalletID -- ^ The ID of the credited wallet
+  ,cpDebitedWalletId :: Maybe WalletID -- ^  The ID of the debited wallet
+  ,cpDebitedFunds  :: Amount -- ^  It represents the amount debited from the bank account.
+  ,cpCreditedFunds :: Maybe Amount -- ^   It represents the amount credited on the targeted e-wallet.
+  ,cpSecureModeReturnURL :: Maybe Text -- ^ This URL will be used in case the SecureMode is activated.
+  ,cpSecureMode :: Maybe Text -- ^ The SecureMode correspond to « 3D secure » for CB Visa and MasterCard or « Amex Safe Key » for American Express. This field lets you activate it manually.
+  ,cpSecureModeRedirectURL :: Maybe Text -- ^ This URL will be used in case the SecureMode is activated.
+  ,cpCardId :: CardID -- ^ The ID of the registered card (Got through CardRegistration object)
+  ,cpStatus  :: Maybe TransferStatus -- ^  The status of the payment
+  ,cpResultCode  :: Maybe Text -- ^  The transaction result code
+  ,cpResultMessage :: Maybe Text -- ^  The transaction result Message
+  ,cpExecutionDate :: Maybe POSIXTime --   The date when the payment is processed
+  ,cpType  :: Maybe TransactionType -- ^  The type of the transaction
+  ,cpNature  :: Maybe TransactionNature -- ^  The nature of the transaction:
+  ,cpPaymentType :: Maybe Text -- ^  The type of the payment (which type of mean of payment is used).
+  ,cpExecutionType :: Maybe PaymentExecution -- ^  How the payment has been executed:
+  } deriving (Show,Eq,Ord,Typeable)
+  
+-- | to json as per MangoPay format        
+instance ToJSON CardPayin where
+        toJSON cp=object ["Tag" .= cpTag cp,"AuthorId" .= cpAuthorId  cp
+          ,"CreditedUserId" .= cpCreditedUserId cp,"CreditedWalletId" .= cpCreditedWalletId cp
+          ,"DebitedFunds" .= cpDebitedFunds cp,"Fees" .= cpFees cp,"CardID" .= cpCardId cp
+          ,"SecureModeReturnURL" .= cpSecureModeReturnURL cp
+          ,"SecureMode" .= cpSecureMode cp]
+
+-- | from json as per MangoPay format 
+instance FromJSON CardPayin where
+        parseJSON (Object v) =CardPayin <$>
+                         v .: "Id" <*>
+                         v .: "CreationDate" <*>
+                         v .:? "Tag" <*>
+                         v .: "AuthorId" <*>
+                         v .: "CreditedUserId" <*>
+                         v .: "Fees"  <*>
+                         v .: "CreditedWalletId"  <*>
+                         v .:? "DebitedWalletId"  <*>
+                         v .: "DebitedFunds"  <*>
+                         v .:? "CreditedFunds"  <*>
+                         v .:? "SecureModeReturnURL" <*>
+                         v .:? "SecureModeRedirectURL" <*>
+                         v .:? "SecureMode" <*>
+                         v .: "CardId" <*>
+                         v .:? "Status" <*>
+                         v .:? "ResultCode" <*>
+                         v .:? "ResultMessage" <*>
+                         v .:? "ExecutionDate" <*>
+                         v .:? "Type" <*>
+                         v .:? "Nature" <*>
+                         v .:? "PaymentType" <*>
+                         v .:? "ExecutionType" 
+        parseJSON _=fail "CardPayin"   
+   

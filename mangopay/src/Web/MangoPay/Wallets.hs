@@ -69,9 +69,6 @@ listTransfersForUser uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/transactions"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
         getJSONResponse req 
-        
--- | alias for Currency
-type Currency=Text
 
 -- | currency amount 
 data Amount=Amount {

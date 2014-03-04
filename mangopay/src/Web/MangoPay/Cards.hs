@@ -25,9 +25,18 @@ import qualified Data.HashMap.Lazy as HM
 import Control.Exception.Base (throw)
 
 type CardRegistrationID=Text
-type CardID=Text
 
-
+-- | perform the full registration of a card
+fullRegistration :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Currency -> CardInfo -> AccessToken -> MangoPayT m CardRegistration
+fullRegistration uid currency cardInfo at=do
+  -- create registration
+  let cr1=mkCardRegistration uid currency
+  cr2<-storeCardRegistration cr1 at
+  -- register it
+  cr3<-registerCard cardInfo cr2
+  -- save registered version
+  storeCardRegistration cr3 at
+  
 
 -- | create or edit a card registration
 storeCardRegistration ::  (MonadBaseControl IO m, MonadResource m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
@@ -78,7 +87,7 @@ registerCard _ _=do
   throw $ MpAppException $ MpError "" "IllegalState" "CardRegistration not ready" $ Just pt            
                 
 -- | helper function to create a new card registration
-mkCardRegistration :: AnyUserID -> Text -> CardRegistration
+mkCardRegistration :: AnyUserID -> Currency -> CardRegistration
 mkCardRegistration uid currency=CardRegistration Nothing Nothing Nothing uid currency Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- | a card registration
@@ -87,7 +96,7 @@ data CardRegistration = CardRegistration {
   ,crCreationDate  :: Maybe POSIXTime -- ^ The creation date of the object
   ,crTag :: Maybe Text -- ^  Custom data
   ,crUserId  :: AnyUserID -- ^  The ID of the author
-  ,crCurrency  :: Text -- ^ The currency of the card registrated
+  ,crCurrency  :: Currency -- ^ The currency of the card registrated
   ,crAccessKey :: Maybe Text -- ^ This key has to be sent with the card details and the PreregistrationData
   ,crPreregistrationData  :: Maybe Text -- ^  This passphrase has to be sent with the card details and the AccessKey
   ,crCardRegistrationURL  :: Maybe Text -- ^  The URL where to POST the card details, the AccessKey and PreregistrationData

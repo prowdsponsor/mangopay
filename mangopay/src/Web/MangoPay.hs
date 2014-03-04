@@ -81,7 +81,12 @@ module Web.MangoPay (
         ,storeBankWire
         ,fetchBankWire
         ,mkBankWire
-        
+        ,CardPayinID
+        ,CardPayin(..)
+        ,storeCardPayin
+        ,fetchCardPayin
+        ,mkCardPayin
+                
         -- Cards
         ,CardRegistration(..)
         ,CardRegistrationID
@@ -90,6 +95,7 @@ module Web.MangoPay (
         ,mkCardRegistration
         ,storeCardRegistration
         ,registerCard
+        ,fullRegistration
 )
 where
 
