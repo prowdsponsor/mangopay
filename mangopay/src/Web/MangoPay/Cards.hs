@@ -11,7 +11,7 @@ import Data.Conduit
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
+import Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
@@ -22,6 +22,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString as BS
 
 import qualified Data.HashMap.Lazy as HM
+import Control.Exception.Base (throw)
 
 type CardRegistrationID=Text
 type CardID=Text
@@ -48,7 +49,6 @@ data CardInfo = CardInfo {
   } deriving (Show,Read,Eq,Ord,Typeable)
 
 -- | register a card with the registration URL
--- TODO launch proper errors
 registerCard :: (MonadBaseControl IO m, MonadResource m) => CardInfo -> CardRegistration -> MangoPayT m CardRegistration
 registerCard ci cr |
   Just url <- crCardRegistrationURL cr,
@@ -67,10 +67,15 @@ registerCard ci cr |
          , H.requestBody=H.RequestBodyBS b}             
     res<- H.http req' mgr
     reg <- H.responseBody res $$+- EL.consume
-    let cr'= cr{crRegistrationData=Just $ TE.decodeUtf8 $ BS.concat reg}
-    liftIO $ print cr'
-    return cr'
-registerCard _ _=error "CardRegistration not ready"                
+    let t=TE.decodeUtf8 $ BS.concat reg
+    if "data=" `isPrefixOf` t 
+      then return cr{crRegistrationData=Just t}
+      else do
+        pt<-liftIO getPOSIXTime
+        throw $ MpAppException $ MpError "" "RegistrationError" t $ Just pt            
+registerCard _ _=do
+  pt<-liftIO getPOSIXTime
+  throw $ MpAppException $ MpError "" "IllegalState" "CardRegistration not ready" $ Just pt            
                 
 -- | helper function to create a new card registration
 mkCardRegistration :: AnyUserID -> Text -> CardRegistration
