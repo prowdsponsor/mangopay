@@ -10,8 +10,6 @@ import Test.Framework
 import Test.HUnit (Assertion)
 import Data.Maybe (isJust, fromJust)
 import Data.Default (def)
-import Control.Concurrent (killThread)
-import Control.Exception (bracket)
 
 -- | test wallet API
 test_Wallet :: Assertion
@@ -49,13 +47,8 @@ test_Transfer = do
         let uw2=fromJust $ wId w2'
         assertBool (uw1 /= uw2)
         
-        hook<-getHookEndPoint
-        res<-newReceivedEvents
-        -- test notifications
-        ok<-bracket 
-          (startHTTPServer (hepPort hook) res)
-          killThread
-          (\_->do
+        checkEvents (do
+                hook<-getHookEndPoint
                 h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing TRANSFER_NORMAL_FAILED)
                 assertBool (isJust $ hId h)
                 h2<-testMP $ fetchHook (fromJust $ hId h)
@@ -81,9 +74,7 @@ test_Transfer = do
                 es<-testMP $ searchEvents (def{espEventType=Just TRANSFER_NORMAL_FAILED})
                 assertBool (not $ null es)
                 assertBool (any ((tId t1' ==) . Just . eResourceId) es)
-                
-                waitForEvent res ((tId t1' ==) . Just . eResourceId) 10
-          )
-        assertBool ok   
+                return $ tId t1'
+          ) [testEvent TRANSFER_NORMAL_FAILED] 
         return ()
         
