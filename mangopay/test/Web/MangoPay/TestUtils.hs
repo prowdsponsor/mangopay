@@ -15,7 +15,6 @@ import Network.Wai.Handler.Warp
 import Network.HTTP.Types (status200)
 import Blaze.ByteString.Builder (copyByteString)
 import Data.Aeson as A
-import Data.Monoid
 import Control.Concurrent (forkIO, ThreadId, threadDelay)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
 import Control.Monad (when)
@@ -28,6 +27,10 @@ import Control.Applicative
 -- | file path to test client conf file
 testConfFile :: FilePath
 testConfFile="client.test.conf"
+
+-- | a test card
+testCardInfo1 :: CardInfo
+testCardInfo1 = CardInfo "4970100000000154" "1220" "123"
 
 -- | test MangoPay API call, logging in with the client credentials
 -- expects a file called client.test.conf containing the JSON of client credentials
@@ -129,5 +132,5 @@ startHTTPServer p revts=
                                 Prelude.putStrLn "Received!!"
                                 print evt
                             Nothing->Prelude.putStrLn "Couldn't parse Event"
-                return $ ResponseBuilder status200 [("Content-Type", "text/plain")] $ mconcat $ map copyByteString ["noop"]
+                return $ ResponseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
                 

@@ -32,8 +32,7 @@ test_CardOK = do
   us<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length us)
   let uid=urId $ head us
-  let ci=CardInfo "4970100000000154" "1220" "123"
-  cr<-testMP $ fullRegistration uid "EUR" ci
+  cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr
   let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing 
@@ -55,8 +54,7 @@ disabled_test_CardKO = do
   us<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length us)
   let uid=urId $ head us
-  let ci=CardInfo "4970100000000154" "1220" "123"
-  cr<-testMP $ fullRegistration uid "EUR" ci
+  cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr
   let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing 

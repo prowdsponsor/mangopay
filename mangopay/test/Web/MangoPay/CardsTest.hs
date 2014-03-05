@@ -6,7 +6,7 @@ module Web.MangoPay.CardsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
-import Data.Maybe (isJust, fromJust, isNothing)
+import Data.Maybe (isJust, isNothing)
 import Test.Framework
 import Test.HUnit (Assertion)
 
@@ -24,8 +24,7 @@ test_Card = do
   assertBool (isJust $ crPreregistrationData cr2)  
   assertBool (isNothing $ crRegistrationData cr2)  
   assertBool (isNothing $ crCardId cr2)  
-  let ci=CardInfo "4970100000000154" "1220" "123"
-  cr3<-testMP $ (\_->registerCard ci cr2)
+  cr3<-testMP $ (\_->registerCard testCardInfo1 cr2)
   assertBool (isJust $ crRegistrationData cr3)  
   cr4<-testMP $ storeCardRegistration cr3
   assertBool (isJust $ crCardId cr4)  
