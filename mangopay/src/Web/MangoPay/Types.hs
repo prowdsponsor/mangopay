@@ -36,7 +36,7 @@ data Credentials = Credentials {
       
 -- | to json as per MangoPay format    
 instance ToJSON Credentials  where
-    toJSON c=object ["ClientId" .= cClientID c, "Name" .= cName c , "Email" .= cEmail c] 
+    toJSON c=object ["ClientId" .= cClientID c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c] 
 
 -- | from json as per MangoPay format
 instance FromJSON Credentials where
@@ -134,6 +134,11 @@ paginationAttributes :: Maybe Pagination -> [(ByteString,Maybe ByteString)]
 paginationAttributes (Just p)=["page" ?+ pPage p, "per_page" ?+ pPerPage p]
 paginationAttributes _=[]
 
+-- | ID of a card
+type CardID=Text
+
+-- | alias for Currency
+type Currency=Text
 
 -- | simple class used to hide the serialization of parameters ansd simplify the calling code  
 class ToHtQuery a where

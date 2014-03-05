@@ -8,7 +8,7 @@ module Web.MangoPay.Monad where
 import Web.MangoPay.Types
 
 import Control.Applicative 
-import Control.Monad (MonadPlus, liftM)
+import Control.Monad (MonadPlus, liftM, void)
 import Control.Monad.Base (MonadBase(..))
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -158,12 +158,12 @@ getQueryURL path query=do
   return $ BS.concat ["https://",host,path,HT.renderQuery True  $ HT.toQuery query]
 
 -- | perform a HTTP request and deal with the JSON result
-igReq :: forall b (m :: * -> *) wrappedErr .
+mpReq :: forall b (m :: * -> *) wrappedErr .
                     (MonadBaseControl IO m, C.MonadResource m,FromJSON b,FromJSON wrappedErr) =>
                     H.Request
                     -> (wrappedErr -> MpError) -- ^ extract the error from the JSON
                     -> MangoPayT m b
-igReq req extractError=do
+mpReq req extractError=do
    -- we check the status ourselves
   let req' = req { H.checkStatus = \_ _ _ -> Nothing }
   mgr<-getManager
@@ -200,7 +200,7 @@ getJSONResponse :: forall (m :: * -> *) v.
                                  H.Request
                                  -> MangoPayT
                                       m v
-getJSONResponse req=igReq req id 
+getJSONResponse req=mpReq req id 
  
 -- | get the headers necessary for a JSON call              
 getJSONHeaders ::  Maybe AccessToken -> HT.RequestHeaders
@@ -239,13 +239,23 @@ jsonExchange :: forall (m :: * -> *) v p.
                  -> p
                  -> MangoPayT
                       m v        
-jsonExchange meth path mat p= do
+jsonExchange meth path mat p= getJSONRequest meth path mat p >>= getJSONResponse
+  
+-- | get JSON request                
+getJSONRequest :: forall (m :: * -> *) p.
+                 (MonadBaseControl IO m, C.MonadResource m,ToJSON p) =>
+                 HT.Method
+                 -> ByteString
+                 -> Maybe AccessToken
+                 -> p
+                 ->  MangoPayT m H.Request -- ^ the properly configured request            
+getJSONRequest meth path mat p=    do
   host<-getHost
 #if DEBUG
   liftIO $ BSC.putStrLn path
   liftIO $ BSLC.putStrLn $ encode p
 #endif  
-  let req= def {
+  return def {
                      H.secure=True
                      , H.host = host
                      , H.port = 443
@@ -253,8 +263,20 @@ jsonExchange meth path mat p= do
                      , H.method=meth
                      , H.requestHeaders=getJSONHeaders mat
                      , H.requestBody=H.RequestBodyLBS $ encode p
-                }              
-  getJSONResponse req    
+                }      
+                         
+-- | post JSON content and ignore the reply                
+postNoReply :: forall (m :: * -> *) p.
+                 (MonadBaseControl IO m, C.MonadResource m,ToJSON p) =>
+                  ByteString
+                 -> Maybe AccessToken
+                 -> p
+                 -> MangoPayT
+                      m ()                        
+postNoReply path mat p= do
+  req<- getJSONRequest HT.methodPost path mat p
+  mgr<-getManager
+  void $ H.http req mgr        
                 
 -- | Get the 'H.Manager'.
 getManager :: Monad m => MangoPayT m H.Manager

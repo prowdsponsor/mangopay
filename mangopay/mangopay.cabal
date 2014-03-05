@@ -41,6 +41,7 @@ library
      , base16-bytestring
      , primitive == 0.5.1.0
      , utf8-string >=0.3.7 && <0.4
+     , base64-bytestring >=1.0.0 && <1.1
   ghc-options:      -Wall
   other-modules:    
                     Web.MangoPay.Access,
@@ -48,7 +49,10 @@ library
                     Web.MangoPay.Monad,
                     Web.MangoPay.Types,
                     Web.MangoPay.Users,
-                    Web.MangoPay.Wallets
+                    Web.MangoPay.Wallets,
+                    Web.MangoPay.Documents,
+                    Web.MangoPay.Payins,
+                    Web.MangoPay.Cards
 
   if flag(debug)
     cpp-options:  -DDEBUG
@@ -85,7 +89,7 @@ executable mangopay-passphrase
 test-suite mangopay-tests
   type:            exitcode-stdio-1.0
   main-is:         mangopay-tests.hs
-  ghc-options:     -Wall -rtsopts
+  ghc-options:     -Wall -rtsopts -threaded
   build-depends:   
      base >= 4, HTF > 0.9
      , mangopay
@@ -108,10 +112,18 @@ test-suite mangopay-tests
      , base16-bytestring
      , HUnit >=1.2.5 && <1.3
      , utf8-string >=0.3.7 && <0.4
+     , blaze-builder >=0.3.1 && <0.4
+     , warp
+     , wai
+     , base64-bytestring >=1.0.0 && <1.1
   other-modules:   
                   Web.MangoPay.UsersTest,
                   Web.MangoPay.TestUtils,
-                  Web.MangoPay.WalletsTest
+                  Web.MangoPay.WalletsTest,
+                  Web.MangoPay.AccessTest,
+                  Web.MangoPay.DocumentsTest,
+                  Web.MangoPay.PayinsTest,
+                  Web.MangoPay.CardsTest
   hs-source-dirs:  
                   test,
                   src
