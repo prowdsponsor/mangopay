@@ -15,19 +15,25 @@ import Network.Wai.Handler.Warp
 import Network.HTTP.Types (status200)
 import Blaze.ByteString.Builder (copyByteString)
 import Data.Aeson as A
-import Data.Monoid
-import Control.Concurrent (forkIO, ThreadId, threadDelay)
+import Control.Concurrent (forkIO, ThreadId, threadDelay,killThread)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Text (Text)
+import Data.List
 import Data.Typeable
 import Control.Applicative
+import Test.HUnit (Assertion)
+import Control.Exception (bracket)
 
 -- | file path to test client conf file
 testConfFile :: FilePath
 testConfFile="client.test.conf"
+
+-- | a test card
+testCardInfo1 :: CardInfo
+testCardInfo1 = CardInfo "4970100000000154" "1220" "123"
 
 -- | test MangoPay API call, logging in with the client credentials
 -- expects a file called client.test.conf containing the JSON of client credentials
@@ -73,10 +79,11 @@ instance FromJSON HookEndPoint where
                          v .: "Port" 
         parseJSON _=fail "HookEndPoint"
 
+
 -- | the events received via the notification hook
 -- uses a MVar for storing events
 data ReceivedEvents=ReceivedEvents{
-        events::MVar [Event]
+        events::MVar [Either EventResult Event]
         }
 
 -- | creates the new ReceivedEvents
@@ -85,29 +92,85 @@ newReceivedEvents=do
         mv<-newMVar []          
         return $ ReceivedEvents mv
 
--- | wait till we receive the expected event, for a maximum number of seconds
+-- | test an event, checking the event type, and resource id
+testEvent :: EventType -> Maybe Text -> Event -> Bool
+testEvent et tid evt= tid == (Just $ eResourceId evt) 
+        && et == eEventType evt
+
+-- | run a test with the notification server running
+checkEvents :: IO a -- ^ the test, returning a value
+  -> [a -> Event -> Bool] -- ^ the test on the events, taking into account the returned value
+  -> Assertion
+checkEvents ops tests=do
+    hook<-getHookEndPoint
+    res<-newReceivedEvents
+    er<-bracket 
+          (startHTTPServer (hepPort hook) res)
+          killThread
+          (\_->do
+            a<-ops
+            waitForEvent res (map ($ a) tests) 30
+          )
+    assertEqual EventsOK er
+            
+-- | result of waiting for event
+data EventResult = Timeout -- ^ didn't receive all expected events
+  | EventsOK -- ^ OK: everything expected received, nothing unexpected
+  | ExtraEvent Event -- ^ unexpected
+  | UnhandledNotification String -- ^ notification we couldn't parse
+  deriving (Show,Eq,Ord,Typeable)
+
+-- | wait till we receive all the expected events, and none other, for a maximum number of seconds
 waitForEvent :: ReceivedEvents 
-  -> (Event -> Bool) -- ^ function on the expected event
+  -> [Event -> Bool] -- ^ function on the expected event
   -> Integer -- ^ delay in seconds
-  -> IO Bool
-waitForEvent _ _ del | del<=0=return False
-waitForEvent rc f del=do
-        evts<-popReceivedEvents rc
-        if Prelude.any f evts
-                then return True
-                else do
+  -> IO EventResult
+waitForEvent _ _ del | del<=0=return Timeout
+waitForEvent rc fs del=do
+        mevt<-popReceivedEvent rc
+        case (mevt,fs) of
+          (Nothing,[])->return EventsOK -- nothing left to process
+          (Just (Left er),_)->return er -- some notification we didn't understant
+          (Just (Right evt),[])->return $ ExtraEvent evt -- an event that doesn't match
+          (Nothing,_)->do -- no event yet
+             threadDelay 1000000
+             waitForEvent rc fs (del-1)
+          (Just (Right evt),_)-> -- an event, does it match
+                case Data.List.foldl' (match1 evt) ([],False) fs of
+                  ([],True)->return EventsOK -- match, nothing else to do
+                  (_,False)->return $ ExtraEvent evt -- doesn't match
+                  (fs2,_)-> do -- matched, more to do
                         threadDelay 1000000
-                        waitForEvent rc f (del-1)
+                        waitForEvent rc fs2 (del-1)
+  where 
+    -- | match the first event function and return all the non matching function, and a flag indicating if we matched
+    match1 :: Event -> ([Event -> Bool],Bool) -> (Event -> Bool) -> ([Event -> Bool],Bool)
+    match1 evt (nfs,False) f
+      | f evt=(nfs,True)
+      | otherwise=(f:nfs,False)
+    match1 _ (nfs,True) f=(f:nfs,True)
+
+-- | get one received event (and remove it from the underlying storage)        
+popReceivedEvent :: ReceivedEvents -> IO (Maybe (Either EventResult Event))
+popReceivedEvent (ReceivedEvents mv)=do
+        evts<-takeMVar mv                
+        case evts of
+          []->do
+                putMVar mv []
+                return Nothing
+          (e:es)->do
+                putMVar mv es
+                return $ Just e
 
 -- | get all received events (and remove them from the underlying storage)        
-popReceivedEvents :: ReceivedEvents -> IO [Event]
+popReceivedEvents :: ReceivedEvents -> IO [Either EventResult Event]
 popReceivedEvents (ReceivedEvents mv)=do
         evts<-takeMVar mv                
         putMVar mv []
         return evts
 
 -- | add a new event
-pushReceivedEvent :: ReceivedEvents -> Event -> IO ()
+pushReceivedEvent :: ReceivedEvents -> Either EventResult Event -> IO ()
 pushReceivedEvent (ReceivedEvents mv) evt=do
         evts' <-takeMVar mv    
         putMVar mv (evt : evts')
@@ -121,13 +184,11 @@ startHTTPServer p revts=
   where
     app req = do
                 when (pathInfo req == ["mphook"]) $ do
-                        liftIO $ Prelude.putStrLn "mphook start"
                         let mevt=eventFromQueryString $ W.queryString req
                         liftIO $ case mevt of
                             Just evt->do
-                                pushReceivedEvent revts evt
-                                Prelude.putStrLn "Received!!"
+                                pushReceivedEvent revts $ Right evt
                                 print evt
-                            Nothing->Prelude.putStrLn "Couldn't parse Event"
-                return $ ResponseBuilder status200 [("Content-Type", "text/plain")] $ mconcat $ map copyByteString ["noop"]
+                            Nothing->pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
+                return $ ResponseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
                 
