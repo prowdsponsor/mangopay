@@ -31,9 +31,9 @@ test_Wallet = do
         assertBool (not (null ws))
         assertEqual 1 (length $ filter ((wId w3 ==) . wId) ws)
 
--- | test transfer API + notifications        
-test_Transfer :: Assertion
-test_Transfer = do
+-- | test transfer API + notifications on failure       
+test_FailedTransfer :: Assertion
+test_FailedTransfer = do
         us<-testMP $ listUsers (Just $ Pagination 1 2)
         assertEqual 2 (length us)
         let [uid1,uid2] = map urId us
@@ -45,7 +45,7 @@ test_Transfer = do
         w2'<-testMP $ storeWallet w2
         let uw2=fromJust $ wId w2'
         assertBool (uw1 /= uw2)
-        -- transfer will failed since I have no money
+        -- transfer will fail since I have no money
         checkEventTypes [TRANSFER_NORMAL_FAILED] (do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
@@ -54,14 +54,53 @@ test_Transfer = do
                 assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
-                ts1 <- testMP $ listTransfers uw1 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . tId) ts1)
-                ts2 <- testMP $ listTransfers uw2 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . tId) ts2)
-                uts1 <- testMP $ listTransfersForUser uid1 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . tId) uts1)
+                ts1 <- testMP $ listTransactions uw1 Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts1)
+                ts2 <- testMP $ listTransactions uw2 Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts2)
+                uts1 <- testMP $ listTransactionsForUser uid1 Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)
                 
                 return $ tId t1'
           )
         return ()
+ 
+-- | test transfer API + notifications on success     
+test_SuccessfulTransfer :: Assertion
+test_SuccessfulTransfer = do
+        us<-testMP $ listUsers (Just $ Pagination 1 2)
+        assertEqual 2 (length us)
+        let [uid1,uid2] = map urId us
+        assertBool (uid1 /= uid2)
+        let w1=Wallet Nothing Nothing (Just "custom") [uid1] "my wallet" "EUR" Nothing 
+        w1'<-testMP $ storeWallet w1
+        let uw1=fromJust $ wId w1'
+        let w2=Wallet Nothing Nothing (Just "custom") [uid2] "my wallet" "EUR" Nothing 
+        w2'<-testMP $ storeWallet w2
+        let uw2=fromJust $ wId w2'
+        assertBool (uw1 /= uw2)
         
+        cr<-testMP $ fullRegistration uid1 "EUR" testCardInfo1
+        assertBool (isJust $ crCardId cr)
+        let cid=fromJust $ crCardId cr
+        let cp=mkCardPayin uid1 uid1 uw1 (Amount "EUR" 333) (Amount "EUR" 1) "http://dummy" cid
+        cp2<-testMP $ storeCardPayin cp
+        assertEqual (Just Succeeded) (cpStatus cp2)
+
+        checkEventTypes [TRANSFER_NORMAL_SUCCEEDED] (do
+                let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
+                        uw1 uw2 Nothing Nothing Nothing Nothing Nothing
+                t1'<-testMP $ createTransfer t1
+                assertBool (isJust $ tId t1')
+                assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
+                t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
+                assertEqual t1' t2'
+                ts1 <- testMP $ listTransactions uw1 Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts1)
+                ts2 <- testMP $ listTransactions uw2 Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts2)
+                uts1 <- testMP $ listTransactionsForUser uid1 Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)             
+                return $ tId t1'
+          )
+        return ()        

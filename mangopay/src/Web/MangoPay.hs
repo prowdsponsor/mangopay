@@ -43,10 +43,14 @@ module Web.MangoPay (
         ,Transfer(..)
         ,TransferID
         ,TransferStatus(..)
+        ,Transaction(..)
+        ,TransactionID
+        ,TransactionType(..)
+        ,TransactionNature(..)
         ,createTransfer
         ,fetchTransfer
-        ,listTransfers
-        ,listTransfersForUser
+        ,listTransactions
+        ,listTransactionsForUser
         
         -- Events and Hooks
         ,Event(..)
@@ -74,8 +78,6 @@ module Web.MangoPay (
         -- Payins
         ,BankAccount(..)
         ,PaymentExecution(..)
-        ,TransactionType(..)
-        ,TransactionNature(..)
         ,BankWireID
         ,BankWire(..)
         ,storeBankWire
