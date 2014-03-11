@@ -83,6 +83,9 @@ mkBankWire :: AnyUserID -> AnyUserID -> WalletID -> Amount -> Amount -> BankWire
 mkBankWire aid uid wid amount fees= BankWire Nothing Nothing Nothing aid uid Nothing
   wid Nothing Nothing Nothing amount fees Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
+-- | bankwire or card pay in
+type AnyPayinID=Text
+
 -- | id of a bankwire
 type BankWireID=Text
 

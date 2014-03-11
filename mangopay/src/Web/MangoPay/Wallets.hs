@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards #-}
 -- | handle wallets
 module Web.MangoPay.Wallets where
 
@@ -185,8 +185,8 @@ instance FromJSON Transfer where
         parseJSON _=fail "Transfer"   
         
 -- | type of transaction
-data TransactionType = PAY_IN 
-  | PAY_OUT
+data TransactionType = PAYIN 
+  | PAYOUT
   | TRANSFER 
   deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
 
@@ -196,7 +196,8 @@ instance ToJSON TransactionType where
 
 -- | from json as per MangoPay format
 instance FromJSON TransactionType where
-        parseJSON (String s)=pure $ read $ unpack s
+        parseJSON (String s)
+          | ((a,_):_)<-reads $ unpack s=pure a
         parseJSON _ =fail "TransactionType"
 
 data TransactionNature =  REGULAR -- ^ just as you created the object
@@ -210,7 +211,8 @@ instance ToJSON TransactionNature where
 
 -- | from json as per MangoPay format
 instance FromJSON TransactionNature where
-        parseJSON (String s)=pure $ read $ unpack s
+        parseJSON (String s)
+          | ((a,_):_)<-reads $ unpack s=pure a
         parseJSON _ =fail "TransactionNature"
     
       

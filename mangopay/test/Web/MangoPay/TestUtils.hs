@@ -17,7 +17,7 @@ import Blaze.ByteString.Builder (copyByteString)
 import Data.Aeson as A
 import Control.Concurrent (forkIO, ThreadId, threadDelay,killThread)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
-import Control.Monad (when)
+import Control.Monad (when, void)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Text (Text)
@@ -103,18 +103,27 @@ testEvent tid et evt= tid == (Just $ eResourceId evt)
 testEventTypes :: [EventType] 
   -> IO (Maybe Text)
   -> Assertion
-testEventTypes evtTs ops=do
+testEventTypes evtTs =void . testEventTypes' evtTs 
+
+-- | check that we're receiving events of the given type with the resource id returned by the passed test
+-- returns the result of the inner test
+testEventTypes' :: [EventType] 
+  -> IO (Maybe Text)
+  -> IO (Maybe Text)
+testEventTypes' evtTs ops=do
     hook<-getHookEndPoint
     res<-newReceivedEvents
-    er<-bracket 
+    (a,er)<-bracket 
           (startHTTPServer (hepPort hook) res)
           killThread
           (\_->do
             a<-ops
             mapM_ (testSearchEvent a) evtTs
-            waitForEvent res (map (testEvent a) evtTs) 30
+            r<-waitForEvent res (map (testEvent a) evtTs) 30
+            return (a,r)
           )
     assertEqual EventsOK er
+    return a
 
 -- | assert that we find an event for the given resource id and event type
 testSearchEvent :: Maybe Text -> EventType -> Assertion

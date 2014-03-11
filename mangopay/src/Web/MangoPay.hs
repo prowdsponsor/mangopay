@@ -101,6 +101,14 @@ module Web.MangoPay (
         ,registerCard
         ,fullRegistration
         ,fetchCard
+        
+        -- Refunds
+        ,RefundID
+        ,Refund(..)
+        ,RefundRequest(..)
+        ,refundTransfer
+        ,refundPayin
+        ,fetchRefund
 )
 where
 
@@ -110,6 +118,7 @@ import Web.MangoPay.Documents
 import Web.MangoPay.Events
 import Web.MangoPay.Monad
 import Web.MangoPay.Payins
+import Web.MangoPay.Refunds
 import Web.MangoPay.Users
 import Web.MangoPay.Types
 import Web.MangoPay.Wallets

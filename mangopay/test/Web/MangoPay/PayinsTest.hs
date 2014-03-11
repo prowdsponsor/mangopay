@@ -49,6 +49,8 @@ test_CardOK = do
     assertEqual (Just Succeeded) (cpStatus cp2)
     w3<-testMP $ fetchWallet wid
     assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
+    ts1 <- testMP $ listTransactions wid Nothing
+    assertEqual 1 (length $ filter ((cpId cp2==) . txId) ts1)
     return $ cpId cp2
   
 -- | test a failed card pay in
