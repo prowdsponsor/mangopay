@@ -119,7 +119,7 @@ testEventTypes' evtTs ops=do
           (\_->do
             a<-ops
             mapM_ (testSearchEvent a) evtTs
-            r<-waitForEvent res (map (testEvent a) evtTs) 30
+            r<-waitForEvent res (map (testEvent a) evtTs) 5
             return (a,r)
           )
     assertEqual EventsOK er
