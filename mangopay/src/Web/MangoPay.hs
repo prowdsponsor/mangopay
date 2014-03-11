@@ -92,10 +92,13 @@ module Web.MangoPay (
         ,CardRegistrationID
         ,CardID
         ,CardInfo(..)
+        ,Card(..)
+        ,CardValidity(..)
         ,mkCardRegistration
         ,storeCardRegistration
         ,registerCard
         ,fullRegistration
+        ,fetchCard
 )
 where
 

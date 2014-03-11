@@ -24,6 +24,7 @@ import qualified Data.ByteString as BS
 import qualified Data.HashMap.Lazy as HM
 import Control.Exception.Base (throw)
 
+-- | card registration ID
 type CardRegistrationID=Text
 
 -- | perform the full registration of a card
@@ -133,3 +134,63 @@ instance FromJSON CardRegistration where
                          v .:? "ResultMessage"  <*>
                          v .:? "Status"  
         parseJSON _=fail "CardRegistration"  
+
+-- | fetch a card from its ID
+fetchCard :: (MonadBaseControl IO m, MonadResource m) => CardID -> AccessToken -> MangoPayT m Card
+fetchCard cid at=do
+        url<-getClientURLMultiple ["/cards/",cid]
+        req<-getGetRequest url (Just at) ([]::HT.Query)
+        getJSONResponse req 
+
+-- | validity of a card
+data CardValidity=UNKNOWN | VALID | INVALID
+  deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
+
+
+-- | to json as per MangoPay format
+instance ToJSON CardValidity where
+        toJSON =toJSON . show
+
+-- | from json as per MangoPay format
+instance FromJSON CardValidity where
+        parseJSON (String s)=pure $ read $ unpack s
+        parseJSON _ =fail "CardValidity"
+
+
+-- | a registered card
+data Card=Card {
+  cId :: CardID
+  ,cCreationDate :: POSIXTime 
+  ,cTag :: Maybe Text  
+  ,cExpirationDate   :: Text -- ^  MMYY
+  ,cAlias :: Text -- ^ Example: 497010XXXXXX4414
+  ,cCardProvider  :: Text -- ^ The card provider, it could be « CB », « VISA », « MASTERCARD », etc.
+  ,cCardType :: Text -- ^ « CB_VISA_MASTERCARD » is the only value available yet
+  ,cProduct :: Maybe Text  
+  ,cBankCode  :: Maybe Text  
+  ,cActive :: Bool
+  ,cCurrency :: Currency
+  ,cValidity :: CardValidity -- ^ Once we proceed (or attempted to process) a payment with the card we are able to indicate if it is « valid » or « invalid ». If we didn’t process a payment yet the « Validity » stay at « unknown ».
+  ,cCountry :: Text
+  ,cUserId :: AnyUserID
+  } deriving (Show,Eq,Ord,Typeable)
+  
+-- | from json as per MangoPay format 
+instance FromJSON Card where
+        parseJSON (Object v) =Card <$>
+                         v .: "Id" <*>
+                         v .: "CreationDate" <*>
+                         v .:? "Tag" <*>
+                         v .: "ExpirationDate" <*>
+                         v .: "Alias" <*>
+                         v .: "CardProvider"  <*>
+                         v .: "CardType"  <*>
+                         v .:? "Product"  <*>
+                         v .:? "BankCode"  <*>
+                         v .: "Active"  <*>
+                         v .: "Currency"  <*>
+                         v .: "Validity" <*>
+                         v .: "Country" <*>
+                         v .: "UserId" 
+        parseJSON _=fail "Card"  
+  
