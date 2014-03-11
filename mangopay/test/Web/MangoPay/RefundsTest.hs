@@ -108,7 +108,7 @@ test_TransferRefund = do
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) ts1)
                 ts2 <- testMP $ listTransactions uw2 Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) ts2)
-                uts1 <- testMP $ listTransactionsForUser uid1 Nothing
+                uts1 <- testMP $ listTransactionsForUser uid1 (Just $ Pagination 1 50)
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)             
                 return $ tId t1' 
                 
