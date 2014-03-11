@@ -26,7 +26,6 @@ import Data.Typeable
 import Control.Applicative
 import Test.HUnit (Assertion)
 import Data.Default (def)
-import qualified Data.Set as S
 import Data.IORef 
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -212,18 +211,8 @@ pushReceivedEvent :: ReceivedEvents -> Either EventResult Event -> IO ()
 pushReceivedEvent (ReceivedEvents mv) evt=do
         evts' <-takeMVar mv   
         -- we're getting events in duplicate ???
-        let ns= nubSet (evt : evts')
+        let ns = if evt `Prelude.elem` evts' then evts' else evt:evts'
         putMVar mv ns
-  where
-    -- | /(n log n)/ Like 'nub', but with better asymptotic complexity.  
-    -- Adapted from <http://hpaste.org/54411> which was found by Google.
-    nubSet :: Ord a => [a] -> [a]
-    nubSet = loop S.empty
-        where
-            loop _    []          = []
-            loop seen (x : xs)
-                | x `S.member` seen = loop seen xs
-                | otherwise         = x : loop (S.insert x seen) xs
 
 -- | start a HTTP server listening on the given port
 -- if the path info is "mphook", then we'll push the received event                        
