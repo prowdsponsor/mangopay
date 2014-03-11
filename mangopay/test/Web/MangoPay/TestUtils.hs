@@ -4,7 +4,7 @@ module Web.MangoPay.TestUtils where
 
 import Web.MangoPay
 
-import Data.ByteString.Lazy as BS hiding (map)
+import Data.ByteString.Lazy as BS hiding (map,any,null)
 import Network.HTTP.Conduit as H
 import Data.Conduit
 import Data.Maybe
@@ -26,6 +26,7 @@ import Data.Typeable
 import Control.Applicative
 import Test.HUnit (Assertion)
 import Control.Exception (bracket)
+import Data.Default (def)
 
 -- | file path to test client conf file
 testConfFile :: FilePath
@@ -92,11 +93,45 @@ newReceivedEvents=do
         mv<-newMVar []          
         return $ ReceivedEvents mv
 
--- | test an event, checking the event type, and resource id
-testEvent :: EventType -> Maybe Text -> Event -> Bool
-testEvent et tid evt= tid == (Just $ eResourceId evt) 
+-- | test an event, checking the resource id and the event type
+testEvent :: Maybe Text -> EventType -> Event -> Bool
+testEvent tid et evt= tid == (Just $ eResourceId evt) 
         && et == eEventType evt
 
+-- | check that we're receiving events of the given type with the resource id returned by the passed test
+checkEventTypes :: [EventType] 
+  -> IO (Maybe Text)
+  -> Assertion
+checkEventTypes evtTs ops=do
+    hook<-getHookEndPoint
+    res<-newReceivedEvents
+    er<-bracket 
+          (startHTTPServer (hepPort hook) res)
+          killThread
+          (\_->do
+            a<-ops
+            mapM_ (testSearchEvent a) evtTs
+            waitForEvent res (map (testEvent a) evtTs) 30
+          )
+    assertEqual EventsOK er
+
+-- | assert that we find an event for the given resource id and event type
+testSearchEvent :: Maybe Text -> EventType -> Assertion
+testSearchEvent tid evtT=do
+  es<-testMP $ searchEvents (def{espEventType=Just evtT})
+  assertBool (not $ null es)
+  assertBool (any ((tid ==) . Just . eResourceId) es)
+
+-- | create a hook for a given event type    
+createHook :: EventType -> Assertion
+createHook evtT= do
+    hook<-getHookEndPoint
+    h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing evtT)
+    assertBool (isJust $ hId h)
+    h2<-testMP $ fetchHook (fromJust $ hId h)
+    assertEqual (hId h) (hId h2)
+    assertEqual (Just Valid) (hValidity h2)
+    
 -- | run a test with the notification server running
 checkEvents :: IO a -- ^ the test, returning a value
   -> [a -> Event -> Bool] -- ^ the test on the events, taking into account the returned value

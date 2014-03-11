@@ -9,7 +9,6 @@ import Web.MangoPay.TestUtils
 import Test.Framework
 import Test.HUnit (Assertion)
 import Data.Maybe (isJust, fromJust)
-import Data.Default (def)
 
 -- | test wallet API
 test_Wallet :: Assertion
@@ -46,15 +45,8 @@ test_Transfer = do
         w2'<-testMP $ storeWallet w2
         let uw2=fromJust $ wId w2'
         assertBool (uw1 /= uw2)
-        
-        checkEvents (do
-                hook<-getHookEndPoint
-                h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing TRANSFER_NORMAL_FAILED)
-                assertBool (isJust $ hId h)
-                h2<-testMP $ fetchHook (fromJust $ hId h)
-                assertEqual (hId h) (hId h2)
-                assertEqual (Just Valid) (hValidity h2)
-                
+        -- transfer will failed since I have no money
+        checkEventTypes [TRANSFER_NORMAL_FAILED] (do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
                 t1'<-testMP $ createTransfer t1
@@ -68,13 +60,8 @@ test_Transfer = do
                 assertEqual 1 (length $ filter ((tId t1'==) . tId) ts2)
                 uts1 <- testMP $ listTransfersForUser uid1 Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . tId) uts1)
-                -- transfer has failed since I have no money
-                -- uts2 <- testMP $ listTransfersForUser uid2 Nothing
-                -- assertEqual 1 (length $ filter ((tId t1'==) . tId) uts2)
-                es<-testMP $ searchEvents (def{espEventType=Just TRANSFER_NORMAL_FAILED})
-                assertBool (not $ null es)
-                assertBool (any ((tId t1' ==) . Just . eResourceId) es)
+                
                 return $ tId t1'
-          ) [testEvent TRANSFER_NORMAL_FAILED] 
+          )
         return ()
         

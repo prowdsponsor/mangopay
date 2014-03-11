@@ -36,3 +36,5 @@ test_CreateCredentials=do
                 runMangoPayT newCreds mgr Sandbox createCredentialsSecret)
        assertBool (isJust $ cClientSecret  creds2)       
        BS.writeFile testConfFile $ encode creds2
+       -- create hooks for all event types
+       mapM_ createHook [minBound .. maxBound]
