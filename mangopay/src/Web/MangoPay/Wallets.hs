@@ -73,7 +73,7 @@ listTransfersForUser uid mp at=do
 -- | currency amount 
 data Amount=Amount {
         bCurrency :: Currency
-        ,bAmount :: Double -- ^ all examples show integer values but let's accept doubles for now
+        ,bAmount :: Integer -- ^ all amounts should be in cents!
         }
         deriving (Show,Read,Eq,Ord,Typeable)
  
