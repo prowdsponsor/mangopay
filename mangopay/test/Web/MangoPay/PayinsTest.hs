@@ -25,7 +25,7 @@ test_BankWire=do
   assertBool (isJust $ bwBankAccount bw2)
   bw3<-testMP $ fetchBankWire (fromJust $ bwId bw2)
   assertEqual (bwId bw2) (bwId bw3)
-  
+ 
 -- | test a successful card pay in
 test_CardOK :: Assertion
 test_CardOK = do
@@ -39,12 +39,14 @@ test_CardOK = do
   w2<-testMP $ storeWallet w
   assertBool (isJust $ wId w2)
   let wid=fromJust $ wId w2
-  let cp=mkCardPayin uid uid wid (Amount "EUR" 333) (Amount "EUR" 1) "http://dummy" cid
-  cp2<-testMP $ storeCardPayin cp
-  assertBool (isJust $ cpId cp2)
-  assertEqual (Just Succeeded) (cpStatus cp2)
-  w3<-testMP $ fetchWallet wid
-  assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
+  testEventTypes [PAYIN_NORMAL_CREATED,PAYIN_NORMAL_SUCCEEDED] $ do
+    let cp=mkCardPayin uid uid wid (Amount "EUR" 333) (Amount "EUR" 1) "http://dummy" cid
+    cp2<-testMP $ storeCardPayin cp
+    assertBool (isJust $ cpId cp2)
+    assertEqual (Just Succeeded) (cpStatus cp2)
+    w3<-testMP $ fetchWallet wid
+    assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
+    return $ cpId cp2
   
 -- | test a failed card pay in
 -- according to <http://docs.mangopay.com/api-references/test-payment/>
@@ -60,12 +62,14 @@ test_CardKO = do
   w2<-testMP $ storeWallet w
   assertBool (isJust $ wId w2)
   let wid=fromJust $ wId w2
-  let cp=mkCardPayin uid uid wid (Amount "EUR" 33394) (Amount "EUR" 0) "http://dummy" cid
-  cp2<-testMP $ storeCardPayin cp
-  assertBool (isJust $ cpId cp2)
-  assertEqual (Just Failed) (cpStatus cp2)
-  assertEqual (Just "009199") (cpResultCode cp2)
-  assertEqual (Just "PSP technical error") (cpResultMessage cp2)
-  w3<-testMP $ fetchWallet wid
-  assertEqual (Just $ Amount "EUR" 0) (wBalance w3)
+  testEventTypes [PAYIN_NORMAL_CREATED,PAYIN_NORMAL_FAILED] $ do
+    let cp=mkCardPayin uid uid wid (Amount "EUR" 33394) (Amount "EUR" 0) "http://dummy" cid
+    cp2<-testMP $ storeCardPayin cp
+    assertBool (isJust $ cpId cp2)
+    assertEqual (Just Failed) (cpStatus cp2)
+    assertEqual (Just "009199") (cpResultCode cp2)
+    assertEqual (Just "PSP technical error") (cpResultMessage cp2)
+    w3<-testMP $ fetchWallet wid
+    assertEqual (Just $ Amount "EUR" 0) (wBalance w3)
+    return $ cpId cp2
     

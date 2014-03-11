@@ -46,7 +46,7 @@ test_FailedTransfer = do
         let uw2=fromJust $ wId w2'
         assertBool (uw1 /= uw2)
         -- transfer will fail since I have no money
-        checkEventTypes [TRANSFER_NORMAL_FAILED] (do
+        testEventTypes [TRANSFER_NORMAL_CREATED,TRANSFER_NORMAL_FAILED] $ do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
                 t1'<-testMP $ createTransfer t1
@@ -60,10 +60,7 @@ test_FailedTransfer = do
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) ts2)
                 uts1 <- testMP $ listTransactionsForUser uid1 Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)
-                
                 return $ tId t1'
-          )
-        return ()
  
 -- | test transfer API + notifications on success     
 test_SuccessfulTransfer :: Assertion
@@ -83,11 +80,13 @@ test_SuccessfulTransfer = do
         cr<-testMP $ fullRegistration uid1 "EUR" testCardInfo1
         assertBool (isJust $ crCardId cr)
         let cid=fromJust $ crCardId cr
-        let cp=mkCardPayin uid1 uid1 uw1 (Amount "EUR" 333) (Amount "EUR" 1) "http://dummy" cid
-        cp2<-testMP $ storeCardPayin cp
-        assertEqual (Just Succeeded) (cpStatus cp2)
+        testEventTypes [PAYIN_NORMAL_CREATED,PAYIN_NORMAL_SUCCEEDED] $ do
+          let cp=mkCardPayin uid1 uid1 uw1 (Amount "EUR" 333) (Amount "EUR" 1) "http://dummy" cid
+          cp2<-testMP $ storeCardPayin cp
+          assertEqual (Just Succeeded) (cpStatus cp2)
+          return $ cpId cp2
 
-        checkEventTypes [TRANSFER_NORMAL_SUCCEEDED] (do
+        testEventTypes [TRANSFER_NORMAL_CREATED,TRANSFER_NORMAL_SUCCEEDED] $ do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
                 t1'<-testMP $ createTransfer t1
@@ -102,5 +101,3 @@ test_SuccessfulTransfer = do
                 uts1 <- testMP $ listTransactionsForUser uid1 Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)             
                 return $ tId t1'
-          )
-        return ()        

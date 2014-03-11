@@ -27,6 +27,7 @@ import Control.Applicative
 import Test.HUnit (Assertion)
 import Control.Exception (bracket)
 import Data.Default (def)
+import qualified Data.Set as S
 
 -- | file path to test client conf file
 testConfFile :: FilePath
@@ -99,10 +100,10 @@ testEvent tid et evt= tid == (Just $ eResourceId evt)
         && et == eEventType evt
 
 -- | check that we're receiving events of the given type with the resource id returned by the passed test
-checkEventTypes :: [EventType] 
+testEventTypes :: [EventType] 
   -> IO (Maybe Text)
   -> Assertion
-checkEventTypes evtTs ops=do
+testEventTypes evtTs ops=do
     hook<-getHookEndPoint
     res<-newReceivedEvents
     er<-bracket 
@@ -133,10 +134,10 @@ createHook evtT= do
     assertEqual (Just Valid) (hValidity h2)
     
 -- | run a test with the notification server running
-checkEvents :: IO a -- ^ the test, returning a value
+testEvents :: IO a -- ^ the test, returning a value
   -> [a -> Event -> Bool] -- ^ the test on the events, taking into account the returned value
   -> Assertion
-checkEvents ops tests=do
+testEvents ops tests=do
     hook<-getHookEndPoint
     res<-newReceivedEvents
     er<-bracket 
@@ -165,18 +166,16 @@ waitForEvent rc fs del=do
         mevt<-popReceivedEvent rc
         case (mevt,fs) of
           (Nothing,[])->return EventsOK -- nothing left to process
-          (Just (Left er),_)->return er -- some notification we didn't understant
+          (Just (Left er),_)->return er -- some notification we didn't understand
           (Just (Right evt),[])->return $ ExtraEvent evt -- an event that doesn't match
           (Nothing,_)->do -- no event yet
              threadDelay 1000000
              waitForEvent rc fs (del-1)
           (Just (Right evt),_)-> -- an event, does it match
                 case Data.List.foldl' (match1 evt) ([],False) fs of
-                  ([],True)->return EventsOK -- match, nothing else to do
                   (_,False)->return $ ExtraEvent evt -- doesn't match
-                  (fs2,_)-> do -- matched, more to do
-                        threadDelay 1000000
-                        waitForEvent rc fs2 (del-1)
+                  (fs2,_)-> waitForEvent rc fs2 del -- matched, either we have more to do or we need to check no unexpected event was found
+                       
   where 
     -- | match the first event function and return all the non matching function, and a flag indicating if we matched
     match1 :: Event -> ([Event -> Bool],Bool) -> (Event -> Bool) -> ([Event -> Bool],Bool)
@@ -207,9 +206,20 @@ popReceivedEvents (ReceivedEvents mv)=do
 -- | add a new event
 pushReceivedEvent :: ReceivedEvents -> Either EventResult Event -> IO ()
 pushReceivedEvent (ReceivedEvents mv) evt=do
-        evts' <-takeMVar mv    
-        putMVar mv (evt : evts')
-        return ()
+        evts' <-takeMVar mv   
+        -- we're getting events in duplicate ???
+        let ns= nubSet (evt : evts')
+        putMVar mv ns
+  where
+    -- | /(n log n)/ Like 'nub', but with better asymptotic complexity.  
+    -- Adapted from <http://hpaste.org/54411> which was found by Google.
+    nubSet :: Ord a => [a] -> [a]
+    nubSet = loop S.empty
+        where
+            loop _    []          = []
+            loop seen (x : xs)
+                | x `S.member` seen = loop seen xs
+                | otherwise         = x : loop (S.insert x seen) xs
 
 -- | start a HTTP server listening on the given port
 -- if the path info is "mphook", then we'll push the received event                        
