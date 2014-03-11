@@ -15,9 +15,9 @@ import Network.Wai.Handler.Warp
 import Network.HTTP.Types (status200)
 import Blaze.ByteString.Builder (copyByteString)
 import Data.Aeson as A
-import Control.Concurrent (forkIO, ThreadId, threadDelay,killThread)
+import Control.Concurrent (forkIO, ThreadId, threadDelay)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
-import Control.Monad (when, void)
+import Control.Monad (when, void, liftM)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Text (Text)
@@ -25,13 +25,10 @@ import Data.List
 import Data.Typeable
 import Control.Applicative
 import Test.HUnit (Assertion)
-import Control.Exception (bracket)
 import Data.Default (def)
 import qualified Data.Set as S
-
--- | file path to test client conf file
-testConfFile :: FilePath
-testConfFile="client.test.conf"
+import Data.IORef 
+import System.IO.Unsafe (unsafePerformIO)
 
 -- | a test card
 testCardInfo1 :: CardInfo
@@ -44,17 +41,28 @@ testMP :: forall b.
             (AccessToken -> MangoPayT (ResourceT IO) b)
             -> IO b
 testMP f= do
-        js<-BS.readFile testConfFile
-        let mcred=decode js
-        assertBool (isJust mcred)
-        let cred=fromJust mcred
-        assertBool (isJust $ cClientSecret cred)
-        let s=fromJust $ cClientSecret cred
-        H.withManager (\mgr->
-          runMangoPayT cred mgr Sandbox (do
-                at<-oauthLogin (cClientID cred) s
-                f at
-                ))
+        ior<-readIORef testState  
+        let mgr=fromJust $ tsManager ior 
+        let at=fromJust $ tsAccessToken ior
+        let cred=fromJust $ tsCredentials ior
+        runResourceT $ runMangoPayT cred mgr Sandbox $ f at
+
+-- | the test state as a top level global variable
+-- <http://www.haskell.org/haskellwiki/Top_level_mutable_state>
+-- since HTF does not let us thread a parameter through tests
+testState :: IORef TestState
+{-# NOINLINE testState #-}
+testState = unsafePerformIO (newIORef $ TestState Nothing Nothing Nothing Nothing Nothing)
+
+-- | the test state we keep over all tests
+data TestState=TestState {
+    tsAccessToken :: Maybe AccessToken -- ^ the access token if we're logged in
+    ,tsCredentials :: Maybe Credentials -- ^ the credentials
+    ,tsManager :: Maybe H.Manager -- ^ the http manager
+    ,tsHookEndPoint :: Maybe HookEndPoint -- ^ the end point for notifications
+    ,tsReceivedEvents :: Maybe ReceivedEvents -- ^ the received events
+  }
+  
 
 -- | read end point information from hook.test.conf in current folder
 getHookEndPoint :: IO HookEndPoint
@@ -111,17 +119,10 @@ testEventTypes' :: [EventType]
   -> IO (Maybe Text)
   -> IO (Maybe Text)
 testEventTypes' evtTs ops=do
-    hook<-getHookEndPoint
-    res<-newReceivedEvents
-    (a,er)<-bracket 
-          (startHTTPServer (hepPort hook) res)
-          killThread
-          (\_->do
-            a<-ops
-            mapM_ (testSearchEvent a) evtTs
-            r<-waitForEvent res (map (testEvent a) evtTs) 5
-            return (a,r)
-          )
+    res<-liftM (fromJust . tsReceivedEvents) $ readIORef testState
+    a<-ops
+    mapM_ (testSearchEvent a) evtTs
+    er<-waitForEvent res (map (testEvent a) evtTs) 5
     assertEqual EventsOK er
     return a
 
@@ -135,27 +136,21 @@ testSearchEvent tid evtT=do
 -- | create a hook for a given event type    
 createHook :: EventType -> Assertion
 createHook evtT= do
-    hook<-getHookEndPoint
+    hook<-liftM (fromJust . tsHookEndPoint) $ readIORef testState
     h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing evtT)
     assertBool (isJust $ hId h)
     h2<-testMP $ fetchHook (fromJust $ hId h)
     assertEqual (hId h) (hId h2)
-    assertEqual (Just Valid) (hValidity h2)
+    assertEqual (Just Valid) (hValidity h)
     
 -- | run a test with the notification server running
 testEvents :: IO a -- ^ the test, returning a value
   -> [a -> Event -> Bool] -- ^ the test on the events, taking into account the returned value
   -> Assertion
 testEvents ops tests=do
-    hook<-getHookEndPoint
-    res<-newReceivedEvents
-    er<-bracket 
-          (startHTTPServer (hepPort hook) res)
-          killThread
-          (\_->do
-            a<-ops
-            waitForEvent res (map ($ a) tests) 30
-          )
+    res<-liftM (fromJust . tsReceivedEvents) $ readIORef testState
+    a<-ops
+    er<-waitForEvent res (map ($ a) tests) 30
     assertEqual EventsOK er
             
 -- | result of waiting for event
