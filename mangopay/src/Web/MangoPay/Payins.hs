@@ -65,35 +65,6 @@ instance FromJSON BankAccount where
                          v .: "BIC" 
         parseJSON _=fail "BankAccount"
    
--- | type of transaction
-data TransactionType = PAY_IN 
-  | PAY_OUT
-  | TRANSFER 
-  deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
-
--- | to json as per MangoPay format
-instance ToJSON TransactionType where
-        toJSON =toJSON . show
-
--- | from json as per MangoPay format
-instance FromJSON TransactionType where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "TransactionType"
-
-data TransactionNature =  REGULAR -- ^ just as you created the object
- | REFUND -- ^ the transaction has been refunded
- | REPUDIATION -- ^ the transaction has been repudiated
-  deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
-
--- | to json as per MangoPay format
-instance ToJSON TransactionNature where
-        toJSON =toJSON . show
-
--- | from json as per MangoPay format
-instance FromJSON TransactionNature where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "TransactionNature"
-
 data PaymentExecution = WEB  -- ^ through a web interface
  | DIRECT -- ^ with a tokenized card
   deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
@@ -111,6 +82,9 @@ instance FromJSON PaymentExecution where
 mkBankWire :: AnyUserID -> AnyUserID -> WalletID -> Amount -> Amount -> BankWire
 mkBankWire aid uid wid amount fees= BankWire Nothing Nothing Nothing aid uid Nothing
   wid Nothing Nothing Nothing amount fees Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+
+-- | bankwire or card pay in
+type AnyPayinID=Text
 
 -- | id of a bankwire
 type BankWireID=Text
@@ -136,7 +110,7 @@ data BankWire=BankWire {
   ,bwStatus  :: Maybe TransferStatus -- ^  The status of the payment
   ,bwResultCode  :: Maybe Text -- ^  The transaction result code
   ,bwResultMessage :: Maybe Text -- ^  The transaction result Message
-  ,bwExecutionDate :: Maybe POSIXTime --   The date when the payment is processed
+  ,bwExecutionDate :: Maybe POSIXTime -- ^ The date when the payment is processed
   ,bwType  :: Maybe TransactionType -- ^  The type of the transaction
   ,bwNature  :: Maybe TransactionNature -- ^  The nature of the transaction:
   ,bwPaymentType :: Maybe Text -- ^  The type of the payment (which type of mean of payment is used).

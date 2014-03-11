@@ -43,10 +43,14 @@ module Web.MangoPay (
         ,Transfer(..)
         ,TransferID
         ,TransferStatus(..)
+        ,Transaction(..)
+        ,TransactionID
+        ,TransactionType(..)
+        ,TransactionNature(..)
         ,createTransfer
         ,fetchTransfer
-        ,listTransfers
-        ,listTransfersForUser
+        ,listTransactions
+        ,listTransactionsForUser
         
         -- Events and Hooks
         ,Event(..)
@@ -74,8 +78,6 @@ module Web.MangoPay (
         -- Payins
         ,BankAccount(..)
         ,PaymentExecution(..)
-        ,TransactionType(..)
-        ,TransactionNature(..)
         ,BankWireID
         ,BankWire(..)
         ,storeBankWire
@@ -92,10 +94,21 @@ module Web.MangoPay (
         ,CardRegistrationID
         ,CardID
         ,CardInfo(..)
+        ,Card(..)
+        ,CardValidity(..)
         ,mkCardRegistration
         ,storeCardRegistration
         ,registerCard
         ,fullRegistration
+        ,fetchCard
+        
+        -- Refunds
+        ,RefundID
+        ,Refund(..)
+        ,RefundRequest(..)
+        ,refundTransfer
+        ,refundPayin
+        ,fetchRefund
 )
 where
 
@@ -105,6 +118,7 @@ import Web.MangoPay.Documents
 import Web.MangoPay.Events
 import Web.MangoPay.Monad
 import Web.MangoPay.Payins
+import Web.MangoPay.Refunds
 import Web.MangoPay.Users
 import Web.MangoPay.Types
 import Web.MangoPay.Wallets

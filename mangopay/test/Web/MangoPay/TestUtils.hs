@@ -4,7 +4,7 @@ module Web.MangoPay.TestUtils where
 
 import Web.MangoPay
 
-import Data.ByteString.Lazy as BS hiding (map)
+import Data.ByteString.Lazy as BS hiding (map,any,null)
 import Network.HTTP.Conduit as H
 import Data.Conduit
 import Data.Maybe
@@ -15,9 +15,9 @@ import Network.Wai.Handler.Warp
 import Network.HTTP.Types (status200)
 import Blaze.ByteString.Builder (copyByteString)
 import Data.Aeson as A
-import Control.Concurrent (forkIO, ThreadId, threadDelay,killThread)
+import Control.Concurrent (forkIO, ThreadId, threadDelay)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
-import Control.Monad (when)
+import Control.Monad (when, void, liftM)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Text (Text)
@@ -25,11 +25,9 @@ import Data.List
 import Data.Typeable
 import Control.Applicative
 import Test.HUnit (Assertion)
-import Control.Exception (bracket)
-
--- | file path to test client conf file
-testConfFile :: FilePath
-testConfFile="client.test.conf"
+import Data.Default (def)
+import Data.IORef 
+import System.IO.Unsafe (unsafePerformIO)
 
 -- | a test card
 testCardInfo1 :: CardInfo
@@ -42,17 +40,30 @@ testMP :: forall b.
             (AccessToken -> MangoPayT (ResourceT IO) b)
             -> IO b
 testMP f= do
-        js<-BS.readFile testConfFile
-        let mcred=decode js
-        assertBool (isJust mcred)
-        let cred=fromJust mcred
-        assertBool (isJust $ cClientSecret cred)
-        let s=fromJust $ cClientSecret cred
-        H.withManager (\mgr->
-          runMangoPayT cred mgr Sandbox (do
-                at<-oauthLogin (cClientID cred) s
-                f at
-                ))
+        ior<-readIORef testState  
+        let mgr=tsManager ior 
+        let at=tsAccessToken ior
+        let cred=tsCredentials ior
+        runResourceT $ runMangoPayT cred mgr Sandbox $ f at
+
+-- | the test state as a top level global variable
+-- <http://www.haskell.org/haskellwiki/Top_level_mutable_state>
+-- since HTF does not let us thread a parameter through tests
+testState :: IORef TestState
+{-# NOINLINE testState #-}
+testState = unsafePerformIO (newIORef $ TestState zero zero zero zero zero)
+  where zero=error "testState has not been initialized yet"
+
+
+-- | the test state we keep over all tests
+data TestState=TestState {
+    tsAccessToken :: AccessToken -- ^ the access token if we're logged in
+    ,tsCredentials :: Credentials -- ^ the credentials
+    ,tsManager :: H.Manager -- ^ the http manager
+    ,tsHookEndPoint :: HookEndPoint -- ^ the end point for notifications
+    ,tsReceivedEvents :: ReceivedEvents -- ^ the received events
+  }
+  
 
 -- | read end point information from hook.test.conf in current folder
 getHookEndPoint :: IO HookEndPoint
@@ -92,25 +103,55 @@ newReceivedEvents=do
         mv<-newMVar []          
         return $ ReceivedEvents mv
 
--- | test an event, checking the event type, and resource id
-testEvent :: EventType -> Maybe Text -> Event -> Bool
-testEvent et tid evt= tid == (Just $ eResourceId evt) 
+-- | test an event, checking the resource id and the event type
+testEvent :: Maybe Text -> EventType -> Event -> Bool
+testEvent tid et evt= tid == (Just $ eResourceId evt) 
         && et == eEventType evt
 
+-- | check that we're receiving events of the given type with the resource id returned by the passed test
+testEventTypes :: [EventType] 
+  -> IO (Maybe Text)
+  -> Assertion
+testEventTypes evtTs =void . testEventTypes' evtTs 
+
+-- | check that we're receiving events of the given type with the resource id returned by the passed test
+-- returns the result of the inner test
+testEventTypes' :: [EventType] 
+  -> IO (Maybe Text)
+  -> IO (Maybe Text)
+testEventTypes' evtTs ops=do
+    res<-liftM tsReceivedEvents $ readIORef testState
+    a<-ops
+    mapM_ (testSearchEvent a) evtTs
+    er<-waitForEvent res (map (testEvent a) evtTs) 5
+    assertEqual EventsOK er
+    return a
+
+-- | assert that we find an event for the given resource id and event type
+testSearchEvent :: Maybe Text -> EventType -> Assertion
+testSearchEvent tid evtT=do
+  es<-testMP $ searchEvents (def{espEventType=Just evtT})
+  assertBool (not $ null es)
+  assertBool (any ((tid ==) . Just . eResourceId) es)
+
+-- | create a hook for a given event type    
+createHook :: EventType -> Assertion
+createHook evtT= do
+    hook<-liftM tsHookEndPoint $ readIORef testState
+    h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing evtT)
+    assertBool (isJust $ hId h)
+    h2<-testMP $ fetchHook (fromJust $ hId h)
+    assertEqual (hId h) (hId h2)
+    assertEqual (Just Valid) (hValidity h)
+    
 -- | run a test with the notification server running
-checkEvents :: IO a -- ^ the test, returning a value
+testEvents :: IO a -- ^ the test, returning a value
   -> [a -> Event -> Bool] -- ^ the test on the events, taking into account the returned value
   -> Assertion
-checkEvents ops tests=do
-    hook<-getHookEndPoint
-    res<-newReceivedEvents
-    er<-bracket 
-          (startHTTPServer (hepPort hook) res)
-          killThread
-          (\_->do
-            a<-ops
-            waitForEvent res (map ($ a) tests) 30
-          )
+testEvents ops tests=do
+    res<-liftM tsReceivedEvents $ readIORef testState
+    a<-ops
+    er<-waitForEvent res (map ($ a) tests) 30
     assertEqual EventsOK er
             
 -- | result of waiting for event
@@ -130,18 +171,16 @@ waitForEvent rc fs del=do
         mevt<-popReceivedEvent rc
         case (mevt,fs) of
           (Nothing,[])->return EventsOK -- nothing left to process
-          (Just (Left er),_)->return er -- some notification we didn't understant
+          (Just (Left er),_)->return er -- some notification we didn't understand
           (Just (Right evt),[])->return $ ExtraEvent evt -- an event that doesn't match
           (Nothing,_)->do -- no event yet
              threadDelay 1000000
              waitForEvent rc fs (del-1)
           (Just (Right evt),_)-> -- an event, does it match
                 case Data.List.foldl' (match1 evt) ([],False) fs of
-                  ([],True)->return EventsOK -- match, nothing else to do
                   (_,False)->return $ ExtraEvent evt -- doesn't match
-                  (fs2,_)-> do -- matched, more to do
-                        threadDelay 1000000
-                        waitForEvent rc fs2 (del-1)
+                  (fs2,_)-> waitForEvent rc fs2 del -- matched, either we have more to do or we need to check no unexpected event was found
+                       
   where 
     -- | match the first event function and return all the non matching function, and a flag indicating if we matched
     match1 :: Event -> ([Event -> Bool],Bool) -> (Event -> Bool) -> ([Event -> Bool],Bool)
@@ -172,9 +211,10 @@ popReceivedEvents (ReceivedEvents mv)=do
 -- | add a new event
 pushReceivedEvent :: ReceivedEvents -> Either EventResult Event -> IO ()
 pushReceivedEvent (ReceivedEvents mv) evt=do
-        evts' <-takeMVar mv    
-        putMVar mv (evt : evts')
-        return ()
+        evts' <-takeMVar mv   
+        -- we're getting events in duplicate ???
+        let ns = if evt `Prelude.elem` evts' then evts' else evt:evts'
+        putMVar mv ns
 
 -- | start a HTTP server listening on the given port
 -- if the path info is "mphook", then we'll push the received event                        

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards #-}
 -- | handle wallets
 module Web.MangoPay.Wallets where
 
@@ -57,15 +57,15 @@ fetchTransfer wid at=do
         getJSONResponse req         
 
 -- | list transfers for a given wallet 
-listTransfers ::  (MonadBaseControl IO m, MonadResource m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m [Transfer]
-listTransfers wid mp at=do
+listTransactions ::  (MonadBaseControl IO m, MonadResource m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m [Transaction]
+listTransactions wid mp at=do
         url<-getClientURLMultiple ["/wallets/",wid,"/transactions"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
         getJSONResponse req 
 
 -- | list transfer for a given user
-listTransfersForUser ::  (MonadBaseControl IO m, MonadResource m) =>  AnyUserID  -> Maybe Pagination -> AccessToken -> MangoPayT m [Transfer]
-listTransfersForUser uid mp at=do
+listTransactionsForUser ::  (MonadBaseControl IO m, MonadResource m) =>  AnyUserID  -> Maybe Pagination -> AccessToken -> MangoPayT m [Transaction]
+listTransactionsForUser uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/transactions"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
         getJSONResponse req 
@@ -73,7 +73,7 @@ listTransfersForUser uid mp at=do
 -- | currency amount 
 data Amount=Amount {
         bCurrency :: Currency
-        ,bAmount :: Double -- ^ all examples show integer values but let's accept doubles for now
+        ,bAmount :: Integer -- ^ all amounts should be in cents!
         }
         deriving (Show,Read,Eq,Ord,Typeable)
  
@@ -170,7 +170,7 @@ instance FromJSON Transfer where
         parseJSON (Object v) =Transfer <$>
                          v .: "Id" <*>
                          v .: "CreationDate" <*>
-                         v .: "Tag" <*>
+                         v .:? "Tag" <*>
                          v .: "AuthorId" <*>
                          v .: "CreditedUserId" <*>
                          v .: "DebitedFunds" <*>
@@ -183,4 +183,85 @@ instance FromJSON Transfer where
                          v .:? "ResultMessage" <*>
                          v .:? "ExecutionDate" 
         parseJSON _=fail "Transfer"   
+        
+-- | type of transaction
+data TransactionType = PAYIN 
+  | PAYOUT
+  | TRANSFER 
+  deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
+
+-- | to json as per MangoPay format
+instance ToJSON TransactionType where
+        toJSON =toJSON . show
+
+-- | from json as per MangoPay format
+instance FromJSON TransactionType where
+        parseJSON (String s)
+          | ((a,_):_)<-reads $ unpack s=pure a
+        parseJSON _ =fail "TransactionType"
+
+data TransactionNature =  REGULAR -- ^ just as you created the object
+ | REFUND -- ^ the transaction has been refunded
+ | REPUDIATION -- ^ the transaction has been repudiated
+  deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
+
+-- | to json as per MangoPay format
+instance ToJSON TransactionNature where
+        toJSON =toJSON . show
+
+-- | from json as per MangoPay format
+instance FromJSON TransactionNature where
+        parseJSON (String s)
+          | ((a,_):_)<-reads $ unpack s=pure a
+        parseJSON _ =fail "TransactionNature"
     
+      
+type TransactionID = Text
+    
+-- | any transaction
+data Transaction = Transaction{
+        txId :: Maybe TransactionID -- ^ Id of the transfer
+        ,txCreationDate    :: Maybe POSIXTime -- ^  The creation date of the object
+        ,txTag     :: Maybe Text -- ^   Custom data
+        ,txAuthorId :: AnyUserID -- ^ The Id of the author
+        ,txCreditedUserId  :: Maybe AnyUserID -- ^ The Id of the user owner of the credited wallet
+        ,txDebitedFunds :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,txFees  :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,txDebitedWalletID :: Maybe WalletID -- ^  The debited wallet (where the funds are held before the transfer)
+        ,txCreditedWalletID:: Maybe WalletID -- ^ The credited wallet (where the funds will be held after the transfer)
+        ,txCreditedFunds :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,txStatus  :: Maybe TransferStatus -- ^   The status of the transfer:
+        ,txResultCode      :: Maybe Text -- ^   The transaction result code
+        ,txResultMessage   :: Maybe Text -- ^   The transaction result message
+        ,txExecutionDate   :: Maybe POSIXTime -- ^  The execution date of the transfer
+        ,txType  :: TransactionType -- ^  The type of the transaction
+        ,txNature  :: TransactionNature -- ^  The nature of the transaction:
+        }
+        deriving (Show,Eq,Ord,Typeable)
+        
+-- | to json as per MangoPay format
+instance ToJSON Transaction  where
+    toJSON t=object ["AuthorId" .= txAuthorId t,"CreditedUserId" .= txCreditedUserId t,"DebitedFunds" .= txDebitedFunds t,
+        "Fees" .= txFees t,"DebitedWalletID" .= txDebitedWalletID t,"CreditedWalletID" .= txCreditedWalletID t,
+        "Tag" .= txTag t,"Type" .= txType t,"Nature" .= txNature t]
+    
+ -- | from json as per MangoPay format 
+instance FromJSON Transaction where
+        parseJSON (Object v) =Transaction <$>
+                         v .: "Id" <*>
+                         v .: "CreationDate" <*>
+                         v .:? "Tag" <*>
+                         v .: "AuthorId" <*>
+                         v .: "CreditedUserId" <*>
+                         v .: "DebitedFunds" <*>
+                         v .: "Fees" <*>
+                         v .:? "DebitedWalletId" <*> -- yes, it's ID one way, Id the other
+                         v .:? "CreditedWalletId" <*> -- yes, it's ID one way, Id the other
+                         v .:? "CreditedFunds" <*>
+                         v .:? "Status" <*>
+                         v .:? "ResultCode" <*>
+                         v .:? "ResultMessage" <*>
+                         v .:? "ExecutionDate" <*>
+                         v .: "Type"  <*>
+                         v .: "Nature" 
+        parseJSON _=fail "Transfer"   
