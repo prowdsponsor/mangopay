@@ -19,12 +19,15 @@ test_BankWire=do
   let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing 
   w2<-testMP $ storeWallet w
   assertBool (isJust $ wId w2)
-  let bw1=mkBankWire uid uid (fromJust $ wId w2) (Amount "EUR" 100) (Amount "EUR" 1)
-  bw2<-testMP $ storeBankWire bw1
-  assertBool (isJust $ bwId bw2)
-  assertBool (isJust $ bwBankAccount bw2)
-  bw3<-testMP $ fetchBankWire (fromJust $ bwId bw2)
-  assertEqual (bwId bw2) (bwId bw3)
+  -- bank wire does not succeed since the real transfer needs to be performed afterwards
+  testEventTypes [PAYIN_NORMAL_CREATED] $ do
+    let bw1=mkBankWire uid uid (fromJust $ wId w2) (Amount "EUR" 100) (Amount "EUR" 1)
+    bw2<-testMP $ storeBankWire bw1
+    assertBool (isJust $ bwId bw2)
+    assertBool (isJust $ bwBankAccount bw2)
+    bw3<-testMP $ fetchBankWire (fromJust $ bwId bw2)
+    assertEqual (bwId bw2) (bwId bw3)
+    return $ bwId bw2
  
 -- | test a successful card pay in
 test_CardOK :: Assertion
