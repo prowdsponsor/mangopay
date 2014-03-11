@@ -27,7 +27,7 @@ main = H.withManager (\mgr->liftIO $ do
     hook<-getHookEndPoint
     res<-newReceivedEvents
     -- initial state
-    modifyIORef testState (\ts->ts{tsManager=Just mgr,tsHookEndPoint=Just hook,tsReceivedEvents=Just res})
+    modifyIORef testState (\ts->ts{tsManager=mgr,tsHookEndPoint=hook,tsReceivedEvents=res})
     bracket 
           (startHTTPServer (hepPort hook) res)
           killThread

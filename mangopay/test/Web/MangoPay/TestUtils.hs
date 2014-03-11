@@ -41,9 +41,9 @@ testMP :: forall b.
             -> IO b
 testMP f= do
         ior<-readIORef testState  
-        let mgr=fromJust $ tsManager ior 
-        let at=fromJust $ tsAccessToken ior
-        let cred=fromJust $ tsCredentials ior
+        let mgr=tsManager ior 
+        let at=tsAccessToken ior
+        let cred=tsCredentials ior
         runResourceT $ runMangoPayT cred mgr Sandbox $ f at
 
 -- | the test state as a top level global variable
@@ -51,15 +51,17 @@ testMP f= do
 -- since HTF does not let us thread a parameter through tests
 testState :: IORef TestState
 {-# NOINLINE testState #-}
-testState = unsafePerformIO (newIORef $ TestState Nothing Nothing Nothing Nothing Nothing)
+testState = unsafePerformIO (newIORef $ TestState zero zero zero zero zero)
+  where zero=error "testState has not been initialized yet"
+
 
 -- | the test state we keep over all tests
 data TestState=TestState {
-    tsAccessToken :: Maybe AccessToken -- ^ the access token if we're logged in
-    ,tsCredentials :: Maybe Credentials -- ^ the credentials
-    ,tsManager :: Maybe H.Manager -- ^ the http manager
-    ,tsHookEndPoint :: Maybe HookEndPoint -- ^ the end point for notifications
-    ,tsReceivedEvents :: Maybe ReceivedEvents -- ^ the received events
+    tsAccessToken :: AccessToken -- ^ the access token if we're logged in
+    ,tsCredentials :: Credentials -- ^ the credentials
+    ,tsManager :: H.Manager -- ^ the http manager
+    ,tsHookEndPoint :: HookEndPoint -- ^ the end point for notifications
+    ,tsReceivedEvents :: ReceivedEvents -- ^ the received events
   }
   
 
@@ -118,7 +120,7 @@ testEventTypes' :: [EventType]
   -> IO (Maybe Text)
   -> IO (Maybe Text)
 testEventTypes' evtTs ops=do
-    res<-liftM (fromJust . tsReceivedEvents) $ readIORef testState
+    res<-liftM tsReceivedEvents $ readIORef testState
     a<-ops
     mapM_ (testSearchEvent a) evtTs
     er<-waitForEvent res (map (testEvent a) evtTs) 5
@@ -135,7 +137,7 @@ testSearchEvent tid evtT=do
 -- | create a hook for a given event type    
 createHook :: EventType -> Assertion
 createHook evtT= do
-    hook<-liftM (fromJust . tsHookEndPoint) $ readIORef testState
+    hook<-liftM tsHookEndPoint $ readIORef testState
     h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing evtT)
     assertBool (isJust $ hId h)
     h2<-testMP $ fetchHook (fromJust $ hId h)
@@ -147,7 +149,7 @@ testEvents :: IO a -- ^ the test, returning a value
   -> [a -> Event -> Bool] -- ^ the test on the events, taking into account the returned value
   -> Assertion
 testEvents ops tests=do
-    res<-liftM (fromJust . tsReceivedEvents) $ readIORef testState
+    res<-liftM tsReceivedEvents $ readIORef testState
     a<-ops
     er<-waitForEvent res (map ($ a) tests) 30
     assertEqual EventsOK er

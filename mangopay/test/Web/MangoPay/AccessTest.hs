@@ -34,7 +34,7 @@ test_CreateCredentials=do
        let newCreds=creds{cClientSecret=Nothing,
                 cClientID=T.append (cClientID creds) suff,
                 cName=T.append (cName creds) suff}
-       mgr<-liftM (fromJust . tsManager) $ readIORef testState         
+       mgr<-liftM tsManager $ readIORef testState         
        creds2<-runResourceT $ runMangoPayT newCreds mgr Sandbox createCredentialsSecret
        assertBool (isJust $ cClientSecret  creds2)   
        let s=fromJust $ cClientSecret creds2
@@ -42,6 +42,6 @@ test_CreateCredentials=do
        at<-runResourceT $ runMangoPayT creds2 mgr Sandbox $
                 oauthLogin (cClientID creds2) s    
        -- store access token and credentials         
-       modifyIORef testState (\ts->ts{tsAccessToken=Just at,tsCredentials=Just creds2})
+       modifyIORef testState (\ts->ts{tsAccessToken=at,tsCredentials=creds2})
        -- create hooks for all event types
        mapM_ createHook [minBound .. maxBound]
