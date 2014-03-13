@@ -39,7 +39,6 @@ library
      , lifted-base
      , unordered-containers
      , base16-bytestring
-     , primitive == 0.5.1.0
      , utf8-string >=0.3.7 && <0.4
      , base64-bytestring >=1.0.0 && <1.1
   ghc-options:      -Wall
