@@ -75,8 +75,16 @@ module Web.MangoPay (
         ,fetchDocument
         ,storePage
         
-        -- Payins
+        -- Accounts
         ,BankAccount(..)
+        ,BankAccountID
+        ,BankAccountDetails(..)
+        ,PaymentType(..)
+        ,storeAccount
+        ,fetchAccount
+        ,listAccounts
+        
+        -- Payins
         ,PaymentExecution(..)
         ,BankWireID
         ,BankWire(..)
@@ -88,6 +96,13 @@ module Web.MangoPay (
         ,storeCardPayin
         ,fetchCardPayin
         ,mkCardPayin
+        
+        -- Payouts
+        ,PayoutID
+        ,Payout(..)
+        ,mkPayout
+        ,storePayout
+        ,fetchPayout
                 
         -- Cards
         ,CardRegistration(..)
@@ -113,11 +128,13 @@ module Web.MangoPay (
 where
 
 import Web.MangoPay.Access
+import Web.MangoPay.Accounts
 import Web.MangoPay.Cards
 import Web.MangoPay.Documents
 import Web.MangoPay.Events
 import Web.MangoPay.Monad
 import Web.MangoPay.Payins
+import Web.MangoPay.Payouts
 import Web.MangoPay.Refunds
 import Web.MangoPay.Users
 import Web.MangoPay.Types

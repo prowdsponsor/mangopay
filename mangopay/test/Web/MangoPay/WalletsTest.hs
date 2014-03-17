@@ -38,9 +38,9 @@ test_FailedTransfer = do
         assertEqual 2 (length us)
         let [uid1,uid2] = map urId us
         assertBool (uid1 /= uid2)
-        let w1=Wallet Nothing Nothing (Just "custom") [uid1] "my wallet" "EUR" Nothing 
-        w1'<-testMP $ storeWallet w1
-        let uw1=fromJust $ wId w1'
+        ws<- testMP $ listWallets uid1 Nothing
+        assertBool $ not $ null ws
+        let uw1=fromJust $ wId $ head ws 
         let w2=Wallet Nothing Nothing (Just "custom") [uid2] "my wallet" "EUR" Nothing 
         w2'<-testMP $ storeWallet w2
         let uw2=fromJust $ wId w2'
@@ -69,9 +69,9 @@ test_SuccessfulTransfer = do
         assertEqual 2 (length us)
         let [uid1,uid2] = map urId us
         assertBool (uid1 /= uid2)
-        let w1=Wallet Nothing Nothing (Just "custom") [uid1] "my wallet" "EUR" Nothing 
-        w1'<-testMP $ storeWallet w1
-        let uw1=fromJust $ wId w1'
+        ws<- testMP $ listWallets uid1 Nothing
+        assertBool $ not $ null ws
+        let uw1=fromJust $ wId $ head ws 
         let w2=Wallet Nothing Nothing (Just "custom") [uid2] "my wallet" "EUR" Nothing 
         w2'<-testMP $ storeWallet w2
         let uw2=fromJust $ wId w2'

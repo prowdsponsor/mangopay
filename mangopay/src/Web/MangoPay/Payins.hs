@@ -2,6 +2,7 @@
 -- | handle payins
 module Web.MangoPay.Payins where
 
+import Web.MangoPay.Accounts
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
@@ -40,30 +41,6 @@ fetchCardPayin cpid at=do
         url<-getClientURLMultiple ["/payins/",cpid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req   
-     
--- | bank account details
-data BankAccount = BankAccount {
-  baType :: Text
-  ,baOwnerName :: Text
-  ,baOwnerAddress :: Maybe Text
-  ,baIBAN :: Text
-  ,baBIC :: Text
-} deriving (Show,Read,Eq,Ord,Typeable)
-
--- | to json as per MangoPay format        
-instance ToJSON BankAccount where
-        toJSON ba=object ["Type" .= baType ba,"OwnerName" .= baOwnerName ba
-          ,"OwnerAddress" .= baOwnerAddress ba,"IBAN" .= baIBAN ba,"BIC" .= baBIC ba]
-
--- | from json as per MangoPay format 
-instance FromJSON BankAccount where
-        parseJSON (Object v) =BankAccount <$>
-                         v .: "Type" <*>
-                         v .: "OwnerName" <*>
-                         v .:? "OwnerAddress" <*>
-                         v .: "IBAN" <*>
-                         v .: "BIC" 
-        parseJSON _=fail "BankAccount"
    
 data PaymentExecution = WEB  -- ^ through a web interface
  | DIRECT -- ^ with a tokenized card
@@ -113,7 +90,7 @@ data BankWire=BankWire {
   ,bwExecutionDate :: Maybe POSIXTime -- ^ The date when the payment is processed
   ,bwType  :: Maybe TransactionType -- ^  The type of the transaction
   ,bwNature  :: Maybe TransactionNature -- ^  The nature of the transaction:
-  ,bwPaymentType :: Maybe Text -- ^  The type of the payment (which type of mean of payment is used).
+  ,bwPaymentType :: Maybe PaymentType -- ^  The type of the payment (which type of mean of payment is used).
   ,bwExecutionType :: Maybe PaymentExecution -- ^  How the payment has been executed:
   } deriving (Show,Eq,Ord,Typeable)
 
