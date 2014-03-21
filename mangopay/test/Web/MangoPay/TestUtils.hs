@@ -230,5 +230,5 @@ startHTTPServer p revts=
                                 pushReceivedEvent revts $ Right evt
                                 print evt
                             Nothing->pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
-                return $ ResponseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
+                return $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
                 
