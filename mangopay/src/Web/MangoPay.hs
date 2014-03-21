@@ -68,6 +68,7 @@ module Web.MangoPay (
         ,fetchHook
         ,listHooks
         ,eventFromQueryString
+        ,eventFromQueryStringT
         
         -- Documents and pages
         ,Document(..)

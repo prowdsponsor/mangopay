@@ -145,6 +145,21 @@ eventFromQueryString q=do
     maybeRead :: Read a => String -> Maybe a
     maybeRead = fmap fst . listToMaybe . reads                  
 
+-- | parse an event from the query string represented as Text
+-- the MangoPay is not very clear on notifications, but see v1 <http://docs.mangopay.com/v1-api-references/notifications/>
+-- v2 works the same, the event is passed via parameters of the query string   
+eventFromQueryStringT :: [(Text, Text)] -> Maybe Event
+eventFromQueryStringT q=do
+  rid<- get "RessourceId" -- yes, two ss here
+  et<-join $ fmap (maybeRead . unpack) $ get "EventType"
+  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). unpack) $ get "Date"
+  return $ Event rid et d
+  where
+    get :: Text -> Maybe Text
+    get n=listToMaybe $ Prelude.map snd $ filter ((n==) . fst) q
+    maybeRead :: Read a => String -> Maybe a
+    maybeRead = fmap fst . listToMaybe . reads     
+
 -- | status of notification hook                       
 data HookStatus=Enabled | Disabled
        deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
