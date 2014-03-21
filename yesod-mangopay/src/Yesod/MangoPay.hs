@@ -7,8 +7,8 @@ import Web.MangoPay
 import qualified Yesod.Core as Y
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime, addUTCTime)
-import Network.HTTP.Types (internalServerError500)
-import Data.Text (Text)
+--import Data.Text (Text)
+import Data.IORef (IORef, readIORef, writeIORef)
 
 -- | The 'YesodMangoPay' class for foundation datatypes that
 -- support running 'MangoPayT' actions.
@@ -23,26 +23,21 @@ class Y.Yesod site => YesodMangoPay site where
   -- | Use MangoPay's sandbox if @True@.  The default is @True@ for safety.
   mpUseSandbox :: site -> Bool
   mpUseSandbox _ = True
+  
+  -- | store the saved access token if we have one
+  mpToken :: site -> IORef (Maybe MangoPayToken)
 
   
--- | Run a 'MangoPayT' action inside a 'Y.GHandler' using your
--- credentials and a newly created access token.
+-- | Run a 'MangoPayT' action inside a 'Y.GHandler' using your credentials.
 runYesodMPT ::
   (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
-  (AccessToken -> MangoPayT m a) -> m a
+  MangoPayT m a -> m a
 runYesodMPT act = do
   site <- Y.getYesod
   let creds   = mpCredentials site
-      msecret  = cClientSecret creds
       manager = mpHttpManager site
       apoint  = if mpUseSandbox site then Sandbox else Production
-  case msecret of
-    Nothing -> Y.sendResponseStatus internalServerError500 ("No secret provided"::Text)
-    Just secret-> do
-      oat<-runMangoPayT creds manager apoint $
-              oauthLogin (cClientID creds) secret   
-      runMangoPayT creds manager apoint (act $ toAccessToken oat)
-  
+  runMangoPayT creds manager apoint act
 
 -- | the MangoPay access token, valid for a certain time only
 data MangoPayToken=MangoPayToken {
@@ -56,15 +51,10 @@ isTokenValid mpt=do
   ct<-Y.liftIO getCurrentTime
   return $ diffUTCTime (mptExpires mpt) ct > 0
  
--- | a class allowing storing the token  
-class YesodMangoPay site => YesodMangoPayTokenHandler site where
-  getToken :: (Y.MonadResource m) => site -> m (Maybe MangoPayToken)
-  setToken :: (Y.MonadResource m) => site -> MangoPayToken -> m ()
-
 -- | get the currently stored token if we have one and it's valid, or Nothing otherwise
-getTokenIfValid ::   (YesodMangoPayTokenHandler site,Y.MonadResource m) => site -> m (Maybe MangoPayToken)
+getTokenIfValid ::   (YesodMangoPay site,Y.MonadResource m) => site -> m (Maybe MangoPayToken)
 getTokenIfValid site=do
-  mt<-getToken site
+  mt<-Y.liftIO $ readIORef $ mpToken site
   case mt of
     Nothing-> return Nothing
     Just t->do
@@ -72,7 +62,7 @@ getTokenIfValid site=do
       return $ if v then Just t else Nothing
 
 -- | get a valid token, which could be one we had from before, or a new one
-getValidToken ::  (YesodMangoPayTokenHandler site,Y.MonadBaseControl IO m,Y.MonadResource m) => site -> m (Maybe AccessToken)
+getValidToken ::  (YesodMangoPay site,Y.MonadBaseControl IO m,Y.MonadResource m) => site -> m (Maybe AccessToken)
 getValidToken site=do
   mt<-getTokenIfValid site
   case mt of
@@ -83,7 +73,7 @@ getValidToken site=do
           manager = mpHttpManager site
           apoint  = if mpUseSandbox site then Sandbox else Production
       case msecret of
-        Nothing -> return Nothing
+        Nothing -> fail "getValidToken: You need to provide the cClientSecret on the mpCredentials."
         Just secret-> do
           oat<-runMangoPayT creds manager apoint $
                   oauthLogin (cClientID creds) secret   
@@ -91,20 +81,33 @@ getValidToken site=do
           -- oaExpires is in second, remove one minute for safety
           let expires=addUTCTime (fromIntegral (oaExpires oat - 60)) ct
           let at=toAccessToken oat
-          setToken site (MangoPayToken at expires)
+          Y.liftIO $ writeIORef (mpToken site) (Just $ MangoPayToken at expires)
           return $ Just at
           
 -- | same as 'runYesodMPT': runs a MangoPayT computation, but tries to reuse the current token if valid
 runYesodMPTToken ::
-  (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPayTokenHandler site) =>
+  (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   (AccessToken -> MangoPayT m a) -> m a
 runYesodMPTToken act = do
   site <- Y.getYesod
-  let creds   = mpCredentials site
-      manager = mpHttpManager site
-      apoint  = if mpUseSandbox site then Sandbox else Production
   vt<-getValidToken site
   case vt of
-    Nothing -> Y.sendResponseStatus internalServerError500 ("Could not obtain access token"::Text)
-    Just ac-> runMangoPayT creds manager apoint $ act ac
+    Nothing -> fail "runYesodMPTToken: Could not obtain access token."
+    Just ac-> runYesodMPT $ act ac
+
+--registerMPCallback :: (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPayTokenHandler site) =>
+--  Route -> EventType -> Maybe Text -> (AccessToken -> MangoPayT m Hook)
+--registerMPCallback rt et mtag=let
+--  (url,_)=renderRoute rt
+--  h=Hook Nothing Nothing mtag url Enabled Nothing et 
+--  return $ storeHook h
     
+-- | parse a event from a notification callback    
+parseMPNotification :: (Y.MonadHandler m, Y.HandlerSite m ~ site, YesodMangoPay site) => m Event
+parseMPNotification = do
+  req<-Y.getRequest
+  let mevt=eventFromQueryStringT $ Y.reqGetParams req
+  case mevt of
+    Just evt->return evt
+    Nothing->fail "parseMPNotification: could not parse Event"
+  

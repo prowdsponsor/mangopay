@@ -27,7 +27,7 @@ data App = App
     , getStatic :: Static -- ^ Settings for static file serving.
     , httpManager :: Manager
     , appLogger :: Logger
-    , mpToken :: IORef (Maybe MangoPayToken) -- ^ the currently valid access token, if any
+    , appToken :: IORef (Maybe MangoPayToken) -- ^ the currently valid access token, if any
     }
 
 -- Set up i18n messages. See the message folder.
@@ -135,8 +135,6 @@ instance YesodMangoPay App where
     in Credentials (mpID extra) (mpName extra) (mpEmail extra) (Just $ mpSecret extra)
   mpHttpManager=httpManager
   mpUseSandbox=mpSandbox . appExtra . settings
- 
-instance YesodMangoPayTokenHandler App where
-  getToken=liftIO . readIORef . mpToken
-  setToken app tok=liftIO $ writeIORef (mpToken app) (Just tok)
+  mpToken=appToken
+
   
