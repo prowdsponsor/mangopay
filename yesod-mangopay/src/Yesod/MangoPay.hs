@@ -1,0 +1,2 @@
+module Yesod.MangoPay where
+
