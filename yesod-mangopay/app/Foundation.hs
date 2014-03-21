@@ -16,7 +16,7 @@ import Yesod.Core.Types (Logger)
 
 import Yesod.MangoPay
 import Web.MangoPay
-import Data.IORef (IORef, readIORef, writeIORef)
+import Data.IORef (IORef)
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -28,6 +28,7 @@ data App = App
     , httpManager :: Manager
     , appLogger :: Logger
     , appToken :: IORef (Maybe MangoPayToken) -- ^ the currently valid access token, if any
+    , appEvents :: IORef [Event] -- ^ the received events, for the moment stored into a list
     }
 
 -- Set up i18n messages. See the message folder.
@@ -83,7 +84,7 @@ instance Yesod App where
                 , css_bootstrap_css
                 ])
             $(widgetFile "default-layout")
-        hamletToRepHtml $(hamletFile "templates/default-layout-wrapper.hamlet")
+        giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticRoot setting in Settings.hs

@@ -4,3 +4,5 @@
 /robots.txt RobotsR GET
 
 / HomeR GET
+/mphook MPHookR GET
+/events MPEventsR GET

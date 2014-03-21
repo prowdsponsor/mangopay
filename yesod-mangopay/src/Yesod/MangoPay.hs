@@ -7,8 +7,11 @@ import Web.MangoPay
 import qualified Yesod.Core as Y
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime, addUTCTime)
---import Data.Text (Text)
+import Data.Text (Text)
 import Data.IORef (IORef, readIORef, writeIORef)
+
+import qualified Data.Set as S
+import Control.Monad (void)
 
 -- | The 'YesodMangoPay' class for foundation datatypes that
 -- support running 'MangoPayT' actions.
@@ -95,12 +98,34 @@ runYesodMPTToken act = do
     Nothing -> fail "runYesodMPTToken: Could not obtain access token."
     Just ac-> runYesodMPT $ act ac
 
---registerMPCallback :: (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPayTokenHandler site) =>
---  Route -> EventType -> Maybe Text -> (AccessToken -> MangoPayT m Hook)
---registerMPCallback rt et mtag=let
---  (url,_)=renderRoute rt
---  h=Hook Nothing Nothing mtag url Enabled Nothing et 
---  return $ storeHook h
+
+-- | register callbacks for each event type on the same url
+-- we try to not duplicate the callbacks by checking first if they already exists
+registerAllMPCallbacks ::  (Y.MonadHandler m,Y.MonadBaseControl IO m,Y.HandlerSite m ~ site, YesodMangoPay site) =>
+  Y.Route (Y.HandlerSite m)-> m ()
+registerAllMPCallbacks rt=do
+  render<-Y.getUrlRender
+  let url=render rt
+  runYesodMPTToken $ \at-> do
+    hooks<-listHooks (Just $ Pagination 1 100) at
+    let existing=foldr (\h s->S.insert (hUrl h,hEventType h) s) S.empty hooks
+    mapM_ (registerIfAbsent url at existing) [minBound..maxBound]
+  where
+    registerIfAbsent url at existing evt
+      | S.member (url,evt) existing=return ()
+      | otherwise = do
+        let h=Hook Nothing Nothing Nothing url Enabled Nothing evt 
+        Y.liftIO $ print h
+        void $ storeHook h at
+
+
+-- | register a call back using the given route
+registerMPCallback :: (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
+  Y.Route (Y.HandlerSite m)-> EventType -> Maybe Text -> m (AccessToken -> MangoPayT m Hook)
+registerMPCallback rt et mtag=do
+  render<-Y.getUrlRender
+  let h=Hook Nothing Nothing mtag (render rt) Enabled Nothing et 
+  return $ storeHook h
     
 -- | parse a event from a notification callback    
 parseMPNotification :: (Y.MonadHandler m, Y.HandlerSite m ~ site, YesodMangoPay site) => m Event

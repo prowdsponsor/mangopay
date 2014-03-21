@@ -1,6 +1,9 @@
 <h1>_{MsgHello}
 
-Defined Users:
+<div>
+    <a href=@{MPEventsR}>_{MsgLnkEvents}
+
+<h2>_{MsgUsers}
 <ul>
         $forall user <- users
             <li>#{urEmail user}

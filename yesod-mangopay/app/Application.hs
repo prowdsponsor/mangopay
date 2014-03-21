@@ -25,6 +25,9 @@ import Yesod.Core.Types (loggerSet, Logger (Logger))
 import Handler.Home
 import Data.IORef (newIORef)
 
+import Yesod.MangoPay
+
+import qualified Data.Map as M
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -47,6 +50,12 @@ makeApplication conf = do
                 else Apache FromSocket
         , destination = RequestLogger.Logger $ loggerSet $ appLogger foundation
         }
+    
+    -- register all notification callbacks
+    -- we need a handler to resolve the Route URL
+    -- so we use runFakeHandler, because all the caveats the doc outlines don't apply to us
+    -- we don't need anything from the request, nor do we change anything in our state
+    _<-runFakeHandler M.empty appLogger foundation (registerAllMPCallbacks MPHookR)
 
     -- Create the WAI application and apply middlewares
     app <- toWaiAppPlain foundation
@@ -61,6 +70,7 @@ makeFoundation conf = do
     loggerSet' <- newStdoutLoggerSet defaultBufSize
     (getter, updater) <- clockDateCacher
     iorToken<-newIORef Nothing 
+    iorEvents<-newIORef []
     -- If the Yesod logger (as opposed to the request logger middleware) is
     -- used less than once a second on average, you may prefer to omit this
     -- thread and use "(updater >> getter)" in place of "getter" below.  That
@@ -72,7 +82,7 @@ makeFoundation conf = do
     _ <- forkIO updateLoop
 
     let logger = Yesod.Core.Types.Logger loggerSet' getter
-        foundation = App conf s manager logger iorToken
+        foundation = App conf s manager logger iorToken iorEvents
 
     return foundation
 
