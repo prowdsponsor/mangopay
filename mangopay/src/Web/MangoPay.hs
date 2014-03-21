@@ -10,11 +10,14 @@ module Web.MangoPay (
         ,Credentials(..)
         ,AccessPoint(..)
         ,AccessToken(..)
+        ,OAuthToken(..)
         ,Pagination(..)
+        
         
         -- access
         ,createCredentialsSecret
         ,oauthLogin
+        ,toAccessToken
         
         -- Users
         ,NaturalUser(..)

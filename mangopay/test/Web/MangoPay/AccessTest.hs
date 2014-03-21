@@ -39,9 +39,9 @@ test_CreateCredentials=do
        assertBool (isJust $ cClientSecret  creds2)   
        let s=fromJust $ cClientSecret creds2
        -- login once with our new credentials
-       at<-runResourceT $ runMangoPayT creds2 mgr Sandbox $
+       oat<-runResourceT $ runMangoPayT creds2 mgr Sandbox $
                 oauthLogin (cClientID creds2) s    
        -- store access token and credentials         
-       modifyIORef testState (\ts->ts{tsAccessToken=at,tsCredentials=creds2})
+       modifyIORef testState (\ts->ts{tsAccessToken=toAccessToken oat,tsCredentials=creds2})
        -- create hooks for all event types
        mapM_ createHook [minBound .. maxBound]
