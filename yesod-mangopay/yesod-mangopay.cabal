@@ -18,11 +18,16 @@ library
     else
         ghc-options:   -Wall -O2
     hs-source-dirs:    src
-    build-depends: base                          >= 4          && < 5
+    build-depends: 
+                 base                          >= 4          && < 5
                  , yesod                         >= 1.2.5      && < 1.3
                  , yesod-core                    >= 1.2        && < 1.3
                  , mangopay == 0.1
-    other-modules:     Yesod.MangoPay
+                 , http-conduit                  >= 2.0        && < 2.1
+                 , time >=1.4.0 && <1.5
+                 , http-types >=0.8.2 && <0.9
+                 , text >=0.11.3 && <0.12
+    exposed-modules:     Yesod.MangoPay
 
 
 executable         yesod-mangopay
@@ -56,7 +61,8 @@ executable         yesod-mangopay
                 EmptyDataDecls
                 NoMonomorphismRestriction
                 DeriveDataTypeable
-    build-depends:    yesod-mangopay
+    build-depends:    
+                 yesod-mangopay
                  , mangopay == 0.1
                  , base                          >= 4          && < 5
                  , yesod                         >= 1.2.5      && < 1.3
@@ -89,6 +95,7 @@ executable         yesod-mangopay
                  , monad-logger                  >= 0.3        && < 0.4
                  , fast-logger                   >= 2.1.4      && < 2.2
                  , wai-logger                    >= 2.1        && < 2.2
+                 , time >=1.4.0 && <1.5
     ghc-options:       -threaded -O2
 
 

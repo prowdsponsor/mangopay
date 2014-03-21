@@ -64,9 +64,19 @@ widgetFile = (if development then widgetFileReload
 data Extra = Extra
     { extraCopyright :: Text
     , extraAnalytics :: Maybe Text -- ^ Google Analytics
+    , mpID :: Text -- ^ MangoPay client id
+    , mpName :: Text -- ^ MangoPay client name
+    , mpEmail :: Text -- ^ MangoPay client email
+    , mpSecret :: Text -- ^ MangoPay client secret
+    , mpSandbox:: Bool -- ^ are we using the MangoPay sandbox?
     } deriving Show
 
 parseExtra :: DefaultEnv -> Object -> Parser Extra
 parseExtra _ o = Extra
     <$> o .:  "copyright"
     <*> o .:? "analytics"
+    <*> o .: "mangopayClientID"
+    <*> o .: "mangopayName"
+    <*> o .: "mangopayEmail"
+    <*> o .: "mangopaySecret"
+    <*> o .: "mangopaySandbox"

@@ -23,6 +23,7 @@ import Yesod.Core.Types (loggerSet, Logger (Logger))
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Home
+import Data.IORef (newIORef)
 
 
 -- This line actually creates our YesodDispatch instance. It is the second half
@@ -59,7 +60,7 @@ makeFoundation conf = do
     s <- staticSite
     loggerSet' <- newStdoutLoggerSet defaultBufSize
     (getter, updater) <- clockDateCacher
-
+    iorToken<-newIORef Nothing 
     -- If the Yesod logger (as opposed to the request logger middleware) is
     -- used less than once a second on average, you may prefer to omit this
     -- thread and use "(updater >> getter)" in place of "getter" below.  That
@@ -71,7 +72,7 @@ makeFoundation conf = do
     _ <- forkIO updateLoop
 
     let logger = Yesod.Core.Types.Logger loggerSet' getter
-        foundation = App conf s manager logger
+        foundation = App conf s manager logger iorToken
 
     return foundation
 

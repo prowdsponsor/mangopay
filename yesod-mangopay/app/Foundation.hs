@@ -14,6 +14,10 @@ import Text.Jasmine (minifym)
 import Text.Hamlet (hamletFile)
 import Yesod.Core.Types (Logger)
 
+import Yesod.MangoPay
+import Web.MangoPay
+import Data.IORef (IORef, readIORef, writeIORef)
+
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
@@ -23,6 +27,7 @@ data App = App
     , getStatic :: Static -- ^ Settings for static file serving.
     , httpManager :: Manager
     , appLogger :: Logger
+    , mpToken :: IORef (Maybe MangoPayToken) -- ^ the currently valid access token, if any
     }
 
 -- Set up i18n messages. See the message folder.
@@ -123,3 +128,15 @@ getExtra = fmap (appExtra . settings) getYesod
 -- wiki:
 --
 -- https://github.com/yesodweb/yesod/wiki/Sending-email
+
+instance YesodMangoPay App where
+  mpCredentials app=let
+    extra=appExtra $ settings app
+    in Credentials (mpID extra) (mpName extra) (mpEmail extra) (Just $ mpSecret extra)
+  mpHttpManager=httpManager
+  mpUseSandbox=mpSandbox . appExtra . settings
+ 
+instance YesodMangoPayTokenHandler App where
+  getToken=liftIO . readIORef . mpToken
+  setToken app tok=liftIO $ writeIORef (mpToken app) (Just tok)
+  
