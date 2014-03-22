@@ -8,7 +8,7 @@ module Web.MangoPay.Monad where
 import Web.MangoPay.Types
 
 import Control.Applicative 
-import Control.Monad (MonadPlus, liftM, void)
+import Control.Monad (MonadPlus, liftM, void, join)
 import Control.Monad.Base (MonadBase(..))
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -34,6 +34,8 @@ import Data.Conduit.Attoparsec (sinkParser, ParseError)
 import Control.Exception.Base (throw)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text as T (Text)
+import Data.Maybe (fromMaybe)
+import Data.CaseInsensitive (CI)
 
 #if DEBUG
 import Data.Conduit.Binary (sinkHandle)
@@ -158,12 +160,13 @@ getQueryURL path query=do
   return $ BS.concat ["https://",host,path,HT.renderQuery True  $ HT.toQuery query]
 
 -- | perform a HTTP request and deal with the JSON result
-mpReq :: forall b (m :: * -> *) wrappedErr .
+mpReq :: forall b (m :: * -> *) wrappedErr c .
                     (MonadBaseControl IO m, C.MonadResource m,FromJSON b,FromJSON wrappedErr) =>
                     H.Request
                     -> (wrappedErr -> MpError) -- ^ extract the error from the JSON
-                    -> MangoPayT m b
-mpReq req extractError=do
+                    -> (HT.ResponseHeaders -> b -> c)
+                    -> MangoPayT m c
+mpReq req extractError addHeaders=do
    -- we check the status ourselves
   let req' = req { H.checkStatus = \_ _ _ -> Nothing }
   mgr<-getManager
@@ -177,6 +180,7 @@ mpReq req extractError=do
 #if DEBUG
     (value,_)<-H.responseBody res C.$$+- zipSinks (sinkParser json) (sinkHandle stdout)
     liftIO $ BSC.putStrLn ""
+    liftIO $ print headers
 #else  
     value<-H.responseBody res C.$$+- sinkParser json
 #endif
@@ -184,7 +188,7 @@ mpReq req extractError=do
       then 
           -- parse response as the expected value
           case fromJSON value of
-            Success ot->return ot
+            Success ot->return $ addHeaders headers ot
             Error jerr->throw $ JSONException jerr -- got an ok response we couldn't parse
       else
           -- parse response as an error
@@ -200,14 +204,45 @@ getJSONResponse :: forall (m :: * -> *) v.
                                  H.Request
                                  -> MangoPayT
                                       m v
-getJSONResponse req=mpReq req id 
- 
+getJSONResponse req=mpReq req id (const id)
+
+-- | get a PagedList from the JSON items
+getJSONList:: forall (m :: * -> *) v.
+                                 (MonadBaseControl IO m, C.MonadResource m,FromJSON v) =>
+                                 H.Request
+                                 -> MangoPayT
+                                      m (PagedList v)
+getJSONList req=mpReq req id buildList
+
+-- | build a PagedList from the headers information
+buildList :: HT.ResponseHeaders -> [b] -> PagedList b
+buildList headers items=let
+    cnt=fromMaybe (fromIntegral $ length items) $  getI "X-Number-Of-Items" -- yes, doc is wrong (they forgot the s)
+    pgs=fromMaybe 1 $ getI "X-Number-Of-Pages"
+    in PagedList items cnt pgs
+    where
+      getI :: CI ByteString -> Maybe Integer
+      getI =join . fmap ((maybeRead :: String -> Maybe Integer). BSC.unpack) . findAssoc headers
+
+-- | get all items, hiding the pagination system    
+getAll ::  (MonadBaseControl IO m, C.MonadResource m,FromJSON v) => 
+  (Maybe Pagination -> AccessToken -> MangoPayT m (PagedList v)) -> AccessToken -> 
+  MangoPayT m [v]
+getAll f at=readAll 1 []
+  where 
+    readAll p accum=do
+        retL<-f (Just $ Pagination p 100) at
+        let dts=accum ++ plData retL
+        if plPageCount retL > p 
+                then readAll (p + 1) dts
+                else return dts
+    
 -- | get the headers necessary for a JSON call              
 getJSONHeaders ::  Maybe AccessToken -> HT.RequestHeaders
-getJSONHeaders mat=  [("content-type","application/json")] ++
-                        case mat of 
-                                Just (AccessToken at)->[("Authorization",at)]
-                                _->[]           
+getJSONHeaders mat=  ("content-type", "application/json") :
+  case mat of
+      Just (AccessToken at) -> [("Authorization", at)]
+      _ -> []           
 
 
 -- | send JSON via post, get JSON back                

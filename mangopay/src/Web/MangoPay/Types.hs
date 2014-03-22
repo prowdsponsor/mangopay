@@ -14,6 +14,7 @@ import Data.Default
 
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.UTF8 as UTF8
+import Data.Maybe (listToMaybe)
 
 -- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
@@ -134,6 +135,13 @@ paginationAttributes :: Maybe Pagination -> [(ByteString,Maybe ByteString)]
 paginationAttributes (Just p)=["page" ?+ pPage p, "per_page" ?+ pPerPage p]
 paginationAttributes _=[]
 
+data PagedList a= PagedList {
+  plData :: [a]
+  ,plItemCount :: Integer
+  ,plPageCount :: Integer
+  }
+  deriving (Show,Read,Eq,Ord,Typeable)
+
 -- | ID of a card
 type CardID=Text
 
@@ -171,3 +179,11 @@ instance ToHtQuery (Maybe String) where
 
 instance ToHtQuery String where
   n ?+ d=(n,Just $ UTF8.fromString d)  
+
+-- | find in assoc list
+findAssoc :: Eq a=> [(a,b)] -> a -> Maybe b
+findAssoc xs n=listToMaybe $ Prelude.map snd $ Prelude.filter ((n==) . fst) xs
+
+-- | read an object or return Nothing
+maybeRead :: Read a => String -> Maybe a
+maybeRead = fmap fst . listToMaybe . reads   

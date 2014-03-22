@@ -13,16 +13,16 @@ import Test.HUnit (Assertion)
 -- | test successful payout
 test_PayoutOK :: Assertion
 test_PayoutOK=do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   accs<-testMP $ listAccounts uid Nothing
-  assertBool $ not $ null accs
-  let aid=fromJust $ baId $ head accs 
+  assertBool $ not $ null $ plData accs
+  let aid=fromJust $ baId $ head $ plData accs 
   ws<- testMP $ listWallets uid Nothing
-  assertBool $ not $ null ws
-  let wid=fromJust $ wId $ head ws 
-  let Just (Amount _ nb) =wBalance $ head ws
+  assertBool $ not $ null $ plData ws
+  let wid=fromJust $ wId $ head $ plData ws 
+  let Just (Amount _ nb) =wBalance $ head $ plData ws
   assertBool $ nb >= 100
   -- no events triggered !!!
   --testEventTypes [PAYOUT_NORMAL_SUCCEEDED] $ do
@@ -38,15 +38,15 @@ test_PayoutOK=do
 -- | test failing payout
 test_PayoutKO :: Assertion
 test_PayoutKO=do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   accs<-testMP $ listAccounts uid Nothing
-  assertBool $ not $ null accs
-  let aid=fromJust $ baId $ head accs 
+  assertBool $ not $ null $ plData accs
+  let aid=fromJust $ baId $ head $ plData accs 
   ws<- testMP $ listWallets uid Nothing
-  assertBool $ not $ null ws
-  let wid=fromJust $ wId $ head ws 
+  assertBool $ not $ null $ plData ws
+  let wid=fromJust $ wId $ head $ plData ws 
   testEventTypes [PAYOUT_NORMAL_FAILED] $ do
     let pt1=mkPayout uid wid (Amount "EUR" 100000) (Amount "EUR" 0) aid
     pt2<-testMP $ storePayout pt1

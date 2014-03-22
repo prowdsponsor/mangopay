@@ -37,11 +37,11 @@ fetchWallet wid at=do
         getJSONResponse req 
 
 -- | list all wallets for a given user   
-listWallets :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m [Wallet]
+listWallets :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
 listWallets uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/wallets"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONResponse req 
+        getJSONList req 
 
 -- | create a new fund transfer 
 createTransfer :: (MonadBaseControl IO m, MonadResource m) => Transfer -> AccessToken -> MangoPayT m Transfer
@@ -57,18 +57,18 @@ fetchTransfer wid at=do
         getJSONResponse req         
 
 -- | list transfers for a given wallet 
-listTransactions ::  (MonadBaseControl IO m, MonadResource m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m [Transaction]
+listTransactions ::  (MonadBaseControl IO m, MonadResource m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
 listTransactions wid mp at=do
         url<-getClientURLMultiple ["/wallets/",wid,"/transactions"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONResponse req 
+        getJSONList req 
 
 -- | list transfer for a given user
-listTransactionsForUser ::  (MonadBaseControl IO m, MonadResource m) =>  AnyUserID  -> Maybe Pagination -> AccessToken -> MangoPayT m [Transaction]
+listTransactionsForUser ::  (MonadBaseControl IO m, MonadResource m) =>  AnyUserID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
 listTransactionsForUser uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/transactions"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONResponse req 
+        getJSONList req 
 
 -- | currency amount 
 data Amount=Amount {

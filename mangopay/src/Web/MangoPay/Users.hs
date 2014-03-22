@@ -59,11 +59,11 @@ getUser uid at=do
         getJSONResponse req
 
 -- | list all user references
-listUsers :: (MonadBaseControl IO m, MonadResource m) => Maybe Pagination -> AccessToken -> MangoPayT m [UserRef]
+listUsers :: (MonadBaseControl IO m, MonadResource m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
 listUsers mp at=do
         url<-getClientURL "/users/"
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONResponse req        
+        getJSONList req        
 
 instance FromJSON (Either NaturalUser LegalUser) where
         parseJSON o@(Object v)=do

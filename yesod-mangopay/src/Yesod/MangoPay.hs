@@ -107,7 +107,8 @@ registerAllMPCallbacks rt=do
   render<-Y.getUrlRender
   let url=render rt
   runYesodMPTToken $ \at-> do
-    hooks<-listHooks (Just $ Pagination 1 100) at
+    -- get all hooks at once
+    hooks<-getAll listHooks at
     let existing=foldr (\h s->S.insert (hUrl h,hEventType h) s) S.empty hooks
     mapM_ (registerIfAbsent url at existing) [minBound..maxBound]
   where

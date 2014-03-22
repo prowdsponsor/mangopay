@@ -13,9 +13,9 @@ import Test.HUnit (Assertion)
 -- | test bankwire
 test_BankWire :: Assertion
 test_BankWire=do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing 
   w2<-testMP $ storeWallet w
   assertBool (isJust $ wId w2)
@@ -32,9 +32,9 @@ test_BankWire=do
 -- | test a successful card pay in
 test_CardOK :: Assertion
 test_CardOK = do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr
@@ -50,16 +50,16 @@ test_CardOK = do
     w3<-testMP $ fetchWallet wid
     assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
     ts1 <- testMP $ listTransactions wid Nothing
-    assertEqual 1 (length $ filter ((cpId cp2==) . txId) ts1)
+    assertEqual 1 (length $ filter ((cpId cp2==) . txId) $ plData ts1)
     return $ cpId cp2
   
 -- | test a failed card pay in
 -- according to <http://docs.mangopay.com/api-references/test-payment/>
 test_CardKO :: Assertion
 test_CardKO = do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr

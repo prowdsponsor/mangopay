@@ -14,7 +14,7 @@ import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Default
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
-import Data.Maybe (isJust, listToMaybe)
+import Data.Maybe (isJust)
 import qualified Data.HashMap.Lazy as HM (delete)
 import qualified Data.Text.Encoding as TE
 import Control.Monad (join)
@@ -47,11 +47,11 @@ fetchHook wid at=do
         getJSONResponse req 
 
 -- | list all wallets for a given user   
-listHooks :: (MonadBaseControl IO m, MonadResource m) =>  Maybe Pagination -> AccessToken -> MangoPayT m [Hook]
+listHooks :: (MonadBaseControl IO m, MonadResource m) =>  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Hook)
 listHooks mp at=do
         url<-getClientURL "/hooks"
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONResponse req 
+        getJSONList req 
 
 -- | Event type
 data EventType=PAYIN_NORMAL_CREATED
@@ -135,30 +135,21 @@ instance FromJSON Event where
 -- v2 works the same, the event is passed via parameters of the query string   
 eventFromQueryString :: HT.Query -> Maybe Event
 eventFromQueryString q=do
-  rid<-fmap TE.decodeUtf8 $ get "RessourceId" -- yes, two ss here
-  et<-join $ fmap (maybeRead . BS.unpack) $ get "EventType"
-  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). BS.unpack) $ get "Date"
+  rid<-fmap TE.decodeUtf8 $ join $ findAssoc q "RessourceId" -- yes, two ss here
+  et<-join $ fmap (maybeRead . BS.unpack) $ join $ findAssoc q "EventType"
+  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). BS.unpack) $ join $ findAssoc q "Date"
   return $ Event rid et d
-  where
-    get :: BS.ByteString -> Maybe BS.ByteString 
-    get n=join $ listToMaybe $ Prelude.map snd $ filter ((n==) . fst) q
-    maybeRead :: Read a => String -> Maybe a
-    maybeRead = fmap fst . listToMaybe . reads                  
+                
 
 -- | parse an event from the query string represented as Text
 -- the MangoPay is not very clear on notifications, but see v1 <http://docs.mangopay.com/v1-api-references/notifications/>
 -- v2 works the same, the event is passed via parameters of the query string   
 eventFromQueryStringT :: [(Text, Text)] -> Maybe Event
 eventFromQueryStringT q=do
-  rid<- get "RessourceId" -- yes, two ss here
-  et<-join $ fmap (maybeRead . unpack) $ get "EventType"
-  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). unpack) $ get "Date"
-  return $ Event rid et d
-  where
-    get :: Text -> Maybe Text
-    get n=listToMaybe $ Prelude.map snd $ filter ((n==) . fst) q
-    maybeRead :: Read a => String -> Maybe a
-    maybeRead = fmap fst . listToMaybe . reads     
+  rid<- findAssoc q "RessourceId" -- yes, two ss here
+  et<-join $ fmap (maybeRead . unpack) $ findAssoc q "EventType"
+  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). unpack) $ findAssoc q "Date"
+  return $ Event rid et d  
 
 -- | status of notification hook                       
 data HookStatus=Enabled | Disabled

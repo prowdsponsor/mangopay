@@ -5,6 +5,7 @@ module Web.MangoPay (
         ,runMangoPayT
         ,runResourceInMp
         ,MpException
+        ,getAll
         
         -- useful types
         ,Credentials(..)
@@ -12,7 +13,7 @@ module Web.MangoPay (
         ,AccessToken(..)
         ,OAuthToken(..)
         ,Pagination(..)
-        
+        ,PagedList(..)
         
         -- access
         ,createCredentialsSecret
