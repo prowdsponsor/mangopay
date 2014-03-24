@@ -31,11 +31,11 @@ fetchAccount uid aid at=do
         getJSONResponse req 
 
 -- | list all accounts for a given user   
-listAccounts :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m [BankAccount]
+listAccounts :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
 listAccounts uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONResponse req 
+        getJSONList req 
 
 -- | account details, depending on the type
 data BankAccountDetails=IBAN {

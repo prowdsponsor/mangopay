@@ -1,0 +1,16 @@
+<h1>_{MsgHello}
+
+<div>
+    <a href=@{MPEventsR}>_{MsgLnkEvents}
+
+<h2>_{MsgUsers}
+<ul>
+        $forall user <- users
+            <li>#{urEmail user}
+
+<div>
+$if (isJust previous)
+    <a href=@{HomeR}?page=#{fromJust previous}>_{MsgPrevious}
+    
+$if (isJust next)
+    <a href=@{HomeR}?page=#{fromJust next}>_{MsgNext}

@@ -13,9 +13,9 @@ import Test.HUnit (Assertion)
 -- | test bank account creation
 test_BankAccount :: Assertion
 test_BankAccount=do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   let details=IBAN "FR3020041010124530725S03383" "CRLYFRPP"
   let acc1=BankAccount Nothing Nothing (Just uid) Nothing details "JP Moresmau" (Just "Earth")
   acc2<-testMP $ storeAccount acc1
@@ -25,5 +25,5 @@ test_BankAccount=do
   acc3<-testMP $ fetchAccount uid $ fromJust $ baId acc2
   assertEqual details $ baDetails acc3
   accs<-testMP $ listAccounts uid Nothing
-  assertBool $ acc3  `elem` accs
+  assertBool $ acc3  `elem` (plData accs)
   

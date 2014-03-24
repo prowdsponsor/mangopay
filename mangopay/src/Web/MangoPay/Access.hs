@@ -28,8 +28,8 @@ createCredentialsSecret =do
                 else return creds
 
 -- | login with given user name and password
-oauthLogin :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> MangoPayT m AccessToken
+-- returns the OAuth token that can be used to generate the opaque AccessToken and carries the expiration delay
+oauthLogin :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> MangoPayT m OAuthToken
 oauthLogin user pass = do
         req<- liftM (applyBasicAuth (TE.encodeUtf8 user) (TE.encodeUtf8 pass)) $ getPostRequest "/v2/oauth/token" Nothing ([("grant_type",Just "client_credentials")]::HT.Query)
-        t<-getJSONResponse req
-        return $ toAccessToken t
+        getJSONResponse req

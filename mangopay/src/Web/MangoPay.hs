@@ -5,16 +5,20 @@ module Web.MangoPay (
         ,runMangoPayT
         ,runResourceInMp
         ,MpException
+        ,getAll
         
         -- useful types
         ,Credentials(..)
         ,AccessPoint(..)
         ,AccessToken(..)
+        ,OAuthToken(..)
         ,Pagination(..)
+        ,PagedList(..)
         
         -- access
         ,createCredentialsSecret
         ,oauthLogin
+        ,toAccessToken
         
         -- Users
         ,NaturalUser(..)
@@ -65,6 +69,7 @@ module Web.MangoPay (
         ,fetchHook
         ,listHooks
         ,eventFromQueryString
+        ,eventFromQueryStringT
         
         -- Documents and pages
         ,Document(..)

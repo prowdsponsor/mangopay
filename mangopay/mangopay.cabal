@@ -41,6 +41,7 @@ library
      , base16-bytestring
      , utf8-string >=0.3.7 && <0.4
      , base64-bytestring >=1.0.0 && <1.1
+     , case-insensitive >=1.1.0 && <1.2
   ghc-options:      -Wall
   other-modules:    
                     Web.MangoPay.Access,
@@ -82,6 +83,7 @@ executable mangopay-passphrase
      , unordered-containers
      , base16-bytestring
      , utf8-string >=0.3.7 && <0.4
+     , case-insensitive >=1.1.0 && <1.2
   ghc-options:     -Wall -rtsopts
   hs-source-dirs:  exe
   main-is:         Main.hs
@@ -118,6 +120,7 @@ test-suite mangopay-tests
      , warp
      , wai
      , base64-bytestring >=1.0.0 && <1.1
+     , case-insensitive >=1.1.0 && <1.2
   other-modules:   
                   Web.MangoPay.UsersTest,
                   Web.MangoPay.TestUtils,

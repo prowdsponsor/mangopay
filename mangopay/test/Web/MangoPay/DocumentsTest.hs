@@ -14,9 +14,9 @@ import qualified Data.ByteString as BS
 -- | test document API
 test_Document :: Assertion
 test_Document=do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   let d=Document Nothing Nothing Nothing IDENTITY_PROOF (Just CREATED) Nothing Nothing
   d2<-testMP $ storeDocument uid d
   assertBool (isJust $ dId d2)

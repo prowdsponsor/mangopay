@@ -13,9 +13,9 @@ import Test.HUnit (Assertion)
 -- | test a successful card pay in + full refund
 test_SimpleCardRefund :: Assertion
 test_SimpleCardRefund = do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr
@@ -44,9 +44,9 @@ test_SimpleCardRefund = do
 -- | test a successful card pay in + partial refund
 test_AdvancedCardRefund :: Assertion
 test_AdvancedCardRefund = do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr
@@ -75,9 +75,9 @@ test_AdvancedCardRefund = do
 -- | test transfer + full refund
 test_TransferRefund :: Assertion
 test_TransferRefund = do
-        us<-testMP $ listUsers (Just $ Pagination 1 2)
-        assertEqual 2 (length us)
-        let [uid1,uid2] = map urId us
+        usL<-testMP $ listUsers (Just $ Pagination 1 2)
+        assertEqual 2 (length $ plData usL)
+        let [uid1,uid2] = map urId $ plData usL
         assertBool (uid1 /= uid2)
         let w1=Wallet Nothing Nothing (Just "custom") [uid1] "my wallet" "EUR" Nothing 
         w1'<-testMP $ storeWallet w1
@@ -105,11 +105,11 @@ test_TransferRefund = do
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
                 ts1 <- testMP $ listTransactions uw1 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts1)
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
                 ts2 <- testMP $ listTransactions uw2 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts2)
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
                 uts1 <- testMP $ listTransactionsForUser uid1 (Just $ Pagination 1 50)
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)             
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)             
                 return $ tId t1' 
                 
         testEventTypes [TRANSFER_REFUND_CREATED,TRANSFER_REFUND_SUCCEEDED] $ do

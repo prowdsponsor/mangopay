@@ -13,9 +13,9 @@ import Data.Maybe (isJust, fromJust)
 -- | test wallet API
 test_Wallet :: Assertion
 test_Wallet = do
-        us<-testMP $ listUsers (Just $ Pagination 1 1)
-        assertEqual 1 (length us)
-        let uid=urId $ head us
+        usL<-testMP $ listUsers (Just $ Pagination 1 1)
+        assertEqual 1 (length $ plData usL)
+        let uid=urId $ head $ plData usL
         let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing 
         w2<-testMP $ storeWallet w
         assertBool (isJust $ wId w2)
@@ -28,19 +28,19 @@ test_Wallet = do
         assertEqual (wId w2) (wId w4)
         assertEqual (Just $ Amount "EUR" 0) (wBalance w4)
         ws<-testMP $ listWallets uid (Just $ Pagination 1 100)
-        assertBool (not (null ws))
-        assertEqual 1 (length $ filter ((wId w3 ==) . wId) ws)
+        assertBool (not (null $ plData ws))
+        assertEqual 1 (length $ filter ((wId w3 ==) . wId) $ plData ws)
 
 -- | test transfer API + notifications on failure       
 test_FailedTransfer :: Assertion
 test_FailedTransfer = do
-        us<-testMP $ listUsers (Just $ Pagination 1 2)
-        assertEqual 2 (length us)
-        let [uid1,uid2] = map urId us
+        usL<-testMP $ listUsers (Just $ Pagination 1 2)
+        assertEqual 2 (length $ plData usL)
+        let [uid1,uid2] = map urId $ plData usL
         assertBool (uid1 /= uid2)
         ws<- testMP $ listWallets uid1 Nothing
-        assertBool $ not $ null ws
-        let uw1=fromJust $ wId $ head ws 
+        assertBool $ not $ null $ plData ws
+        let uw1=fromJust $ wId $ head $ plData ws 
         let w2=Wallet Nothing Nothing (Just "custom") [uid2] "my wallet" "EUR" Nothing 
         w2'<-testMP $ storeWallet w2
         let uw2=fromJust $ wId w2'
@@ -55,23 +55,23 @@ test_FailedTransfer = do
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
                 ts1 <- testMP $ listTransactions uw1 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts1)
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
                 ts2 <- testMP $ listTransactions uw2 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts2)
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
                 uts1 <- testMP $ listTransactionsForUser uid1 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)
                 return $ tId t1'
  
 -- | test transfer API + notifications on success     
 test_SuccessfulTransfer :: Assertion
 test_SuccessfulTransfer = do
-        us<-testMP $ listUsers (Just $ Pagination 1 2)
-        assertEqual 2 (length us)
-        let [uid1,uid2] = map urId us
+        usL<-testMP $ listUsers (Just $ Pagination 1 2)
+        assertEqual 2 (length $ plData usL)
+        let [uid1,uid2] = map urId $ plData usL
         assertBool (uid1 /= uid2)
         ws<- testMP $ listWallets uid1 Nothing
-        assertBool $ not $ null ws
-        let uw1=fromJust $ wId $ head ws 
+        assertBool $ not $ null $ plData ws
+        let uw1=fromJust $ wId $ head $ plData ws 
         let w2=Wallet Nothing Nothing (Just "custom") [uid2] "my wallet" "EUR" Nothing 
         w2'<-testMP $ storeWallet w2
         let uw2=fromJust $ wId w2'
@@ -95,9 +95,9 @@ test_SuccessfulTransfer = do
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
                 ts1 <- testMP $ listTransactions uw1 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts1)
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
                 ts2 <- testMP $ listTransactions uw2 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) ts2)
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
                 uts1 <- testMP $ listTransactionsForUser uid1 Nothing
-                assertEqual 1 (length $ filter ((tId t1'==) . txId) uts1)             
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)             
                 return $ tId t1'

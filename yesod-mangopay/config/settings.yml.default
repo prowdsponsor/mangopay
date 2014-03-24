@@ -1,0 +1,25 @@
+Default: &defaults
+  host: "*4" # any IPv4 host
+  port: 3000
+  approot: "http://localhost:3000"
+  copyright: Insert copyright statement here
+  mangopayClientID: your MangoPay client id
+  mangopayName: your MangoPay client name
+  mangopayEmail: your MangoPay client email
+  mangopaySecret: your MangoPay client secret 
+  mangopaySandbox: True
+  #analytics: UA-YOURCODE
+
+Development:
+  <<: *defaults
+
+Testing:
+  <<: *defaults
+
+Staging:
+  <<: *defaults
+
+Production:
+  mangopaySandbox: False
+  #approot: "http://www.example.com"
+  <<: *defaults

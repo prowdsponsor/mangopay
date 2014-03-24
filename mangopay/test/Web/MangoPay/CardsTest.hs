@@ -15,9 +15,9 @@ import qualified Data.Text as T
 -- | test a card registration
 test_Card :: Assertion
 test_Card = do
-  us<-testMP $ listUsers (Just $ Pagination 1 1)
-  assertEqual 1 (length us)
-  let uid=urId $ head us
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
   let cr1=mkCardRegistration uid "EUR"
   cr2<-testMP $ storeCardRegistration cr1
   assertBool (isJust $ crId cr2)
