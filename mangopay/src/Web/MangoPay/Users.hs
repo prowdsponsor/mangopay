@@ -89,7 +89,7 @@ type NaturalUserID = Text
 
 -- | supported income ranges
 data IncomeRange=IncomeRange1 | IncomeRange2 | IncomeRange3 | IncomeRange4 | IncomeRange5 | IncomeRange6
-      deriving (Show,Read,Eq,Ord,Typeable)   
+      deriving (Show,Read,Eq,Ord,Bounded, Enum, Typeable)   
 
 -- | to json as per MangoPay format
 instance ToJSON IncomeRange  where
