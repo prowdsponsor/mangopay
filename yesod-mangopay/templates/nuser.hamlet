@@ -1,0 +1,7 @@
+<a href=@{HomeR}>_{MsgLnkHome}
+
+#{msg}
+
+<form method=post action=@{NUserR} enctype=#{enctype}>
+    ^{widget}
+     <button>_{MsgBtnSubmit}
