@@ -1,7 +1,14 @@
-name:              yesod-mangopay
-version:           0.0.1
-cabal-version:     >= 1.8
-build-type:        Simple
+name:           yesod-mangopay
+version:        0.0.1
+cabal-version:  >= 1.8
+build-type:     Simple
+author:         JP Moresmau <jpmoresmau@gmail.com>
+license:        BSD3
+license-file:   LICENSE
+copyright:      (c) 2014 Prowdsponsor
+category:       Web
+homepage:       https://github.com/loyful/yesod-mangopay
+synopsis:       Yesod library for MangoPay API access
 
 Flag dev
     Description:   Turn on development settings, like auto-reload templates.
@@ -45,7 +52,8 @@ executable         yesod-mangopay
                      Handler.Home,
                      Handler.User,
                      Base.Util,
-                     Handler.Doc
+                     Handler.Doc,
+                     Handler.Wallet
     if flag(dev)
         cpp-options:   -DDEVELOPMENT
         ghc-options:   -Wall -O0

@@ -72,14 +72,14 @@ listTransactionsForUser uid mp at=do
 
 -- | currency amount 
 data Amount=Amount {
-        bCurrency :: Currency
-        ,bAmount :: Integer -- ^ all amounts should be in cents!
+        aCurrency :: Currency
+        ,aAmount :: Integer -- ^ all amounts should be in cents!
         }
         deriving (Show,Read,Eq,Ord,Typeable)
  
 -- | to json as per MangoPay format        
 instance ToJSON Amount where
-        toJSON b=object ["Currency"  .= bCurrency b,"Amount" .= bAmount b]
+        toJSON b=object ["Currency"  .= aCurrency b,"Amount" .= aAmount b]
 
 -- | from json as per MangoPay format 
 instance FromJSON Amount where

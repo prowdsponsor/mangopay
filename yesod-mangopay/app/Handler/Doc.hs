@@ -45,8 +45,8 @@ data DocUpload=DocUpload FileInfo (Maybe Text) DocumentType
 -- | the upload form
 uploadForm :: Html -> MForm Handler (FormResult DocUpload, Widget)
 uploadForm= renderDivs $ DocUpload
-  <$> fileAFormReq (fs MsgDocFile)
-  <*> aopt textField (fs MsgDocCustomData) Nothing
-  <*> areq (selectFieldList ranges) (fs MsgDocType) Nothing
+  <$> fileAFormReq (localizedFS MsgDocFile)
+  <*> aopt textField (localizedFS MsgDocCustomData) Nothing
+  <*> areq (selectFieldList ranges) (localizedFS MsgDocType) Nothing
   -- <*> pure (Just CREATED) -- aopt (selectFieldList ranges) (fs MsgDocStatus) Nothing
   
