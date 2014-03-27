@@ -52,9 +52,9 @@ walletForm ::  HtmlForm Wallet
 walletForm mwallet= renderDivs $ Wallet
     <$> aopt hiddenField "" (wId <$> mwallet)
     <*> pure (join $ wCreationDate <$> mwallet)        
-    <*> aopt textField (fs MsgWalletCustomData) (wTag <$> mwallet)
+    <*> aopt textField (localizedFS MsgWalletCustomData) (wTag <$> mwallet)
     <*> pure []
-    <*> areq textField (fs MsgWalletDescription) (wDescription <$> mwallet)
-    <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (disabledIfJust mwallet $ fs MsgWalletCurrency) (wCurrency <$> mwallet)
+    <*> areq textField (localizedFS MsgWalletDescription) (wDescription <$> mwallet)
+    <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (disabledIfJust mwallet $ localizedFS MsgWalletCurrency) (wCurrency <$> mwallet)
     -- we can't edit the amount anyway, so we show it as disabled and return a const 0 value
-    <*> (fmap (const $ Amount "EUR" 0) <$> aopt intField (disabled $ fs MsgWalletBalance) (fmap aAmount <$> wBalance <$> mwallet))
+    <*> (fmap (const $ Amount "EUR" 0) <$> aopt intField (disabled $ localizedFS MsgWalletBalance) (fmap aAmount <$> wBalance <$> mwallet))

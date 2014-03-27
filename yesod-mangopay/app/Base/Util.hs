@@ -12,10 +12,10 @@ import Web.MangoPay (Currency)
 
 
 -- | localized field
-fs :: forall master msg.
+localizedFS :: forall master msg.
             RenderMessage master msg =>
             msg -> FieldSettings master
-fs n=FieldSettings (SomeMessage n) Nothing Nothing Nothing []    
+localizedFS n=FieldSettings (SomeMessage n) Nothing Nothing Nothing []    
 
 -- | disabled field
 disabled :: forall master.

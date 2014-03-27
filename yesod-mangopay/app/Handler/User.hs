@@ -100,21 +100,21 @@ naturalUserForm ::  HtmlForm NaturalUser
 naturalUserForm muser= renderDivs $ NaturalUser 
     <$> aopt hiddenField "" (uId <$> muser)
     <*> pure (join $ uCreationDate <$> muser)
-    <*> areq textField (fs MsgUserEmail) (uEmail <$> muser)
-    <*> areq textField (fs MsgUserFirst) (uFirstName <$> muser) 
-    <*> areq textField (fs MsgUserLast) (uLastName <$> muser)
-    <*> aopt textField (fs MsgUserAddress) (uAddress <$> muser) 
+    <*> areq textField (localizedFS MsgUserEmail) (uEmail <$> muser)
+    <*> areq textField (localizedFS MsgUserFirst) (uFirstName <$> muser) 
+    <*> areq textField (localizedFS MsgUserLast) (uLastName <$> muser)
+    <*> aopt textField (localizedFS MsgUserAddress) (uAddress <$> muser) 
     <*> (day2Posix <$> areq (jqueryDayField def
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
-        }) (fs MsgUserBirthday) (posix2Day <$> uBirthday <$> muser))
-    <*> areq textField (fs MsgUserNationality)  (uNationality <$> muser)
-    <*> areq textField (fs MsgUserCountry) (uCountryOfResidence <$> muser)
-    <*> aopt textField (fs MsgUserOccupation) (uOccupation <$> muser)
-    <*> aopt (selectFieldList ranges) (fs MsgUserIncome) (uIncomeRange <$> muser)
-    <*> aopt textField (fs MsgUserCustomData) (uTag <$> muser)
-    <*> aopt textField (disabled $ fs MsgUserProofIdentity) (uProofOfIdentity <$> muser) -- value comes from Documents uploaded
-    <*> aopt textField (disabled $ fs MsgUserProofAddress) (uProofOfAddress <$> muser) -- value comes from Documents uploaded
+        }) (localizedFS MsgUserBirthday) (posix2Day <$> uBirthday <$> muser))
+    <*> areq textField (localizedFS MsgUserNationality)  (uNationality <$> muser)
+    <*> areq textField (localizedFS MsgUserCountry) (uCountryOfResidence <$> muser)
+    <*> aopt textField (localizedFS MsgUserOccupation) (uOccupation <$> muser)
+    <*> aopt (selectFieldList ranges) (localizedFS MsgUserIncome) (uIncomeRange <$> muser)
+    <*> aopt textField (localizedFS MsgUserCustomData) (uTag <$> muser)
+    <*> aopt textField (disabled $ localizedFS MsgUserProofIdentity) (uProofOfIdentity <$> muser) -- value comes from Documents uploaded
+    <*> aopt textField (disabled $ localizedFS MsgUserProofAddress) (uProofOfAddress <$> muser) -- value comes from Documents uploaded
   where 
 
 -- | form for legal user
@@ -122,22 +122,22 @@ legalUserForm :: HtmlForm LegalUser
 legalUserForm muser= renderDivs $ LegalUser 
     <$> aopt hiddenField "" (lId <$> muser)
     <*> pure (join $ lCreationDate <$> muser)
-    <*> areq textField (fs MsgUserEmail) (lEmail <$> muser)
-    <*> areq textField (fs MsgUserName) (lName <$> muser) 
-    <*> areq (selectFieldList ranges) (fs MsgUserPersonType) (lLegalPersonType <$> muser)
-    <*> aopt textField (fs MsgUserHQAddress) (lHeadquartersAddress <$> muser)
-    <*> areq textField (fs MsgUserRepFirst) (lLegalRepresentativeFirstName <$> muser)
-    <*> areq textField (fs MsgUserRepLast) (lLegalRepresentativeLastName <$> muser)
-    <*> aopt textField (fs MsgUserRepAddress) (lLegalRepresentativeAddress <$> muser)     
-    <*> aopt textField (fs MsgUserRepEmail) (lLegalRepresentativeEmail <$> muser)  
+    <*> areq textField (localizedFS MsgUserEmail) (lEmail <$> muser)
+    <*> areq textField (localizedFS MsgUserName) (lName <$> muser) 
+    <*> areq (selectFieldList ranges) (localizedFS MsgUserPersonType) (lLegalPersonType <$> muser)
+    <*> aopt textField (localizedFS MsgUserHQAddress) (lHeadquartersAddress <$> muser)
+    <*> areq textField (localizedFS MsgUserRepFirst) (lLegalRepresentativeFirstName <$> muser)
+    <*> areq textField (localizedFS MsgUserRepLast) (lLegalRepresentativeLastName <$> muser)
+    <*> aopt textField (localizedFS MsgUserRepAddress) (lLegalRepresentativeAddress <$> muser)     
+    <*> aopt textField (localizedFS MsgUserRepEmail) (lLegalRepresentativeEmail <$> muser)  
     <*> (day2Posix <$> areq (jqueryDayField def
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
-        }) (fs MsgUserRepBirthday) (posix2Day <$> lLegalRepresentativeBirthday <$> muser))   
-    <*> areq textField (fs MsgUserRepNationality) (lLegalRepresentativeNationality <$> muser)  
-    <*> areq textField (fs MsgUserRepCountry) (lLegalRepresentativeCountryOfResidence <$> muser)
+        }) (localizedFS MsgUserRepBirthday) (posix2Day <$> lLegalRepresentativeBirthday <$> muser))   
+    <*> areq textField (localizedFS MsgUserRepNationality) (lLegalRepresentativeNationality <$> muser)  
+    <*> areq textField (localizedFS MsgUserRepCountry) (lLegalRepresentativeCountryOfResidence <$> muser)
     <*> pure Nothing  -- value comes from Documents uploaded (I think)
-    <*> aopt textField (fs MsgUserCustomData) (lTag <$> muser)  
+    <*> aopt textField (localizedFS MsgUserCustomData) (lTag <$> muser)  
     <*> pure Nothing  -- value comes from Documents uploaded
     <*> pure Nothing -- value comes from Documents uploaded
 
