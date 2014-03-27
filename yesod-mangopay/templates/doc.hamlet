@@ -1,0 +1,6 @@
+<div>
+    <a href=@{HomeR}>_{MsgLnkHome}
+<div>
+    <a href=@{UserR uid}>_{MsgLnkUser}
+
+#{show docWritten}

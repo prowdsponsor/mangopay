@@ -11,7 +11,7 @@ import Data.Maybe (fromJust, isJust)
 
 testNaturalUser :: NaturalUser
 testNaturalUser=NaturalUser Nothing Nothing "jpmoresmau@gmail.com" "JP" "Moresmau" Nothing 11111 "FR" "FR" 
-        (Just "Haskell contractor") Nothing Nothing Nothing Nothing 
+        (Just "Haskell contractor") (Just IncomeRange2) Nothing Nothing Nothing 
 
 test_NaturalUser :: Assertion
 test_NaturalUser = do
@@ -23,6 +23,7 @@ test_NaturalUser = do
         assertEqual Nothing (uAddress uf)
         ue<-testMP $ storeNaturalUser (uf{uAddress=Just "St Guilhem"})
         assertEqual (Just "St Guilhem") (uAddress ue)
+        assertEqual (Just IncomeRange2) (uIncomeRange ue)
         eu<-testMP $ getUser (fromJust $ uId u)
         assertEqual (Left ue) eu
         usL<-testMP $ listUsers (Just $ Pagination 1 100)
@@ -30,7 +31,7 @@ test_NaturalUser = do
 
 testLegalUser :: LegalUser
 testLegalUser = LegalUser Nothing Nothing "jpmoresmau@gmail.com" "JP Moresmau" Business Nothing
-        "JP" "Moresmau" Nothing Nothing 222222 "FR" "FR" Nothing Nothing Nothing Nothing 
+        "JP" "Moresmau" (Just "my house") Nothing 222222 "FR" "FR" Nothing Nothing Nothing Nothing
         
 test_LegalUser :: Assertion
 test_LegalUser = do
@@ -42,6 +43,10 @@ test_LegalUser = do
         assertEqual Nothing (lHeadquartersAddress lf)
         le<-testMP $ storeLegalUser (lf{lHeadquartersAddress=Just "St Guilhem"})
         assertEqual (Just "St Guilhem") (lHeadquartersAddress le)
+        assertEqual "Moresmau" (lLegalRepresentativeLastName le)
+        assertEqual (Just "my house") (lLegalRepresentativeAddress le) -- this is lost, see https://mangopay.desk.com/customer/portal/questions/5980417-legalrepresentativeaddress-in-legaluser-api
+        assertEqual Nothing (lProofOfRegistration le)
+        assertEqual Nothing (lShareholderDeclaration le)
         el<-testMP $ getUser (fromJust $ lId l)
         assertEqual (Right le) el
         usL<-testMP $ listUsers  (Just $ Pagination 1 100)

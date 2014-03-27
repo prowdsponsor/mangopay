@@ -17,6 +17,9 @@ import Yesod.Core.Types (Logger)
 import Yesod.MangoPay
 import Web.MangoPay
 import Data.IORef (IORef)
+import Yesod.Form.Jquery (YesodJquery)
+import Network.Wai (pathInfo,Request)
+import Data.Text (Text)
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -57,10 +60,17 @@ mkYesodData "App" $(parseRoutesFile "config/routes")
 
 type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 
+-- |  use relative links unless if to register hook
+-- this is useful when developing since the external address may not be the local address
+approotRequest :: App -> Request -> Text
+approotRequest master request
+        | pathInfo request==["runFakeHandler", "pathInfo"] = appRoot $ settings master
+        | otherwise= ""
+
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod App where
-    approot = ApprootMaster $ appRoot . settings
+    approot = ApprootRequest approotRequest
 
     -- Store session data on the client in encrypted cookies,
     -- default session idle timeout is 120 minutes
@@ -130,6 +140,10 @@ getExtra = fmap (appExtra . settings) getYesod
 --
 -- https://github.com/yesodweb/yesod/wiki/Sending-email
 
+-- | use JQuery form widgets
+instance YesodJquery App
+
+-- | MangoPay support
 instance YesodMangoPay App where
   mpCredentials app=let
     extra=appExtra $ settings app

@@ -3,6 +3,11 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/          HomeR GET
-/mphook    MPHookR GET
-/events    MPEventsR GET
+/                    HomeR GET
+/mphook              MPHookR GET
+/events              MPEventsR GET
+/nuser               NUserR GET POST
+/luser               LUserR GET POST
+/user/#AnyUserID     UserR GET
+/doc/#AnyUserID      DocR GET POST
+

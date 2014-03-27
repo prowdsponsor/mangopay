@@ -28,6 +28,7 @@ module Web.MangoPay (
         ,LegalUserType(..)
         ,LegalUserID
         ,UserRef(..)
+        ,PersonType(..)
         ,AnyUserID
         ,storeNaturalUser
         ,fetchNaturalUser

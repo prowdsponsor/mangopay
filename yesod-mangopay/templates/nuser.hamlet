@@ -1,0 +1,10 @@
+<a href=@{HomeR}>_{MsgLnkHome}
+
+<form method=post action=@{NUserR} enctype=#{enctype}>
+    ^{widget}
+     <button>_{MsgBtnSubmit}
+
+$maybe u<-muser    
+    $maybe i<-uId u
+        <div>
+            <a href=@{DocR i}>_{MsgLnkDoc}

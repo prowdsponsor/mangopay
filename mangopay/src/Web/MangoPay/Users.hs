@@ -89,9 +89,10 @@ type NaturalUserID = Text
 
 -- | supported income ranges
 data IncomeRange=IncomeRange1 | IncomeRange2 | IncomeRange3 | IncomeRange4 | IncomeRange5 | IncomeRange6
-      deriving (Show,Read,Eq,Ord,Typeable)   
+      deriving (Show,Read,Eq,Ord,Bounded, Enum, Typeable)   
 
 -- | to json as per MangoPay format
+-- the samples do show string format when writing, integer format when reading...
 instance ToJSON IncomeRange  where
     toJSON IncomeRange1="1"
     toJSON IncomeRange2="2"
@@ -101,6 +102,7 @@ instance ToJSON IncomeRange  where
     toJSON IncomeRange6="6"
  
 -- | from json as per MangoPay format
+-- the samples do show string format when writing, integer format when reading...
 instance FromJSON IncomeRange where
     parseJSON (String "1") =pure IncomeRange1                  
     parseJSON (String "2") =pure IncomeRange2 
@@ -108,6 +110,12 @@ instance FromJSON IncomeRange where
     parseJSON (String "4") =pure IncomeRange4  
     parseJSON (String "5") =pure IncomeRange5  
     parseJSON (String "6") =pure IncomeRange6                 
+    parseJSON (Number 1) =pure IncomeRange1                  
+    parseJSON (Number 2) =pure IncomeRange2 
+    parseJSON (Number 3) =pure IncomeRange3  
+    parseJSON (Number 4) =pure IncomeRange4  
+    parseJSON (Number 5) =pure IncomeRange5  
+    parseJSON (Number 6) =pure IncomeRange6    
     parseJSON _= fail "IncomeRange"    
 
 -- | a natural user
@@ -160,7 +168,7 @@ type LegalUserID = Text
  
 -- | the type of legal user    
 data LegalUserType = Business | Organization
-      deriving (Show,Read,Eq,Ord,Typeable)   
+      deriving (Show,Read,Eq,Ord,Enum,Bounded,Typeable)   
     
 -- | to json as per MangoPay format
 instance ToJSON LegalUserType  where
@@ -184,7 +192,7 @@ data LegalUser=LegalUser {
         ,lHeadquartersAddress  :: Maybe Text -- ^ The address of the company’s headquarters
         ,lLegalRepresentativeFirstName :: Text -- ^ The firstname of the company’s Legal representative person
         ,lLegalRepresentativeLastName :: Text -- ^ The lastname of the company’s Legal representative person
-        ,lLegalRepresentativeAdress :: Maybe Text -- ^ The address of the company’s Legal representative person
+        ,lLegalRepresentativeAddress :: Maybe Text -- ^ The address of the company’s Legal representative person
         ,lLegalRepresentativeEmail :: Maybe Text -- ^  The email of the company’s Legal representative person
         ,lLegalRepresentativeBirthday :: POSIXTime -- ^ The birthdate of the company’s Legal representative person
         ,lLegalRepresentativeNationality :: Text -- ^ the nationality of the company’s Legal representative person
@@ -199,7 +207,7 @@ data LegalUser=LegalUser {
 -- | to json as per MangoPay format    
 instance ToJSON LegalUser  where
     toJSON u=object ["Tag" .= lTag u,"Email" .= lEmail u,"Name".= lName u,"LegalPersonType" .= lLegalPersonType u,"HeadquartersAddress" .= lHeadquartersAddress u, "LegalRepresentativeFirstName" .=  lLegalRepresentativeFirstName u
-      ,"LegalRepresentativeLastName" .= lLegalRepresentativeLastName u,"LegalRepresentativeAdress" .= lLegalRepresentativeAdress u,"LegalRepresentativeEmail" .= lLegalRepresentativeEmail u, "LegalRepresentativeBirthday" .= lLegalRepresentativeBirthday u,"LegalRepresentativeNationality" .= lLegalRepresentativeNationality u
+      ,"LegalRepresentativeLastName" .= lLegalRepresentativeLastName u,"LegalRepresentativeAddress" .= lLegalRepresentativeAddress u,"LegalRepresentativeEmail" .= lLegalRepresentativeEmail u, "LegalRepresentativeBirthday" .= lLegalRepresentativeBirthday u,"LegalRepresentativeNationality" .= lLegalRepresentativeNationality u
       ,"LegalRepresentativeCountryOfResidence" .= lLegalRepresentativeCountryOfResidence u,"Statute" .= lStatute u,"ProofOfRegistration" .=lProofOfRegistration u,"ShareholderDeclaration" .=lShareholderDeclaration u,"PersonType" .= Legal]        
       
 -- | from json as per MangoPay format
@@ -213,7 +221,7 @@ instance FromJSON LegalUser where
                          v .:? "HeadquartersAddress" <*>
                          v .: "LegalRepresentativeFirstName" <*>
                          v .: "LegalRepresentativeLastName" <*>
-                         v .:? "LegalRepresentativeAdress" <*>
+                         v .:? "LegalRepresentativeAddress" <*>
                          v .:? "LegalRepresentativeEmail" <*>
                          v .: "LegalRepresentativeBirthday" <*>
                          v .: "LegalRepresentativeNationality" <*>
