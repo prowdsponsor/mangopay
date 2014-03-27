@@ -25,6 +25,8 @@ import Yesod.Core.Types (loggerSet, Logger (Logger))
 import Handler.Home
 import Handler.User
 import Handler.Doc
+import Handler.Wallet
+
 import Data.IORef (newIORef)
 
 import Yesod.MangoPay

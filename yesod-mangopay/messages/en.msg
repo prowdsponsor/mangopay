@@ -46,5 +46,11 @@ DocCustomData: Custom Data:
 DocType: Document Type:
 DocStatus: Status:
 
-
 BtnSubmit: Submit
+
+LnkWalletCreate: Create Wallet...
+LnkWallets: Wallets...
+WalletCustomData: Custom Data:
+WalletDescription: Description:
+WalletCurrency: Currency:
+WalletBalance: Balance:

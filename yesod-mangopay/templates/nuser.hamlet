@@ -8,3 +8,5 @@ $maybe u<-muser
     $maybe i<-uId u
         <div>
             <a href=@{DocR i}>_{MsgLnkDoc}
+        <div>
+            <a href=@{WalletsR i}>_{MsgLnkWallets}

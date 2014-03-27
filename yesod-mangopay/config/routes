@@ -10,4 +10,5 @@
 /luser               LUserR GET POST
 /user/#AnyUserID     UserR GET
 /doc/#AnyUserID      DocR GET POST
-
+/wallets/#AnyUserID  WalletsR GET
+/wallet/#AnyUserID   WalletR GET POST

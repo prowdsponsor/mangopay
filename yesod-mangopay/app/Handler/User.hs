@@ -83,7 +83,7 @@ userPost :: HtmlForm a
                  -> Handler (Maybe a, Widget, Enctype)
 userPost form store = do
     ((result, _), _) <- runFormPost $ form Nothing
-    (muser)<-case result of
+    muser<-case result of
               FormSuccess u -> do
                 user<-runYesodMPTToken $ store u
                 setMessage "User change done"
