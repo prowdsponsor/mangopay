@@ -24,7 +24,9 @@ library
                  , http-types >=0.8.2 && <0.9
                  , text >=0.11.3 && <0.12
                  , containers >=0.5.0 && <0.6
-    exposed-modules:     Yesod.MangoPay
+    exposed-modules:     
+                         Yesod.MangoPay,
+                         Yesod.MangoPay.Util
 
 
 executable         yesod-mangopay
@@ -33,13 +35,16 @@ executable         yesod-mangopay
 
     main-is:           main.hs
     hs-source-dirs:    app
-    other-modules:   Application
+    other-modules:   
+                     Application
                      Foundation
                      Import
                      Settings
                      Settings.StaticFiles
                      Settings.Development
-                     Handler.Home
+                     Handler.Home,
+                     Handler.User,
+                     Base.Util
     if flag(dev)
         cpp-options:   -DDEVELOPMENT
         ghc-options:   -Wall -O0
@@ -94,6 +99,7 @@ executable         yesod-mangopay
                  , wai-logger                    >= 2.1        && < 2.2
                  , time >=1.4.0 && <1.5
                  , containers >=0.5.0 && <0.6
+                 , wai >=2.0 && <2.1
     ghc-options:       -threaded -O2
 
 

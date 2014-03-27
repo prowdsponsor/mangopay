@@ -6,3 +6,5 @@
 /          HomeR GET
 /mphook    MPHookR GET
 /events    MPEventsR GET
+/nuser     NUserR GET POST
+/luser     LUserR GET POST

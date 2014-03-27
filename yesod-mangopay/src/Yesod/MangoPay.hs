@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell #-}
 -- | typeclasses and helpers to access MangoPay from Yesod
 module Yesod.MangoPay where
 
@@ -101,11 +101,12 @@ runYesodMPTToken act = do
 
 -- | register callbacks for each event type on the same url
 -- we try to not duplicate the callbacks by checking first if they already exists
-registerAllMPCallbacks ::  (Y.MonadHandler m,Y.MonadBaseControl IO m,Y.HandlerSite m ~ site, YesodMangoPay site) =>
+registerAllMPCallbacks ::  (Y.MonadHandler m,Y.MonadBaseControl IO m,Y.MonadLogger m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   Y.Route (Y.HandlerSite m)-> m ()
 registerAllMPCallbacks rt=do
   render<-Y.getUrlRender
   let url=render rt
+  $(Y.logInfo) url
   runYesodMPTToken $ \at-> do
     -- get all hooks at once
     hooks<-getAll listHooks at

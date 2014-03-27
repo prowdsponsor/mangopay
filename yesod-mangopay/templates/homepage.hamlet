@@ -6,11 +6,20 @@
 <h2>_{MsgUsers}
 <ul>
         $forall user <- users
-            <li>#{urEmail user}
+            <li>
+                $if (urPersonType user == Natural)
+                    <a href=@{NUserR}?id=#{urId user}>#{urEmail user}
+                $else
+                    <a href=@{LUserR}?id=#{urId user}>#{urEmail user}
+                
 
 <div>
-$if (isJust previous)
-    <a href=@{HomeR}?page=#{fromJust previous}>_{MsgPrevious}
+$maybe prev<-previous
+    <a href=@{HomeR}?page=#{prev}>_{MsgPrevious}
     
-$if (isJust next)
-    <a href=@{HomeR}?page=#{fromJust next}>_{MsgNext}
+$maybe nex<-next
+    <a href=@{HomeR}?page=#{nex}>_{MsgNext}
+    
+<div>
+    <a href=@{NUserR}>_{MsgLnkNUserCreate}
+    <a href=@{LUserR}>_{MsgLnkLUserCreate}

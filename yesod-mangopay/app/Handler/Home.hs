@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections, OverloadedStrings #-}
+-- | home and events pages
 module Handler.Home where
 
 import Import
