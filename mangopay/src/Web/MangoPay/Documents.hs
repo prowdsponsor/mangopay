@@ -51,6 +51,7 @@ storePage uid did contents at=do
 -- | ID of a document
 type DocumentID = Text
 
+-- | type of the document
 data DocumentType= IDENTITY_PROOF -- ^ For legal and natural users
   | REGISTRATION_PROOF -- ^ Only for legal users
   | ARTICLES_OF_ASSOCIATION -- ^ Only for legal users

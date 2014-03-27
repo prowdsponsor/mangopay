@@ -9,6 +9,7 @@ import Web.MangoPay
 import           Yesod.Form.Jquery
 import Control.Monad (join, liftM)
 
+-- | get the form to edit any type of user
 getUserR :: AnyUserID -> Handler Html
 getUserR uid=do
   eu <- runYesodMPTToken $ getUser uid
@@ -63,7 +64,8 @@ postLUserR = do
         aDomId <- newIdent
         setTitle "Manage a user"
         $(widgetFile "luser")
- 
+
+-- | common code for retrieval and form building 
 userGet :: HtmlForm a
                  -> (Text -> AccessToken -> MangoPayT Handler a)
                  -> Handler (Maybe a, Widget, Enctype)
@@ -75,6 +77,7 @@ userGet form fetch =do
     (widget, enctype) <- generateFormPost $ form muser
     return (muser,widget,enctype)
 
+-- | common code for storing, retrieving update and form building
 userPost :: HtmlForm a
                  -> (a -> AccessToken -> MangoPayT Handler a)
                  -> Handler (Maybe a, Widget, Enctype)

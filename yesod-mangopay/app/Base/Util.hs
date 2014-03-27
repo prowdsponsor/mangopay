@@ -16,6 +16,7 @@ fs :: forall master msg.
             msg -> FieldSettings master
 fs n=FieldSettings (SomeMessage n) Nothing Nothing Nothing []    
 
+-- | disabled field
 disabled :: forall master.
               FieldSettings master -> FieldSettings master
 disabled fs= fs{fsAttrs= ("disabled",""):fsAttrs fs}
