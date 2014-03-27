@@ -5,7 +5,7 @@ build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
 license:        BSD3
 license-file:   LICENSE
-copyright:      (c) 2014 ProwdFunder
+copyright:      (c) 2014 Prowdsponsor
 category:       Web
 homepage:       https://github.com/loyful/mangopay
 synopsis:       Bindings to the MangoPay API
