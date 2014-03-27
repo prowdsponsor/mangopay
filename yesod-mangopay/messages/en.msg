@@ -39,4 +39,12 @@ UserDeclaration: ShareHolder Declaration:
 LnkLUserCreate: Create Legal User...
 TitleLUser: Legal User
 
+LnkDoc: Upload document...
+LnkUser: Back to user
+DocFile: File:
+DocCustomData: Custom Data:
+DocType: Document Type:
+DocStatus: Status:
+
+
 BtnSubmit: Submit

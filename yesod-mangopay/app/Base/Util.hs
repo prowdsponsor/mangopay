@@ -16,6 +16,9 @@ fs :: forall master msg.
             msg -> FieldSettings master
 fs n=FieldSettings (SomeMessage n) Nothing Nothing Nothing []    
 
+disabled :: forall master.
+              FieldSettings master -> FieldSettings master
+disabled fs= fs{fsAttrs= ("disabled",""):fsAttrs fs}
 
 -- | show text and identifier for all values of an enum    
 ranges :: forall a. (Bounded a, Enum a, Show a) => [(Text, a)]

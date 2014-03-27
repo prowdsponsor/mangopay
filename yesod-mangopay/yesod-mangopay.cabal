@@ -36,15 +36,16 @@ executable         yesod-mangopay
     main-is:           main.hs
     hs-source-dirs:    app
     other-modules:   
-                     Application
-                     Foundation
-                     Import
-                     Settings
-                     Settings.StaticFiles
-                     Settings.Development
+                     Application,
+                     Foundation,
+                     Import,
+                     Settings,
+                     Settings.StaticFiles,
+                     Settings.Development,
                      Handler.Home,
                      Handler.User,
-                     Base.Util
+                     Base.Util,
+                     Handler.Doc
     if flag(dev)
         cpp-options:   -DDEVELOPMENT
         ghc-options:   -Wall -O0
