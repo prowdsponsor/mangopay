@@ -85,3 +85,7 @@ UserDone: User change submitted
 AccountDone: Account registration done
 DocDone: Document uploaded
 ErrorDoc: Error while uploading document
+
+LnkTransactions: Transactions...
+TitleTransactions: Transactions
+PastTransactions: Past transactions:

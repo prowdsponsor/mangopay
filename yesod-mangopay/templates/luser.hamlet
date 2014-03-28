@@ -13,4 +13,6 @@ $maybe u<-muser
         <div>
             <a href=@{CardsR i}>_{MsgLnkCards}
         <div>
-            <a href=@{AccountsR i}>_{MsgLnkAccounts}            
+            <a href=@{AccountsR i}>_{MsgLnkAccounts}   
+        <div>
+            <a href=@{TransactionsR i}>_{MsgLnkTransactions}                        
