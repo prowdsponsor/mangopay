@@ -131,6 +131,7 @@ instance FromJSON BankWire where
 type CardPayinID=Text 
   
 -- | helper function to create a new direct payin with the needed information
+-- | the url is only used in secure mode but is REQUIRED by MangoPay
 mkCardPayin :: AnyUserID -> AnyUserID -> WalletID -> Amount -> Amount -> Text -> CardID -> CardPayin
 mkCardPayin aid uid wid amount fees url cid= CardPayin Nothing Nothing Nothing aid uid fees
   wid Nothing amount Nothing (Just url) Nothing Nothing cid Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
@@ -142,7 +143,7 @@ data CardPayin=CardPayin {
   ,cpCreationDate :: Maybe POSIXTime
   ,cpTag :: Maybe Text -- ^  custom data
   ,cpAuthorId  :: AnyUserID -- ^   The user ID of the author
-  ,cpCreditedUserId  :: AnyUserID -- ^  It represents the amount credited on the targeted e-wallet.
+  ,cpCreditedUserId  :: AnyUserID -- ^  The user ID of the owner of the credited wallet
   ,cpFees :: Amount -- ^  It represents your fees taken on the DebitedFundsDebitedFunds – Fees = CreditedFunds (amount received on wallet)
   ,cpCreditedWalletId :: WalletID -- ^ The ID of the credited wallet
   ,cpDebitedWalletId :: Maybe WalletID -- ^  The ID of the debited wallet
