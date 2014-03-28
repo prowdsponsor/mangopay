@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell, RankNTypes #-}
 -- | typeclasses and helpers to access MangoPay from Yesod
 module Yesod.MangoPay where
 
@@ -12,6 +12,7 @@ import Data.IORef (IORef, readIORef, writeIORef)
 
 import qualified Data.Set as S
 import Control.Monad (void)
+import qualified Control.Exception.Lifted as L
 
 -- | The 'YesodMangoPay' class for foundation datatypes that
 -- support running 'MangoPayT' actions.
@@ -138,3 +139,10 @@ parseMPNotification = do
     Just evt->return evt
     Nothing->fail "parseMPNotification: could not parse Event"
   
+-- | catches any exception that the MangoPay library may throw and deals with it in a error handler
+catchMP :: forall (m :: * -> *) a.
+             Y.MonadBaseControl IO m =>
+             m a -> (MpException -> m a) -> m a
+catchMP func onError=L.catches func [
+   L.Handler (\e -> L.throw (e :: L.AsyncException))
+  ,L.Handler (\e -> onError (e :: MpException))]

@@ -30,10 +30,19 @@ postCardR :: AnyUserID -> Handler Html
 postCardR uid=do
   ((result, widget), enctype) <- runFormPost cardInfoForm
   case result of
-    FormSuccess (c,ci)->do
-            _<-runYesodMPTToken $ fullRegistration uid c ci
-            setMessageI MsgCardDone
-            redirect $ CardsR uid
+    FormSuccess (c,ci)->
+            catchMP (do
+              _<-runYesodMPTToken $ fullRegistration uid c ci
+              setMessageI MsgCardDone
+              redirect $ CardsR uid
+              )
+               (\e->do
+                setMessage $ toHtml $ show e
+                defaultLayout $ do
+                  aDomId <- newIdent
+                  setTitleI MsgTitleCard
+                  $(widgetFile "card")
+                  )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do

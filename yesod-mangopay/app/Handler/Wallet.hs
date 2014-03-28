@@ -36,9 +36,16 @@ postWalletR uid=do
   mwallet<-case result of
     FormSuccess w->do
             -- set the owner to current user
-            wallet<-runYesodMPTToken $ storeWallet w{wOwners=[uid]}
-            setMessageI MsgWalletDone
-            return (Just wallet)
+            let wo= w{wOwners=[uid]}
+            catchMP (do
+              wallet<-runYesodMPTToken $ storeWallet wo
+              setMessageI MsgWalletDone
+              return (Just wallet)
+              )
+              (\e->do
+                setMessage $ toHtml $ show e
+                return (Just wo)
+              )    
     _ -> do
             setMessageI MsgErrorData
             return Nothing

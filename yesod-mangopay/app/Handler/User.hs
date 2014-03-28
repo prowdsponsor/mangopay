@@ -85,9 +85,15 @@ userPost form store = do
     ((result, _), _) <- runFormPost $ form Nothing
     muser<-case result of
               FormSuccess u -> do
-                user<-runYesodMPTToken $ store u
-                setMessageI MsgUserDone
-                return (Just user)
+                catchMP (do
+                  user<-runYesodMPTToken $ store u
+                  setMessageI MsgUserDone
+                  return (Just user)
+                  )
+                  (\e->do
+                    setMessage $ toHtml $ show e
+                    return (Just u)
+                  )    
               _ -> do
                 setMessageI MsgErrorData
                 return Nothing

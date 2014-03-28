@@ -5,6 +5,7 @@ import Import
 import Web.MangoPay
 import Yesod.MangoPay
 
+
 -- | get account list
 getAccountsR :: AnyUserID -> Handler Html
 getAccountsR uid=do
@@ -29,10 +30,19 @@ postAccountR :: AnyUserID -> Handler Html
 postAccountR uid=do
   ((result, widget), enctype) <- runFormPost accountForm
   case result of
-    FormSuccess bap->do
-            _<-runYesodMPTToken $ storeAccount (toBankAccount uid bap)
-            setMessageI MsgAccountDone
-            redirect $ AccountsR uid
+    FormSuccess bap->
+            catchMP (do
+              _<-runYesodMPTToken $ storeAccount (toBankAccount uid bap)
+              setMessageI MsgAccountDone
+              redirect $ AccountsR uid
+              )
+               (\e->do
+                setMessage $ toHtml $ show e
+                defaultLayout $ do
+                  aDomId <- newIdent
+                  setTitleI MsgTitleAccount
+                  $(widgetFile "account")
+                  )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
