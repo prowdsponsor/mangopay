@@ -15,6 +15,7 @@ import Data.Default
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.UTF8 as UTF8
 import Data.Maybe (listToMaybe)
+import Network.HTTP.Conduit (HttpException)
 
 -- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
@@ -85,6 +86,7 @@ toAccessToken  oa=AccessToken $ TE.encodeUtf8 $ T.concat [oaTokenType oa, " ",oa
 -- | an exception that a call to MangoPay may throw
 data MpException = JSONException String -- ^ JSON parsingError
   | MpAppException MpError -- ^ application exception
+  | MpHttpException HttpException -- ^ HTTP level exception
   deriving (Show,Typeable)
 
 -- | make our exception type a normal exception  
