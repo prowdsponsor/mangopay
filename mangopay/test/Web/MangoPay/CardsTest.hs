@@ -41,6 +41,9 @@ test_Card = do
   assertBool $ cActive c
   assertEqual uid $ cUserId c
   assertEqual "CB_VISA_MASTERCARD" $ cCardType c
+  cs<-testMP $ getAll $ listCards uid
+  assertBool $ not $ null cs
+  assertBool $ any (\ c1 -> cId c == cid) cs
   
  
   

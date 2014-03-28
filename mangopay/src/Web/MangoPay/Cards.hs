@@ -142,6 +142,13 @@ fetchCard cid at=do
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
+-- | list all cards for a given user   
+listCards :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)
+listCards uid mp at=do
+        url<-getClientURLMultiple ["/users/",uid,"/cards"]
+        req<-getGetRequest url (Just at) (paginationAttributes mp)
+        getJSONList req 
+
 -- | validity of a card
 data CardValidity=UNKNOWN | VALID | INVALID
   deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
