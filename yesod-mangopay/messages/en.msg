@@ -61,3 +61,12 @@ CardCurrency: Currency:
 CardNumber: Number:
 CardExpire: Expiry Date:
 CardCSC: Security Code:
+
+LnkAccountCreate: Create Account...
+LnkAccounts: Accounts...
+AccountCustomData: Custom Data:
+AccountOwnerName: Owner Name:
+AccountOwnerAddress: Owner Address:
+AccountIBAN: IBAN:
+AccountBIC: BIC:
+

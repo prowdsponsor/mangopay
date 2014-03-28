@@ -27,6 +27,7 @@ import Handler.User
 import Handler.Doc
 import Handler.Wallet
 import Handler.Card
+import Handler.Account
 
 import Data.IORef (newIORef)
 

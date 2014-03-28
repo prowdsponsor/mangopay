@@ -31,7 +31,6 @@ postCardR uid=do
   ((result, widget), enctype) <- runFormPost cardInfoForm
   case result of
     FormSuccess (c,ci)->do
-            -- set the owner to current user
             _<-runYesodMPTToken $ fullRegistration uid c ci
             setMessage "Card registration done"
             redirect $ CardsR uid

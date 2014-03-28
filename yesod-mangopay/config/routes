@@ -14,4 +14,6 @@
 /wallet/#AnyUserID   WalletR GET POST
 /cards/#AnyUserID    CardsR GET
 /card/#AnyUserID     CardR GET POST
+/accounts/#AnyUserID AccountsR GET
+/account/#AnyUserID  AccountR GET POST
 

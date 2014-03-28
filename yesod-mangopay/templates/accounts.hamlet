@@ -1,0 +1,12 @@
+<div>
+    <a href=@{HomeR}>_{MsgLnkHome}
+<div>
+    <a href=@{UserR uid}>_{MsgLnkUser}
+    
+<ul>
+        $forall acc <- accounts
+            <li>
+                #{show acc}
+    
+<div>
+    <a href=@{AccountR uid}>_{MsgLnkAccountCreate}
