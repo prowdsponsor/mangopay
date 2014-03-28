@@ -1,0 +1,12 @@
+<div>
+    <a href=@{HomeR}>_{MsgLnkHome}
+<div>
+    <a href=@{UserR uid}>_{MsgLnkUser}
+    
+<ul>
+        $forall crd <- cards
+            <li>
+                #{show crd}
+    
+<div>
+    <a href=@{CardR uid}>_{MsgLnkCardCreate}

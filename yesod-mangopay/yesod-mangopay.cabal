@@ -53,7 +53,8 @@ executable         yesod-mangopay
                      Handler.User,
                      Base.Util,
                      Handler.Doc,
-                     Handler.Wallet
+                     Handler.Wallet,
+                     Handler.Card
     if flag(dev)
         cpp-options:   -DDEVELOPMENT
         ghc-options:   -Wall -O0

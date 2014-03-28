@@ -54,3 +54,10 @@ WalletCustomData: Custom Data:
 WalletDescription: Description:
 WalletCurrency: Currency:
 WalletBalance: Balance:
+
+LnkCardCreate: Register Card...
+LnkCards: Cards...
+CardCurrency: Currency:
+CardNumber: Number:
+CardExpire: Expiry Date:
+CardCSC: Security Code:
