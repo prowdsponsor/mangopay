@@ -28,7 +28,7 @@ getHomeR = do
     let users=plData usersL
     defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Welcome to the MangoPay demo application!"
+        setTitleI MsgHello
         $(widgetFile "homepage")
 
 -- | notification callback page
@@ -48,5 +48,5 @@ getMPEventsR = do
   events<-liftIO $ readIORef  (appEvents site)
   defaultLayout $ do
       aDomId <- newIdent
-      setTitle "MangoPay Events!"
+      setTitleI MsgTitleEvents
       $(widgetFile "events")

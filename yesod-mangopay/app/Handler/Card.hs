@@ -13,7 +13,7 @@ getCardsR uid=do
   cards<-runYesodMPTToken $ getAll $ listCards uid
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Cards"
+        setTitleI MsgTitleCards
         $(widgetFile "cards")
         
 -- | get card registration form
@@ -22,7 +22,7 @@ getCardR uid=do
     (widget, enctype) <- generateFormPost cardInfoForm
     defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Card"
+        setTitleI MsgTitleCard
         $(widgetFile "card")
 
 -- | register card
@@ -32,13 +32,13 @@ postCardR uid=do
   case result of
     FormSuccess (c,ci)->do
             _<-runYesodMPTToken $ fullRegistration uid c ci
-            setMessage "Card registration done"
+            setMessageI MsgCardDone
             redirect $ CardsR uid
     _ -> do
-            setMessage "Invalid data"
+            setMessageI MsgErrorData
             defaultLayout $ do
                   aDomId <- newIdent
-                  setTitle "Card"
+                  setTitleI MsgTitleCard
                   $(widgetFile "card")
         
 cardInfoForm :: Html -> MForm Handler (FormResult (Currency,CardInfo), Widget)

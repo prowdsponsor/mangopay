@@ -13,7 +13,7 @@ getWalletsR uid=do
   wallets<-runYesodMPTToken $ getAll $ listWallets uid
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Wallets"
+        setTitleI MsgTitleWallets
         $(widgetFile "wallets")
 
 -- | get wallet creation/edition form
@@ -26,7 +26,7 @@ getWalletR uid=do
     (widget, enctype) <- generateFormPost $ walletForm mwallet
     defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Wallets"
+        setTitleI MsgTitleWallet
         $(widgetFile "wallet")
 
 -- | edit/create wallet
@@ -37,14 +37,14 @@ postWalletR uid=do
     FormSuccess w->do
             -- set the owner to current user
             wallet<-runYesodMPTToken $ storeWallet w{wOwners=[uid]}
-            setMessage "Wallet change done"
+            setMessageI MsgWalletDone
             return (Just wallet)
     _ -> do
-            setMessage "Invalid data"
+            setMessageI MsgErrorData
             return Nothing
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Wallets"
+        setTitleI MsgTitleWallet
         $(widgetFile "wallet")
         
 -- | form for wallet  

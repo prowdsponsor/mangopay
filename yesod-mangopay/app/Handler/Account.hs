@@ -12,7 +12,7 @@ getAccountsR uid=do
   accounts<-runYesodMPTToken $ getAll $ listAccounts uid
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Accounts"
+        setTitleI MsgTitleAccounts
         $(widgetFile "accounts")
 
 -- | get account registration form
@@ -21,7 +21,7 @@ getAccountR uid=do
     (widget, enctype) <- generateFormPost accountForm
     defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Account"
+        setTitleI MsgTitleAccount
         $(widgetFile "account")
 
 -- | register account
@@ -31,13 +31,13 @@ postAccountR uid=do
   case result of
     FormSuccess bap->do
             _<-runYesodMPTToken $ storeAccount (toBankAccount uid bap)
-            setMessage "Account registration done"
+            setMessageI MsgAccountDone
             redirect $ AccountsR uid
     _ -> do
-            setMessage "Invalid data"
+            setMessageI MsgErrorData
             defaultLayout $ do
                   aDomId <- newIdent
-                  setTitle "Account"
+                  setTitleI MsgTitleAccount
                   $(widgetFile "account")
 
 -- | partial data for account

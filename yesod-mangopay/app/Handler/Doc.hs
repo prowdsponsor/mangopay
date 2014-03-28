@@ -16,7 +16,7 @@ getDocR uid= do
   (widget, enctype) <- generateFormPost uploadForm
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Upload a document"
+        setTitleI MsgTitleDocument
         $(widgetFile "docupload")
 
 -- | upload doc and file and show result
@@ -33,10 +33,10 @@ postDocR uid=do
         docWritten<-runYesodMPTToken $ storeDocument uid (docWritten0{dStatus=Just VALIDATION_ASKED})
         defaultLayout $ do
           aDomId <- newIdent
-          setTitle "Document uploaded"
+          setTitleI MsgDocDone
           $(widgetFile "doc")
      _ -> do
-            setMessage "Something went wrong"
+            setMessageI MsgErrorDoc
             redirect $ DocR uid
 
 -- | the upload data type
