@@ -62,6 +62,56 @@ postPayinR uid=do
                   setTitleI MsgTitleWallet
                   $(widgetFile "payin")
 
+-- | get first transfer page: choose the target user
+getTransfer1R :: AnyUserID -> Handler Html
+getTransfer1R uid=do
+  users<-runYesodMPTToken $ getAll listUsers
+  defaultLayout $ do
+        aDomId <- newIdent
+        setTitleI MsgTitleTransfer
+        $(widgetFile "transfer1")
+
+-- | get second transfer page: choose between wallets
+getTransfer2R :: AnyUserID -> AnyUserID -> Handler Html
+getTransfer2R uid touid=do
+    fromWallets<-runYesodMPTToken $ getAll $ listWallets uid
+    toWallets<-runYesodMPTToken $ getAll $ listWallets touid
+    (widget, enctype) <- generateFormPost $ transferForm fromWallets toWallets
+    defaultLayout $ do
+        aDomId <- newIdent
+        setTitleI MsgTitleTransfer
+        $(widgetFile "transfer2")
+
+-- | perfrm transfer
+postTransfer2R :: AnyUserID -> AnyUserID -> Handler Html
+postTransfer2R uid touid=do
+  fromWallets<-runYesodMPTToken $ getAll $ listWallets uid
+  toWallets<-runYesodMPTToken $ getAll $ listWallets touid
+    
+  ((result, widget), enctype) <- runFormPost $ transferForm fromWallets toWallets
+  case result of
+    FormSuccess (MPTransfer from to am cur)->do
+            let t1=Web.MangoPay.Transfer Nothing Nothing Nothing uid (Just touid) (Amount cur am) (Amount cur 0)
+                        from to Nothing Nothing Nothing Nothing Nothing
+            catchMP (do
+              _<-runYesodMPTToken $ createTransfer t1
+              setMessageI MsgPayInDone
+              redirect $ TransactionsR uid
+              )
+              (\e->do
+                setMessage $ toHtml $ show e
+                defaultLayout $ do
+                  aDomId <- newIdent
+                  setTitleI MsgTitleTransfer
+                  $(widgetFile "transfer2")
+              )    
+    _ -> do
+            setMessageI MsgErrorData
+            defaultLayout $ do
+                  aDomId <- newIdent
+                  setTitleI MsgTitleTransfer
+                  $(widgetFile "transfer2")
+
 -- | data necessary for payin
 data PayIn = PayIn CardID WalletID Integer Currency
 
@@ -72,3 +122,14 @@ payinInForm cards wallets= renderDivs $ PayIn
   <*> areq (selectFieldList (map (wDescription &&& (fromJust . wId)) wallets)) (localizedFS MsgPayInWallet) Nothing
   <*> areq intField (localizedFS MsgPayInAmount) Nothing
   <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgPayInCurrency) Nothing
+
+-- | data necessary for transfer
+data MPTransfer= MPTransfer WalletID WalletID Integer Currency
+  
+-- | transfer form
+transferForm :: [Wallet] -> [Wallet] -> Html -> MForm Handler (FormResult MPTransfer, Widget)
+transferForm fromWallets toWallets=renderDivs $ MPTransfer
+  <$> areq (selectFieldList (map (wDescription &&& (fromJust . wId)) fromWallets)) (localizedFS MsgTransferFromWallet) Nothing
+  <*> areq (selectFieldList (map (wDescription &&& (fromJust . wId)) toWallets)) (localizedFS MsgTransferToWallet) Nothing
+  <*> areq intField (localizedFS MsgTransferAmount) Nothing
+  <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgTransferCurrency) Nothing

@@ -98,5 +98,12 @@ PayInWallet: To Wallet:
 PayInAmount: Amount:
 PayInCurrency: Currency:
 
-
+TitleTransfer: Transfer
+LnkTransfer: Make Transfer
+TransferDone: Transfer done
+TransferToUser: To User:
+TransferFromWallet: From Wallet:
+TransferToWallet: To Wallet:
+TransferAmount: Amount:
+TransferCurrency: Currency:
 

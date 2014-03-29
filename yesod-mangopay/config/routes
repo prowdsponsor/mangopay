@@ -18,3 +18,5 @@
 /account/#AnyUserID      AccountR GET POST
 /transactions/#AnyUserID TransactionsR GET
 /payin/#AnyUserID        PayinR GET POST
+/transfer1/#AnyUserID    Transfer1R GET
+/transfer2/#AnyUserID/#AnyUserID    Transfer2R GET POST
