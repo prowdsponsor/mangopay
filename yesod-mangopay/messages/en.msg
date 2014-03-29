@@ -89,3 +89,14 @@ ErrorDoc: Error while uploading document
 LnkTransactions: Transactions...
 TitleTransactions: Transactions
 PastTransactions: Past transactions:
+
+TitlePayIn: Pay In
+LnkPayIn: Make Pay-In
+PayInDone: Pay-In done
+PayInCard: From Card:
+PayInWallet: To Wallet:
+PayInAmount: Amount:
+PayInCurrency: Currency:
+
+
+

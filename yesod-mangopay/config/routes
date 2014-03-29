@@ -17,3 +17,4 @@
 /accounts/#AnyUserID     AccountsR GET
 /account/#AnyUserID      AccountR GET POST
 /transactions/#AnyUserID TransactionsR GET
+/payin/#AnyUserID        PayinR GET POST

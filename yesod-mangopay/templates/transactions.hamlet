@@ -14,3 +14,6 @@ $maybe prev<-previous
     
 $maybe nex<-next
     <a href=@{TransactionsR uid}?page=#{nex}>_{MsgNext}
+    
+<div>
+    <a href=@{PayinR uid}>_{MsgLnkPayIn}
