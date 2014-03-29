@@ -3,20 +3,21 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/                        HomeR GET
-/mphook                  MPHookR GET
-/events                  MPEventsR GET
-/nuser                   NUserR GET POST
-/luser                   LUserR GET POST
-/user/#AnyUserID         UserR GET
-/doc/#AnyUserID          DocR GET POST
-/wallets/#AnyUserID      WalletsR GET
-/wallet/#AnyUserID       WalletR GET POST
-/cards/#AnyUserID        CardsR GET
-/card/#AnyUserID         CardR GET POST
-/accounts/#AnyUserID     AccountsR GET
-/account/#AnyUserID      AccountR GET POST
-/transactions/#AnyUserID TransactionsR GET
-/payin/#AnyUserID        PayinR GET POST
-/transfer1/#AnyUserID    Transfer1R GET
+/                                   HomeR GET
+/mphook                             MPHookR GET
+/events                             MPEventsR GET
+/nuser                              NUserR GET POST
+/luser                              LUserR GET POST
+/user/#AnyUserID                    UserR GET
+/doc/#AnyUserID                     DocR GET POST
+/wallets/#AnyUserID                 WalletsR GET
+/wallet/#AnyUserID                  WalletR GET POST
+/cards/#AnyUserID                   CardsR GET
+/card/#AnyUserID                    CardR GET POST
+/accounts/#AnyUserID                AccountsR GET
+/account/#AnyUserID                 AccountR GET POST
+/transactions/#AnyUserID            TransactionsR GET
+/payin/#AnyUserID                   PayinR GET POST
+/transfer1/#AnyUserID               Transfer1R GET
 /transfer2/#AnyUserID/#AnyUserID    Transfer2R GET POST
+/payout/#AnyUserID                  PayoutR GET POST

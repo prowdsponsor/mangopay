@@ -20,3 +20,6 @@ $maybe nex<-next
 
 <div>
     <a href=@{Transfer1R uid}>_{MsgLnkTransfer}
+    
+<div>
+    <a href=@{PayoutR uid}>_{MsgLnkPayOut}

@@ -90,7 +90,7 @@ LnkTransactions: Transactions...
 TitleTransactions: Transactions
 PastTransactions: Past transactions:
 
-TitlePayIn: Pay In
+TitlePayIn: Pay-In
 LnkPayIn: Make Pay-In
 PayInDone: Pay-In done
 PayInCard: From Card:
@@ -107,3 +107,10 @@ TransferToWallet: To Wallet:
 TransferAmount: Amount:
 TransferCurrency: Currency:
 
+TitlePayOut: Pay-Out
+LnkPayOut: Make Pay-out
+PayOutDone: Pay-Out done
+PayOutWallet: From Wallet:
+PayOutAccount: To Account:
+PayOutAmount: Amount:
+PayOutCurrency: Currency:

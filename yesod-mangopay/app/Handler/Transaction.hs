@@ -1,4 +1,4 @@
--- | transactions
+-- | transactions: pay-in, transfer, pay-out
 module Handler.Transaction where
 
 import Import
@@ -7,6 +7,7 @@ import Yesod.MangoPay
 import Web.MangoPay
 import Data.Maybe (fromJust)
 import Control.Arrow ((&&&))
+import Data.Text (pack)
 
 -- | transaction list
 getTransactionsR :: AnyUserID -> Handler Html
@@ -30,7 +31,7 @@ getPayinR uid=do
     (widget, enctype) <- generateFormPost $ payinInForm cards wallets
     defaultLayout $ do
         aDomId <- newIdent
-        setTitleI MsgTitleCard
+        setTitleI MsgTitlePayIn
         $(widgetFile "payin")
 
 -- | payin
@@ -52,14 +53,14 @@ postPayinR uid=do
                 setMessage $ toHtml $ show e
                 defaultLayout $ do
                   aDomId <- newIdent
-                  setTitleI MsgTitleWallet
+                  setTitleI MsgTitlePayIn
                   $(widgetFile "payin")
               )    
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
                   aDomId <- newIdent
-                  setTitleI MsgTitleWallet
+                  setTitleI MsgTitlePayIn
                   $(widgetFile "payin")
 
 -- | get first transfer page: choose the target user
@@ -95,7 +96,7 @@ postTransfer2R uid touid=do
                         from to Nothing Nothing Nothing Nothing Nothing
             catchMP (do
               _<-runYesodMPTToken $ createTransfer t1
-              setMessageI MsgPayInDone
+              setMessageI MsgTransferDone
               redirect $ TransactionsR uid
               )
               (\e->do
@@ -111,6 +112,49 @@ postTransfer2R uid touid=do
                   aDomId <- newIdent
                   setTitleI MsgTitleTransfer
                   $(widgetFile "transfer2")
+
+-- | get payout form
+getPayoutR :: AnyUserID -> Handler Html
+getPayoutR uid=do
+    wallets<-runYesodMPTToken $ getAll $ listWallets uid
+    accounts<-runYesodMPTToken $ getAll $ listAccounts uid
+    
+    (widget, enctype) <- generateFormPost $ payoutForm wallets accounts
+    defaultLayout $ do
+        aDomId <- newIdent
+        setTitleI MsgTitlePayOut
+        $(widgetFile "payout")
+
+-- | payout
+postPayoutR :: AnyUserID -> Handler Html
+postPayoutR uid=do
+  wallets<-runYesodMPTToken $ getAll $ listWallets uid
+  accounts<-runYesodMPTToken $ getAll $ listAccounts uid
+    
+  ((result, widget), enctype) <- runFormPost $ payoutForm wallets accounts
+  case result of
+    FormSuccess (PayOut wid aid am cur)->do
+            let po=mkPayout uid wid (Amount cur am) (Amount cur 0) aid
+            catchMP (do
+              _<-runYesodMPTToken $ storePayout po
+              setMessageI MsgPayOutDone
+              redirect $ TransactionsR uid
+              )
+              (\e->do
+                setMessage $ toHtml $ show e
+                defaultLayout $ do
+                  aDomId <- newIdent
+                  setTitleI MsgTitlePayOut
+                  $(widgetFile "payout")
+              )    
+    _ -> do
+            setMessageI MsgErrorData
+            defaultLayout $ do
+                  aDomId <- newIdent
+                  setTitleI MsgTitlePayOut
+                  $(widgetFile "payout")
+
+
 
 -- | data necessary for payin
 data PayIn = PayIn CardID WalletID Integer Currency
@@ -133,3 +177,15 @@ transferForm fromWallets toWallets=renderDivs $ MPTransfer
   <*> areq (selectFieldList (map (wDescription &&& (fromJust . wId)) toWallets)) (localizedFS MsgTransferToWallet) Nothing
   <*> areq intField (localizedFS MsgTransferAmount) Nothing
   <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgTransferCurrency) Nothing
+
+-- | data necessary for payout
+data PayOut = PayOut WalletID BankAccountID Integer Currency
+
+-- | payin form
+payoutForm :: [Wallet] -> [BankAccount] -> Html -> MForm Handler (FormResult PayOut, Widget)
+payoutForm wallets accounts= renderDivs $ PayOut
+  <$> areq (selectFieldList (map (wDescription &&& (fromJust . wId)) wallets)) (localizedFS MsgPayOutWallet) Nothing
+  <*> areq (selectFieldList (map ((pack . show . baDetails) &&& (fromJust . baId)) accounts)) (localizedFS MsgPayOutAccount) Nothing
+  <*> areq intField (localizedFS MsgPayOutAmount) Nothing
+  <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgPayOutCurrency) Nothing
+  
