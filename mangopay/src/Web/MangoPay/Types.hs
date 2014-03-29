@@ -84,7 +84,7 @@ toAccessToken ::  OAuthToken -> AccessToken
 toAccessToken  oa=AccessToken $ TE.encodeUtf8 $ T.concat [oaTokenType oa, " ",oaAccessToken oa]
         
 -- | an exception that a call to MangoPay may throw
-data MpException = JSONException String -- ^ JSON parsingError
+data MpException = MpJSONException String -- ^ JSON parsingError
   | MpAppException MpError -- ^ application exception
   | MpHttpException HttpException -- ^ HTTP level exception
   deriving (Show,Typeable)
