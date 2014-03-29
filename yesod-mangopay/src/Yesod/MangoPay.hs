@@ -143,6 +143,4 @@ parseMPNotification = do
 catchMP :: forall (m :: * -> *) a.
              Y.MonadBaseControl IO m =>
              m a -> (MpException -> m a) -> m a
-catchMP func onError=L.catches func [
-   L.Handler (\e -> L.throw (e :: L.AsyncException))
-  ,L.Handler (\e -> onError (e :: MpException))]
+catchMP func =L.catch func 
