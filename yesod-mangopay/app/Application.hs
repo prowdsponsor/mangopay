@@ -35,6 +35,7 @@ import Data.IORef (newIORef)
 import Yesod.MangoPay
 
 import qualified Data.Map as M
+import System.IO (stdout, hFlush)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -62,8 +63,10 @@ makeApplication conf = do
     -- we need a handler to resolve the Route URL
     -- so we use runFakeHandler, because all the caveats the doc outlines don't apply to us
     -- we don't need anything from the request, nor do we change anything in our state
-    _<-runFakeHandler M.empty appLogger foundation (registerAllMPCallbacks MPHookR)
-
+    err<-runFakeHandler M.empty appLogger foundation (registerAllMPCallbacks MPHookR)
+    print err
+    hFlush stdout
+    
     -- Create the WAI application and apply middlewares
     app <- toWaiAppPlain foundation
     return $ logWare app
