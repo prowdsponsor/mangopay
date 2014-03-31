@@ -160,6 +160,11 @@ getQueryURL path query=do
   return $ BS.concat ["https://",host,path,HT.renderQuery True  $ HT.toQuery query]
 
 -- | perform a HTTP request and deal with the JSON result
+-- The logic for errors is as follows: we have several cases:
+-- If the HTTP request return OK and we can parse the proper result, we return it. 
+-- If we can't parse it into the data type we expect, we throw a MpJSONException: the server returned ok but we can't parse the result. 
+-- If we get an HTTP error code, we try to parse the result and send the proper exception: we have encountered probably a normal error, when the user has filled in incorrect data, etc. 
+-- If we can't even parse the result as JSON or if we can't understand the JSON error message, we throw an MpHttpException.
 mpReq :: forall b (m :: * -> *) wrappedErr c .
                     (MonadBaseControl IO m, C.MonadResource m,FromJSON b,FromJSON wrappedErr) =>
                     H.Request
@@ -189,13 +194,13 @@ mpReq req extractError addHeaders=do
           -- parse response as the expected value
           case fromJSON value of
             Success ot->return $ addHeaders headers ot
-            Error jerr->throw $ JSONException jerr -- got an ok response we couldn't parse
+            Error jerr->throw $ MpJSONException jerr -- got an ok response we couldn't parse
       else
           -- parse response as an error
           case fromJSON value of
             Success ise-> throw $ MpAppException $ extractError ise
-            _ -> throw err -- we can't even parse the error, throw the HTTP error
-    ) (\(_::ParseError)->throw err) -- the error body wasn't even json   
+            _ -> throw $ MpHttpException err -- we can't even parse the error, throw the HTTP error inside our error type
+    ) (\(_::ParseError)->throw $ MpHttpException err) -- the error body wasn't even json, throw the HTTP error inside our error type   
  
 -- | get a JSON response from a request to MangoPay
 -- MangoPay returns either a result, or an error

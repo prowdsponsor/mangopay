@@ -122,6 +122,7 @@ module Web.MangoPay (
         ,registerCard
         ,fullRegistration
         ,fetchCard
+        ,listCards
         
         -- Refunds
         ,RefundID

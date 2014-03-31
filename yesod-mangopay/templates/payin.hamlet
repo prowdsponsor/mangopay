@@ -1,0 +1,10 @@
+<div>
+    <a href=@{HomeR}>_{MsgLnkHome}
+<div>
+    <a href=@{UserR uid}>_{MsgLnkUser}
+<div>
+    <a href=@{TransactionsR uid}>_{MsgLnkTransactions}
+       
+<form method=post action=@{PayinR uid} enctype=#{enctype}>
+    ^{widget}
+     <button>_{MsgBtnSubmit}

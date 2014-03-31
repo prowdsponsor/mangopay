@@ -1,0 +1,11 @@
+<div>
+    <a href=@{HomeR}>_{MsgLnkHome}
+<div>
+    <a href=@{UserR uid}>_{MsgLnkUser}
+<div>
+    <a href=@{TransactionsR uid}>_{MsgLnkTransactions}
+
+<ul>
+        $forall user <- users
+             <li>
+                 <a href=@{Transfer2R uid (urId user)}>#{urEmail user}

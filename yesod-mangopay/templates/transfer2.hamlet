@@ -1,0 +1,12 @@
+<div>
+    <a href=@{HomeR}>_{MsgLnkHome}
+<div>
+    <a href=@{UserR uid}>_{MsgLnkUser}
+<div>
+    <a href=@{TransactionsR uid}>_{MsgLnkTransactions}
+    
+       
+<form method=post action=@{Transfer2R uid touid} enctype=#{enctype}>
+    ^{widget}
+     <button>_{MsgBtnSubmit}
+    

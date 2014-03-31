@@ -19,14 +19,14 @@ getUserR uid=do
       (widget, enctype) <- generateFormPost $ naturalUserForm muser
       defaultLayout $ do
             aDomId <- newIdent
-            setTitle "Manage a user"
+            setTitleI MsgTitleNUser
             $(widgetFile "nuser")      
     (Right lu)->do
       let muser=Just lu
       (widget, enctype) <- generateFormPost $ legalUserForm muser
       defaultLayout $ do
             aDomId <- newIdent
-            setTitle "Manage a user"
+            setTitleI MsgTitleLUser
             $(widgetFile "luser")  
 
 -- | get a natural user form
@@ -35,7 +35,7 @@ getNUserR =do
   (muser,widget,enctype)<- userGet naturalUserForm fetchNaturalUser 
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Manage a user"
+        setTitleI MsgTitleNUser
         $(widgetFile "nuser")
 
 -- | post a natural user form
@@ -44,7 +44,7 @@ postNUserR = do
   (muser,widget,enctype)<- userPost naturalUserForm storeNaturalUser 
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Manage a user"
+        setTitleI MsgTitleNUser
         $(widgetFile "nuser")
 
 -- | get a legal user form
@@ -53,7 +53,7 @@ getLUserR = do
   (muser,widget,enctype)<- userGet legalUserForm fetchLegalUser 
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Manage a user"
+        setTitleI MsgTitleLUser
         $(widgetFile "luser")
 
 -- | post a legal user form
@@ -62,7 +62,7 @@ postLUserR = do
   (muser,widget,enctype)<- userPost legalUserForm storeLegalUser
   defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Manage a user"
+        setTitleI MsgTitleLUser
         $(widgetFile "luser")
 
 -- | common code for retrieval and form building 
@@ -85,11 +85,17 @@ userPost form store = do
     ((result, _), _) <- runFormPost $ form Nothing
     muser<-case result of
               FormSuccess u -> do
-                user<-runYesodMPTToken $ store u
-                setMessage "User change done"
-                return (Just user)
+                catchMP (do
+                  user<-runYesodMPTToken $ store u
+                  setMessageI MsgUserDone
+                  return (Just user)
+                  )
+                  (\e->do
+                    setMessage $ toHtml $ show e
+                    return (Just u)
+                  )    
               _ -> do
-                setMessage "Invalid data"
+                setMessageI MsgErrorData
                 return Nothing
     (widget, enctype) <- generateFormPost $ form muser
     return (muser,widget,enctype)

@@ -1,0 +1,25 @@
+<div>
+    <a href=@{HomeR}>_{MsgLnkHome}
+<div>
+    <a href=@{UserR uid}>_{MsgLnkUser}
+
+<h2>_{MsgPastTransactions}
+<ul>
+        $forall tx <- txs
+            <li>#{show tx}
+
+<div>
+$maybe prev<-previous
+    <a href=@{TransactionsR uid}?page=#{prev}>_{MsgPrevious}
+    
+$maybe nex<-next
+    <a href=@{TransactionsR uid}?page=#{nex}>_{MsgNext}
+    
+<div>
+    <a href=@{PayinR uid}>_{MsgLnkPayIn}
+
+<div>
+    <a href=@{Transfer1R uid}>_{MsgLnkTransfer}
+    
+<div>
+    <a href=@{PayoutR uid}>_{MsgLnkPayOut}

@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell, RankNTypes #-}
 -- | typeclasses and helpers to access MangoPay from Yesod
 module Yesod.MangoPay where
 
@@ -7,11 +7,13 @@ import Web.MangoPay
 import qualified Yesod.Core as Y
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime, addUTCTime)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.IORef (IORef, readIORef, writeIORef)
 
 import qualified Data.Set as S
+import qualified Data.Map as M
 import Control.Monad (void)
+import qualified Control.Exception.Lifted as L
 
 -- | The 'YesodMangoPay' class for foundation datatypes that
 -- support running 'MangoPayT' actions.
@@ -100,7 +102,7 @@ runYesodMPTToken act = do
 
 
 -- | register callbacks for each event type on the same url
--- we try to not duplicate the callbacks by checking first if they already exists
+-- mango pay does not let register two hooks for the same event, so we replace existing ones
 registerAllMPCallbacks ::  (Y.MonadHandler m,Y.MonadBaseControl IO m,Y.MonadLogger m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   Y.Route (Y.HandlerSite m)-> m ()
 registerAllMPCallbacks rt=do
@@ -110,16 +112,18 @@ registerAllMPCallbacks rt=do
   runYesodMPTToken $ \at-> do
     -- get all hooks at once
     hooks<-getAll listHooks at
-    let existing=foldr (\h s->S.insert (hUrl h,hEventType h) s) S.empty hooks
+    let existing=foldr (\h s->M.insert (hEventType h) h s) M.empty hooks
     mapM_ (registerIfAbsent url at existing) [minBound..maxBound]
   where
-    registerIfAbsent url at existing evt
-      | S.member (url,evt) existing=return ()
-      | otherwise = do
-        let h=Hook Nothing Nothing Nothing url Enabled Nothing evt 
-        Y.liftIO $ print h
-        void $ storeHook h at
-
+    registerIfAbsent url at existing evt=do
+        let mh=case M.lookup evt existing of
+                Nothing->Just $ Hook Nothing Nothing Nothing url Enabled Nothing evt 
+                Just h2->if hUrl h2 /= url then Just h2{hUrl = url} else Nothing
+        case mh of 
+          Just h->do                           
+            Y.liftIO $ print h
+            void $ storeHook h at
+          _-> return ()
 
 -- | register a call back using the given route
 registerMPCallback :: (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
@@ -138,3 +142,8 @@ parseMPNotification = do
     Just evt->return evt
     Nothing->fail "parseMPNotification: could not parse Event"
   
+-- | catches any exception that the MangoPay library may throw and deals with it in a error handler
+catchMP :: forall (m :: * -> *) a.
+             Y.MonadBaseControl IO m =>
+             m a -> (MpException -> m a) -> m a
+catchMP func =L.catch func 
