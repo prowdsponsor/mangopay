@@ -199,8 +199,8 @@ mpReq req extractError addHeaders=do
           -- parse response as an error
           case fromJSON value of
             Success ise-> throw $ MpAppException $ extractError ise
-            _ -> throw $ MpHttpException err -- we can't even parse the error, throw the HTTP error inside our error type
-    ) (\(_::ParseError)->throw $ MpHttpException err) -- the error body wasn't even json, throw the HTTP error inside our error type   
+            _ -> throw $ MpHttpException err $ Just value -- we can't even parse the error, throw the HTTP error inside our error type, but keep the JSON in case a human can make sens of it
+    ) (\(_::ParseError)->throw $ MpHttpException err Nothing) -- the error body wasn't even json, throw the HTTP error inside our error type   
  
 -- | get a JSON response from a request to MangoPay
 -- MangoPay returns either a result, or an error
