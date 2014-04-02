@@ -7,8 +7,12 @@ license:        BSD3
 license-file:   LICENSE
 copyright:      (c) 2014 Prowdsponsor
 category:       Web
-homepage:       https://github.com/loyful/yesod-mangopay
+homepage:       https://github.com/prowdsponsor/mangopay
 synopsis:       Yesod library for MangoPay API access
+
+source-repository head
+  type:      git
+  location:  git://github.com/prowdsponsor/mangopay.git
 
 Flag dev
     Description:   Turn on development settings, like auto-reload templates.
@@ -21,7 +25,7 @@ Flag library-only
 library
     ghc-options:   -Wall
     hs-source-dirs:    src
-    build-depends: 
+    build-depends:
                  base                          >= 4          && < 5
                  , yesod                         >= 1.2.5      && < 1.3
                  , yesod-core                    >= 1.2        && < 1.3
@@ -32,7 +36,7 @@ library
                  , text >=0.11.3 && <0.12
                  , containers >=0.5.0 && <0.6,
                  lifted-base >=0.2.1 && <0.3
-    exposed-modules:     
+    exposed-modules:
                          Yesod.MangoPay,
                          Yesod.MangoPay.Util
 
@@ -43,7 +47,7 @@ executable         yesod-mangopay
 
     main-is:           main.hs
     hs-source-dirs:    app
-    other-modules:   
+    other-modules:
                      Application,
                      Foundation,
                      Import,
@@ -76,7 +80,7 @@ executable         yesod-mangopay
                 EmptyDataDecls
                 NoMonomorphismRestriction
                 DeriveDataTypeable
-    build-depends:    
+    build-depends:
                  yesod-mangopay
                  , mangopay == 0.1
                  , base                          >= 4          && < 5
@@ -114,5 +118,3 @@ executable         yesod-mangopay
                  , containers >=0.5.0 && <0.6
                  , wai >=2.0 && <2.1
     ghc-options:       -threaded -O2
-
-

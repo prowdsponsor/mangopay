@@ -7,12 +7,12 @@ license:        BSD3
 license-file:   LICENSE
 copyright:      (c) 2014 Prowdsponsor
 category:       Web
-homepage:       https://github.com/loyful/mangopay
+homepage:       https://github.com/prowdsponsor/mangopay
 synopsis:       Bindings to the MangoPay API
 
 source-repository head
   type:      git
-  location:  git://github.com/loyful/mangopay.git
+  location:  git://github.com/prowdsponsor/mangopay.git
 
 flag debug
   default:      False
@@ -20,7 +20,7 @@ flag debug
 
 library
   hs-source-dirs:   src
-  build-depends:    
+  build-depends:
      base >= 4
      , bytestring           >= 0.9     && < 0.11
      , text                 == 0.11.*
@@ -43,7 +43,7 @@ library
      , base64-bytestring >=1.0.0 && <1.1
      , case-insensitive >=1.1.0 && <1.2
   ghc-options:      -Wall
-  other-modules:    
+  other-modules:
                     Web.MangoPay.Access,
                     Web.MangoPay.Events,
                     Web.MangoPay.Monad,
@@ -62,7 +62,7 @@ library
   exposed-modules:  Web.MangoPay
 
 executable mangopay-passphrase
-  build-depends:   
+  build-depends:
      base >= 4
      , mangopay
      , bytestring           >= 0.9     && < 0.11
@@ -94,7 +94,7 @@ test-suite mangopay-tests
   type:            exitcode-stdio-1.0
   main-is:         mangopay-tests.hs
   ghc-options:     -Wall -rtsopts -threaded
-  build-depends:   
+  build-depends:
      base >= 4, HTF > 0.9
      , mangopay
      , bytestring           >= 0.9     && < 0.11
@@ -121,7 +121,7 @@ test-suite mangopay-tests
      , wai
      , base64-bytestring >=1.0.0 && <1.1
      , case-insensitive >=1.1.0 && <1.2
-  other-modules:   
+  other-modules:
                   Web.MangoPay.UsersTest,
                   Web.MangoPay.TestUtils,
                   Web.MangoPay.WalletsTest,
@@ -132,7 +132,7 @@ test-suite mangopay-tests
                   Web.MangoPay.RefundsTest,
                   Web.MangoPay.AccountsTest,
                   Web.MangoPay.PayoutsTest
-  hs-source-dirs:  
+  hs-source-dirs:
                   test,
                   src
   if flag(debug)
