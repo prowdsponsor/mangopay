@@ -11,6 +11,12 @@ homepage:       https://github.com/prowdsponsor/mangopay
 maintainer:     Prowdsponsor <opensource@prowdsponsor.com>
 synopsis:       Bindings to the MangoPay API
 
+description:
+  This package provides Haskell bindings to the
+  <http://www.mangopay.com/ MangoPay> payment provider.
+  .
+  See also the @yesod-mangopay@ package.
+
 source-repository head
   type:      git
   location:  git://github.com/prowdsponsor/mangopay.git
