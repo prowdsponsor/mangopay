@@ -8,6 +8,7 @@ license-file:   LICENSE
 copyright:      (c) 2014 Prowdsponsor
 category:       Web
 homepage:       https://github.com/prowdsponsor/mangopay
+maintainer:     Prowdsponsor <opensource@prowdsponsor.com>
 synopsis:       Yesod library for MangoPay API access
 
 source-repository head
