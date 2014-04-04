@@ -6,7 +6,6 @@ import Web.MangoPay
 
 import Data.ByteString.Lazy as BS hiding (map,any,null)
 import Network.HTTP.Conduit as H
-import Data.Conduit
 import Data.Maybe
 import Test.Framework
 
@@ -19,6 +18,7 @@ import Control.Concurrent (forkIO, ThreadId, threadDelay)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
 import Control.Monad (when, void, liftM)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 
 import Data.Text (Text)
 import Data.List
@@ -26,7 +26,7 @@ import Data.Typeable
 import Control.Applicative
 import Test.HUnit (Assertion)
 import Data.Default (def)
-import Data.IORef 
+import Data.IORef
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad.Logger
 
@@ -36,13 +36,13 @@ testCardInfo1 = CardInfo "4970100000000154" "1220" "123"
 
 -- | test MangoPay API call, logging in with the client credentials
 -- expects a file called client.test.conf containing the JSON of client credentials
--- in the current directory 
+-- in the current directory
 testMP :: forall b.
             (AccessToken -> MangoPayT (LoggingT (ResourceT IO)) b)
             -> IO b
 testMP f= do
-        ior<-readIORef testState  
-        let mgr=tsManager ior 
+        ior<-readIORef testState
+        let mgr=tsManager ior
         let at=tsAccessToken ior
         let cred=tsCredentials ior
         runResourceT $ runStdoutLoggingT $ runMangoPayT cred mgr Sandbox $ f at
@@ -64,13 +64,13 @@ data TestState=TestState {
     ,tsHookEndPoint :: HookEndPoint -- ^ the end point for notifications
     ,tsReceivedEvents :: ReceivedEvents -- ^ the received events
   }
-  
+
 
 -- | read end point information from hook.test.conf in current folder
 getHookEndPoint :: IO HookEndPoint
 getHookEndPoint = do
       js<-BS.readFile "hook.test.conf"
-      let mhook=decode js  
+      let mhook=decode js
       assertBool (isJust mhook)
       return $ fromJust mhook
 
@@ -80,15 +80,15 @@ data HookEndPoint = HookEndPoint{
         ,hepPort :: Int
         } deriving (Show,Read,Eq,Ord,Typeable)
 
--- | to json        
+-- | to json
 instance ToJSON HookEndPoint where
         toJSON h=object ["Url"  .= hepUrl h,"Port" .= hepPort h]
 
--- | from json 
+-- | from json
 instance FromJSON HookEndPoint where
         parseJSON (Object v) =HookEndPoint <$>
                          v .: "Url" <*>
-                         v .: "Port" 
+                         v .: "Port"
         parseJSON _=fail "HookEndPoint"
 
 
@@ -101,23 +101,23 @@ data ReceivedEvents=ReceivedEvents{
 -- | creates the new ReceivedEvents
 newReceivedEvents :: IO ReceivedEvents
 newReceivedEvents=do
-        mv<-newMVar []          
+        mv<-newMVar []
         return $ ReceivedEvents mv
 
 -- | test an event, checking the resource id and the event type
 testEvent :: Maybe Text -> EventType -> Event -> Bool
-testEvent tid et evt= tid == (Just $ eResourceId evt) 
+testEvent tid et evt= tid == (Just $ eResourceId evt)
         && et == eEventType evt
 
 -- | check that we're receiving events of the given type with the resource id returned by the passed test
-testEventTypes :: [EventType] 
+testEventTypes :: [EventType]
   -> IO (Maybe Text)
   -> Assertion
-testEventTypes evtTs =void . testEventTypes' evtTs 
+testEventTypes evtTs =void . testEventTypes' evtTs
 
 -- | check that we're receiving events of the given type with the resource id returned by the passed test
 -- returns the result of the inner test
-testEventTypes' :: [EventType] 
+testEventTypes' :: [EventType]
   -> IO (Maybe Text)
   -> IO (Maybe Text)
 testEventTypes' evtTs ops=do
@@ -135,7 +135,7 @@ testSearchEvent tid evtT=do
   assertBool (not $ null es)
   assertBool (any ((tid ==) . Just . eResourceId) es)
 
--- | create a hook for a given event type    
+-- | create a hook for a given event type
 createHook :: EventType -> Assertion
 createHook evtT= do
     hook<-liftM tsHookEndPoint $ readIORef testState
@@ -144,7 +144,7 @@ createHook evtT= do
     h2<-testMP $ fetchHook (fromJust $ hId h)
     assertEqual (hId h) (hId h2)
     assertEqual (Just Valid) (hValidity h)
-    
+
 -- | run a test with the notification server running
 testEvents :: IO a -- ^ the test, returning a value
   -> [a -> Event -> Bool] -- ^ the test on the events, taking into account the returned value
@@ -154,7 +154,7 @@ testEvents ops tests=do
     a<-ops
     er<-waitForEvent res (map ($ a) tests) 30
     assertEqual EventsOK er
-            
+
 -- | result of waiting for event
 data EventResult = Timeout -- ^ didn't receive all expected events
   | EventsOK -- ^ OK: everything expected received, nothing unexpected
@@ -163,7 +163,7 @@ data EventResult = Timeout -- ^ didn't receive all expected events
   deriving (Show,Eq,Ord,Typeable)
 
 -- | wait till we receive all the expected events, and none other, for a maximum number of seconds
-waitForEvent :: ReceivedEvents 
+waitForEvent :: ReceivedEvents
   -> [Event -> Bool] -- ^ function on the expected event
   -> Integer -- ^ delay in seconds
   -> IO EventResult
@@ -181,8 +181,8 @@ waitForEvent rc fs del=do
                 case Data.List.foldl' (match1 evt) ([],False) fs of
                   (_,False)->return $ ExtraEvent evt -- doesn't match
                   (fs2,_)-> waitForEvent rc fs2 del -- matched, either we have more to do or we need to check no unexpected event was found
-                       
-  where 
+
+  where
     -- | match the first event function and return all the non matching function, and a flag indicating if we matched
     match1 :: Event -> ([Event -> Bool],Bool) -> (Event -> Bool) -> ([Event -> Bool],Bool)
     match1 evt (nfs,False) f
@@ -190,10 +190,10 @@ waitForEvent rc fs del=do
       | otherwise=(f:nfs,False)
     match1 _ (nfs,True) f=(f:nfs,True)
 
--- | get one received event (and remove it from the underlying storage)        
+-- | get one received event (and remove it from the underlying storage)
 popReceivedEvent :: ReceivedEvents -> IO (Maybe (Either EventResult Event))
 popReceivedEvent (ReceivedEvents mv)=do
-        evts<-takeMVar mv                
+        evts<-takeMVar mv
         case evts of
           []->do
                 putMVar mv []
@@ -202,25 +202,25 @@ popReceivedEvent (ReceivedEvents mv)=do
                 putMVar mv es
                 return $ Just e
 
--- | get all received events (and remove them from the underlying storage)        
+-- | get all received events (and remove them from the underlying storage)
 popReceivedEvents :: ReceivedEvents -> IO [Either EventResult Event]
 popReceivedEvents (ReceivedEvents mv)=do
-        evts<-takeMVar mv                
+        evts<-takeMVar mv
         putMVar mv []
         return evts
 
 -- | add a new event
 pushReceivedEvent :: ReceivedEvents -> Either EventResult Event -> IO ()
 pushReceivedEvent (ReceivedEvents mv) evt=do
-        evts' <-takeMVar mv   
+        evts' <-takeMVar mv
         -- we're getting events in duplicate ???
         let ns = if evt `Prelude.elem` evts' then evts' else evt:evts'
         putMVar mv ns
 
 -- | start a HTTP server listening on the given port
--- if the path info is "mphook", then we'll push the received event                        
+-- if the path info is "mphook", then we'll push the received event
 startHTTPServer :: Port -> ReceivedEvents -> IO ThreadId
-startHTTPServer p revts= 
+startHTTPServer p revts=
   forkIO $ run p app
   where
     app req = do
@@ -232,4 +232,3 @@ startHTTPServer p revts=
                                 print evt
                             Nothing->pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
                 return $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
-                

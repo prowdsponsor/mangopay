@@ -16,7 +16,7 @@ import Data.ByteString.Lazy as BS
 import Data.Time.Clock.POSIX (getPOSIXTime)
 import Data.IORef (modifyIORef,readIORef)
 import Control.Monad (liftM)
-import Data.Conduit (runResourceT)
+import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad.Logger
 
 -- | Take the name/email from client.conf in the current directory
@@ -35,14 +35,14 @@ test_CreateCredentials=do
        let newCreds=creds{cClientSecret=Nothing,
                 cClientID=T.append (cClientID creds) suff,
                 cName=T.append (cName creds) suff}
-       mgr<-liftM tsManager $ readIORef testState         
+       mgr<-liftM tsManager $ readIORef testState
        creds2<-runResourceT $ runStdoutLoggingT $ runMangoPayT newCreds mgr Sandbox createCredentialsSecret
-       assertBool (isJust $ cClientSecret  creds2)   
+       assertBool (isJust $ cClientSecret  creds2)
        let s=fromJust $ cClientSecret creds2
        -- login once with our new credentials
        oat<-runResourceT $ runStdoutLoggingT $ runMangoPayT creds2 mgr Sandbox $
-                oauthLogin (cClientID creds2) s    
-       -- store access token and credentials         
+                oauthLogin (cClientID creds2) s
+       -- store access token and credentials
        modifyIORef testState (\ts->ts{tsAccessToken=toAccessToken oat,tsCredentials=creds2})
        -- create hooks for all event types
        mapM_ createHook [minBound .. maxBound]

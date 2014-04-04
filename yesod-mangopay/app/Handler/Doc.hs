@@ -5,8 +5,9 @@ import Import
 import Yesod.Core.Types
 import Web.MangoPay
 import Yesod.MangoPay
+import Control.Monad.Trans.Resource (runResourceT)
 import Data.Maybe (fromJust)
-import Data.Conduit (($$), runResourceT)
+import Data.Conduit (($$))
 import Data.Conduit.Binary (sinkLbs)
 import Data.ByteString.Lazy (toStrict)
 
@@ -55,4 +56,3 @@ uploadForm= renderDivs $ DocUpload
   <*> aopt textField (localizedFS MsgDocCustomData) Nothing
   <*> areq (selectFieldList ranges) (localizedFS MsgDocType) Nothing
   -- <*> pure (Just CREATED) -- aopt (selectFieldList ranges) (fs MsgDocStatus) Nothing
-  

@@ -15,13 +15,13 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Base64 as BS
+import qualified Data.ByteString.Base64 as B64
 
 import qualified Data.Text.Encoding as TE
 
 -- | create or edit a document
 storeDocument ::  (MPUsableMonad m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
-storeDocument uid d at= 
+storeDocument uid d at=
         case dId d of
                 Nothing-> do
                         url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/"]
@@ -29,21 +29,21 @@ storeDocument uid d at=
                 Just i-> do
                         url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",i]
                         putExchange url (Just at) d
-                
+
 
 -- | fetch a document from its ID
 fetchDocument :: (MPUsableMonad m) => AnyUserID -> DocumentID -> AccessToken -> MangoPayT m Document
 fetchDocument uid did at=do
         url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did]
         req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req 
+        getJSONResponse req
 
 -- | create a page
 --  note that per the MangoPay API the document HAS to be in CREATED status
 -- should we check it here? Since MangoPay returns a 500 Internal Server Error if the document is in another status...
 storePage :: (MPUsableMonad m) => AnyUserID -> DocumentID -> BS.ByteString -> AccessToken -> MangoPayT m ()
 storePage uid did contents at=do
-  let val=object ["File" .= TE.decodeLatin1 (BS.encode contents)]
+  let val=object ["File" .= TE.decodeUtf8 (B64.encode contents)]
   url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did,"/pages"]
   postNoReply url (Just at) val
 
@@ -71,7 +71,7 @@ instance FromJSON DocumentType where
 data DocumentStatus=CREATED
   | VALIDATION_ASKED
   | VALIDATED
-  | REFUSED 
+  | REFUSED
  deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
 
 -- | to json as per MangoPay format
@@ -93,14 +93,14 @@ data Document = Document {
   ,dRefusedReasonType :: Maybe Text
   ,dRefusedReasonMessage :: Maybe Text
   } deriving (Show,Ord,Eq,Typeable)
-  
- 
--- | to json as per MangoPay format        
+
+
+-- | to json as per MangoPay format
 instance ToJSON Document where
         toJSON d=object ["Tag" .= dTag d,
           "Type" .= dType d,"Status" .= dStatus d]
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON Document where
         parseJSON (Object v) =Document <$>
                          v .: "Id" <*>
@@ -111,7 +111,3 @@ instance FromJSON Document where
                          v .:? "RefusedReasonType" <*>
                          v .:? "RefusedReasonMessage"
         parseJSON _=fail "Document"
-        
-        
-        
-        

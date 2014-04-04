@@ -1,5 +1,5 @@
 name:           yesod-mangopay
-version:        1.1
+version:        1.2
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -29,20 +29,23 @@ Flag library-only
     Description:   Only build the library and not the test application
     Default:       True
 
+Flag conduit11
+    Description:  conduit >= 1.1
+
 library
     ghc-options:   -Wall
     hs-source-dirs:    src
     build-depends:
-                 base                          >= 4          && < 5
-                 , yesod                         >= 1.2.5      && < 1.3
-                 , yesod-core                    >= 1.2        && < 1.3
-                 , mangopay == 1.1.*
-                 , http-conduit                  >= 2.0        && < 2.1
-                 , time >=1.4.0 && <1.5
-                 , http-types >=0.8.2 && <0.9
-                 , text >=0.11.3 && <0.12
-                 , containers >=0.5.0 && <0.6,
-                 lifted-base >=0.2.1 && <0.3
+                   base         >= 4      && < 5
+                 , mangopay     == 1.2.*
+                 , containers   >= 0.5    && < 0.6
+                 , http-conduit >= 2.0    && < 2.2
+                 , http-types   >= 0.8.2  && < 0.9
+                 , lifted-base  >= 0.2.1  && < 0.3
+                 , text         >= 0.11.3
+                 , time         >= 1.4.0  && < 1.5
+                 , yesod        >= 1.2.5  && < 1.3
+                 , yesod-core   >= 1.2    && < 1.3
     exposed-modules:
                          Yesod.MangoPay,
                          Yesod.MangoPay.Util
@@ -88,40 +91,42 @@ executable         yesod-mangopay
                 NoMonomorphismRestriction
                 DeriveDataTypeable
     build-depends:
-                 yesod-mangopay
-                 , mangopay == 1.1.*
-                 , base                          >= 4          && < 5
-                 , yesod                         >= 1.2.5      && < 1.3
-                 , yesod-core                    >= 1.2        && < 1.3
-                 , yesod-auth                    >= 1.2.6      && < 1.3
-                 , yesod-static                  >= 1.2        && < 1.3
-                 , yesod-form                    >= 1.3.0      && < 1.4
-                 , yesod-persistent
+                 base, containers, http-conduit, mangopay, text,
+                 time, yesod, yesod-core
+
+                 , yesod-mangopay
+                 , aeson                         >= 0.6        && < 0.8
                  , bytestring                    >= 0.9        && < 0.11
-                 , text                          >= 0.11       && < 2.0
+                 , data-default
+                 , directory                     >= 1.1        && < 1.3
+                 , fast-logger                   >= 2.1.4      && < 2.2
+                 , hamlet
+                 , hjsmin                        >= 0.1        && < 0.2
+                 , monad-control                 >= 0.3        && < 0.4
+                 , monad-logger                  >= 0.3        && < 0.4
                  , persistent                    >= 1.3        && < 1.4
                  , persistent-postgresql         >= 1.3        && < 1.4
                  , persistent-template           >= 1.3        && < 1.4
-                 , template-haskell
+                 , resourcet
                  , shakespeare
-                 , hamlet                        >= 1.1        && < 1.2
-                 , shakespeare-css               >= 1.0        && < 1.1
-                 , shakespeare-js                >= 1.2        && < 1.3
-                 , shakespeare-text              >= 1.0        && < 1.1
-                 , hjsmin                        >= 0.1        && < 0.2
-                 , monad-control                 >= 0.3        && < 0.4
-                 , wai-extra                     >= 2.0        && < 2.1
-                 , yaml                          >= 0.8        && < 0.9
-                 , http-conduit                  >= 2.0        && < 2.1
-                 , directory                     >= 1.1        && < 1.3
-                 , warp                          >= 2.0        && < 2.1
-                 , data-default
-                 , aeson                         >= 0.6        && < 0.8
-                 , conduit                       >= 1.0        && < 2.0
-                 , monad-logger                  >= 0.3        && < 0.4
-                 , fast-logger                   >= 2.1.4      && < 2.2
+                 , shakespeare-css
+                 , shakespeare-js
+                 , shakespeare-text
+                 , template-haskell
+                 , wai
+                 , wai-extra
                  , wai-logger                    >= 2.1        && < 2.2
-                 , time >=1.4.0 && <1.5
-                 , containers >=0.5.0 && <0.6
-                 , wai >=2.0 && <2.1
+                 , warp
+                 , yaml                          >= 0.8        && < 0.9
+                 , yesod-auth                    >= 1.2.6
+                 , yesod-form                    >= 1.3.0      && < 1.4
+                 , yesod-persistent
+                 , yesod-static                  >= 1.2        && < 1.3
+    if flag(conduit11)
+      build-depends:
+          conduit       == 1.1.*
+        , conduit-extra == 1.1.*
+    else
+      build-depends:
+          conduit       == 1.0.*
     ghc-options:       -threaded -O2
