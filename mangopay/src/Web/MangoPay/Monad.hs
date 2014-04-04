@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, FlexibleInstances,
   MultiParamTypeClasses, UndecidableInstances, TypeFamilies,
-  FlexibleContexts, RankNTypes,CPP #-}
+  FlexibleContexts, RankNTypes,CPP,TemplateHaskell #-}
 -- | the utility monad and related functions, taking care of the HTTP, JSON, etc.
 module Web.MangoPay.Monad where
 
@@ -31,11 +31,12 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import Data.Aeson (json,fromJSON,Result(..),FromJSON, ToJSON,encode)
 import Data.Conduit.Attoparsec (sinkParser, ParseError)
-import Control.Exception.Base (throw)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text as T (Text)
 import Data.Maybe (fromMaybe)
 import Data.CaseInsensitive (CI)
+
+import Control.Monad.Logger
 
 #if DEBUG
 import Data.Conduit.Binary (sinkHandle)
@@ -44,7 +45,7 @@ import Data.Conduit.Util (zipSinks)
 #endif
 
 -- | put our constraints in one synonym
-type MPUsableMonad m=(MonadBaseControl IO m, C.MonadResource m)
+type MPUsableMonad m=(MonadBaseControl IO m, C.MonadResource m, MonadLogger m)
 
 -- | the mangopay monad transformer
 -- this encapsulates the data necessary to pass the app credentials, etc
@@ -65,6 +66,9 @@ instance MonadBaseControl b m => MonadBaseControl b (MangoPayT m) where
     newtype StM (MangoPayT m) a = StMT {unStMT :: ComposeSt MangoPayT m a}
     liftBaseWith = defaultLiftBaseWith StMT
     restoreM = defaultRestoreM unStMT
+
+instance (MonadLogger m) => MonadLogger (MangoPayT m) where
+    monadLoggerLog loc src lvl msg=lift $ monadLoggerLog loc src lvl msg
     
 -- | Run a computation in the 'MangoPayT' monad transformer with
 -- your credentials.
@@ -183,7 +187,7 @@ mpReq req extractError addHeaders=do
       cookies = H.responseCookieJar res
       ok=isOkay status
       err=H.StatusCodeException status headers cookies
-  L.catch (do    
+  mpres<-L.catch (do    
 #if DEBUG
     (value,_)<-H.responseBody res C.$$+- zipSinks (sinkParser json) (sinkHandle stdout)
     liftIO $ BSC.putStrLn ""
@@ -195,14 +199,18 @@ mpReq req extractError addHeaders=do
       then 
           -- parse response as the expected value
           case fromJSON value of
-            Success ot->return $ addHeaders headers ot
-            Error jerr->throw $ MpJSONException jerr -- got an ok response we couldn't parse
+            Success ot->return $ Right (value,addHeaders headers ot)
+            Error jerr->return $ Left $ MpJSONException jerr -- got an ok response we couldn't parse
       else
           -- parse response as an error
           case fromJSON value of
-            Success ise-> throw $ MpAppException $ extractError ise
-            _ -> throw $ MpHttpException err $ Just value -- we can't even parse the error, throw the HTTP error inside our error type, but keep the JSON in case a human can make sens of it
-    ) (\(_::ParseError)->throw $ MpHttpException err Nothing) -- the error body wasn't even json, throw the HTTP error inside our error type   
+            Success ise-> return $ Left $ MpAppException $ extractError ise
+            _ -> return $ Left $  MpHttpException err $ Just value -- we can't even parse the error, throw the HTTP error inside our error type, but keep the JSON in case a human can make sens of it
+    ) (\(_::ParseError)->return $ Left $  MpHttpException err Nothing) -- the error body wasn't even json, throw the HTTP error inside our error type   
+  let cr=CallRecord req' mpres
+  -- log call
+  $(logCall) cr
+  return $ recordResult cr
  
 -- | get a JSON response from a request to MangoPay
 -- MangoPay returns either a result, or an error

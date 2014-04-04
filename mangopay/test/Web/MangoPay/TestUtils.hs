@@ -28,6 +28,7 @@ import Test.HUnit (Assertion)
 import Data.Default (def)
 import Data.IORef 
 import System.IO.Unsafe (unsafePerformIO)
+import Control.Monad.Logger
 
 -- | a test card
 testCardInfo1 :: CardInfo
@@ -37,14 +38,14 @@ testCardInfo1 = CardInfo "4970100000000154" "1220" "123"
 -- expects a file called client.test.conf containing the JSON of client credentials
 -- in the current directory 
 testMP :: forall b.
-            (AccessToken -> MangoPayT (ResourceT IO) b)
+            (AccessToken -> MangoPayT (LoggingT (ResourceT IO)) b)
             -> IO b
 testMP f= do
         ior<-readIORef testState  
         let mgr=tsManager ior 
         let at=tsAccessToken ior
         let cred=tsCredentials ior
-        runResourceT $ runMangoPayT cred mgr Sandbox $ f at
+        runResourceT $ runStdoutLoggingT $ runMangoPayT cred mgr Sandbox $ f at
 
 -- | the test state as a top level global variable
 -- <http://www.haskell.org/haskellwiki/Top_level_mutable_state>
