@@ -117,10 +117,8 @@ instance Yesod App where
     -- Place Javascript at bottom of the body tag so the rest of the page loads first
     jsLoader _ = BottomOfBody
 
-    -- What messages should be logged. The following includes all messages when
-    -- in development, and warnings and errors in production.
-    shouldLog _ _source level =
-        development || level == LevelWarn || level == LevelError
+    -- What messages should be logged. Since this is a test app, log everything.
+    shouldLog _ _ _ = True
 
     makeLogger = return . appLogger
 
@@ -151,5 +149,3 @@ instance YesodMangoPay App where
   mpHttpManager=httpManager
   mpUseSandbox=mpSandbox . appExtra . settings
   mpToken=appToken
-
-  
