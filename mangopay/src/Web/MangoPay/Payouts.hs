@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
 -- | handle payouts
 module Web.MangoPay.Payouts where
 
@@ -8,7 +8,6 @@ import Web.MangoPay.Types
 import Web.MangoPay.Users
 import Web.MangoPay.Wallets
 
-import Data.Conduit
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -17,13 +16,13 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 -- | create a payout
-storePayout ::  (MonadBaseControl IO m, MonadResource m) => Payout -> AccessToken -> MangoPayT m Payout
+storePayout ::  (MPUsableMonad m) => Payout -> AccessToken -> MangoPayT m Payout
 storePayout pt at= do
     url<-getClientURL "/payouts/bankwire"
     postExchange url (Just at) pt
 
 -- | fetch an payout from its ID
-fetchPayout :: (MonadBaseControl IO m, MonadResource m) => PayoutID -> AccessToken -> MangoPayT m Payout
+fetchPayout :: (MPUsableMonad m) => PayoutID -> AccessToken -> MangoPayT m Payout
 fetchPayout ptid at=do
         url<-getClientURLMultiple ["/payouts/",ptid]
         req<-getGetRequest url (Just at) ([]::HT.Query)

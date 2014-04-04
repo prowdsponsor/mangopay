@@ -1,5 +1,5 @@
 name:           mangopay
-version:        1.0
+version:        1.1
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -49,6 +49,9 @@ library
      , utf8-string >=0.3.7 && <0.4
      , base64-bytestring >=1.0.0 && <1.1
      , case-insensitive >=1.1.0 && <1.2
+     , monad-logger                  >= 0.3        && < 0.4
+     , vector >=0.10.9 && <0.11
+     , template-haskell
   ghc-options:      -Wall
   other-modules:
                     Web.MangoPay.Access,
@@ -91,6 +94,9 @@ executable mangopay-passphrase
      , base16-bytestring
      , utf8-string >=0.3.7 && <0.4
      , case-insensitive >=1.1.0 && <1.2
+     , monad-logger                  >= 0.3        && < 0.4
+     , vector >=0.10.9 && <0.11
+     , template-haskell
   ghc-options:     -Wall -rtsopts
   hs-source-dirs:  exe
   main-is:         Main.hs
@@ -128,6 +134,9 @@ test-suite mangopay-tests
      , wai
      , base64-bytestring >=1.0.0 && <1.1
      , case-insensitive >=1.1.0 && <1.2
+     , monad-logger                  >= 0.3        && < 0.4
+     , vector >=0.10.9 && <0.11
+     , template-haskell
   other-modules:
                   Web.MangoPay.UsersTest,
                   Web.MangoPay.TestUtils,

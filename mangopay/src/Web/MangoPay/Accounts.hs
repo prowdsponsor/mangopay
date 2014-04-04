@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards, ConstraintKinds #-}
 -- | handle bank accounts 
 module Web.MangoPay.Accounts where
 
@@ -6,7 +6,6 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
-import Data.Conduit
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -16,7 +15,7 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 -- | create an account
-storeAccount ::  (MonadBaseControl IO m, MonadResource m) => BankAccount -> AccessToken -> MangoPayT m BankAccount
+storeAccount ::  (MPUsableMonad m) => BankAccount -> AccessToken -> MangoPayT m BankAccount
 storeAccount ba at
   | Just uid<-baUserId ba= do
     url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/",typeName $ baDetails ba]
@@ -24,14 +23,14 @@ storeAccount ba at
   | otherwise=error "no user provided for account"    
 
 -- | fetch an account from its ID
-fetchAccount :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> BankAccountID -> AccessToken -> MangoPayT m BankAccount
+fetchAccount :: (MPUsableMonad m) => AnyUserID -> BankAccountID -> AccessToken -> MangoPayT m BankAccount
 fetchAccount uid aid at=do
         url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/",aid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
 -- | list all accounts for a given user   
-listAccounts :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
+listAccounts :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
 listAccounts uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)

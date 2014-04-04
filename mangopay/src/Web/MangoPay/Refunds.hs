@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, FlexibleContexts, ConstraintKinds #-}
 -- | refunds on payins and transfers
 module Web.MangoPay.Refunds where
 
@@ -8,7 +8,6 @@ import Web.MangoPay.Types
 import Web.MangoPay.Users
 import Web.MangoPay.Wallets
 
-import Data.Conduit
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -17,19 +16,19 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 -- | refund a transfer
-refundTransfer ::  (MonadBaseControl IO m, MonadResource m) => TransferID -> AnyUserID -> AccessToken -> MangoPayT m Refund
+refundTransfer ::  (MPUsableMonad m) => TransferID -> AnyUserID -> AccessToken -> MangoPayT m Refund
 refundTransfer tid authID at= do
     url<-getClientURLMultiple ["/transfers/",tid,"/refunds"]
     postExchange url (Just at) (RefundRequest authID Nothing Nothing)
 
 -- | refund a pay-in
-refundPayin ::  (MonadBaseControl IO m, MonadResource m) => AnyPayinID -> RefundRequest -> AccessToken -> MangoPayT m Refund
+refundPayin ::  (MPUsableMonad m) => AnyPayinID -> RefundRequest -> AccessToken -> MangoPayT m Refund
 refundPayin pid rr at= do
     url<-getClientURLMultiple ["/payins/",pid,"/refunds"]
     postExchange url (Just at) rr
 
 -- | fetch a refund from its ID
-fetchRefund :: (MonadBaseControl IO m, MonadResource m) => RefundID -> AccessToken -> MangoPayT m Refund
+fetchRefund :: (MPUsableMonad m) => RefundID -> AccessToken -> MangoPayT m Refund
 fetchRefund rid at=do
         url<-getClientURLMultiple ["/refunds/",rid]
         req<-getGetRequest url (Just at) ([]::HT.Query)

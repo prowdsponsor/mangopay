@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
 -- | handle payins
 module Web.MangoPay.Payins where
 
@@ -8,7 +8,6 @@ import Web.MangoPay.Types
 import Web.MangoPay.Users
 import Web.MangoPay.Wallets
 
-import Data.Conduit
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -17,26 +16,26 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 -- | create or edit a bankwire
-storeBankWire ::  (MonadBaseControl IO m, MonadResource m) => BankWire -> AccessToken -> MangoPayT m BankWire
+storeBankWire ::  (MPUsableMonad m) => BankWire -> AccessToken -> MangoPayT m BankWire
 storeBankWire bw at= do
   url<-getClientURL "/payins/bankwire/direct" 
   postExchange url (Just at) bw
    
 -- | fetch a bank wire from its ID
-fetchBankWire :: (MonadBaseControl IO m, MonadResource m) => BankWireID -> AccessToken -> MangoPayT m BankWire
+fetchBankWire :: (MPUsableMonad m) => BankWireID -> AccessToken -> MangoPayT m BankWire
 fetchBankWire bwid at=do
         url<-getClientURLMultiple ["/payins/",bwid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req    
 
 -- | create or edit a direct card pay in
-storeCardPayin ::  (MonadBaseControl IO m, MonadResource m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
+storeCardPayin ::  (MPUsableMonad m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
 storeCardPayin cp at= do
   url<-getClientURL "/payins/card/direct" 
   postExchange url (Just at) cp
    
 -- | fetch a direct pay in from its ID
-fetchCardPayin :: (MonadBaseControl IO m, MonadResource m) => CardPayinID -> AccessToken -> MangoPayT m CardPayin
+fetchCardPayin :: (MPUsableMonad m) => CardPayinID -> AccessToken -> MangoPayT m CardPayin
 fetchCardPayin cpid at=do
         url<-getClientURLMultiple ["/payins/",cpid]
         req<-getGetRequest url (Just at) ([]::HT.Query)

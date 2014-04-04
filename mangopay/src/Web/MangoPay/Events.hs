@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
 -- | handle events
 -- <http://docs.mangopay.com/api-references/events/>
 module Web.MangoPay.Events where
@@ -6,7 +6,6 @@ module Web.MangoPay.Events where
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 
-import Data.Conduit
 import Data.Text hiding (filter)
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -21,14 +20,14 @@ import Control.Monad (join)
 import qualified Data.ByteString.Char8 as BS
 
 -- | create or edit a natural user
-searchEvents ::  (MonadBaseControl IO m, MonadResource m) => EventSearchParams -> AccessToken -> MangoPayT m  [Event]
+searchEvents ::  (MPUsableMonad m) => EventSearchParams -> AccessToken -> MangoPayT m  [Event]
 searchEvents esp at=do
         url<-getClientURL "/events"
         req<-getGetRequest url (Just at) esp
         getJSONResponse req
 
 -- | create or edit a hook
-storeHook ::  (MonadBaseControl IO m, MonadResource m) => Hook -> AccessToken -> MangoPayT m Hook
+storeHook ::  (MPUsableMonad m) => Hook -> AccessToken -> MangoPayT m Hook
 storeHook h at= 
         case hId h of
                 Nothing-> do
@@ -40,14 +39,14 @@ storeHook h at=
                         putExchange url (Just at) (Object $ HM.delete "EventType" m)
                 
 -- | fetch a wallet from its ID
-fetchHook :: (MonadBaseControl IO m, MonadResource m) => HookID -> AccessToken -> MangoPayT m Hook
+fetchHook :: (MPUsableMonad m) => HookID -> AccessToken -> MangoPayT m Hook
 fetchHook wid at=do
         url<-getClientURLMultiple ["/hooks/",wid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
 -- | list all wallets for a given user   
-listHooks :: (MonadBaseControl IO m, MonadResource m) =>  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Hook)
+listHooks :: (MPUsableMonad m) =>  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Hook)
 listHooks mp at=do
         url<-getClientURL "/hooks"
         req<-getGetRequest url (Just at) (paginationAttributes mp)

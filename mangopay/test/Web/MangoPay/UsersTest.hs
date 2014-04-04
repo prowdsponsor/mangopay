@@ -55,7 +55,7 @@ test_LegalUser = do
 test_PaginationUsers :: Assertion
 test_PaginationUsers = do
   usL<-testMP $ listUsers (Just $ Pagination 1 1)
-  print usL
+  --print usL
   assertEqual 1 (length $ plData usL)
   assertEqual 2 (plItemCount usL)
   assertEqual 2 (plPageCount usL)

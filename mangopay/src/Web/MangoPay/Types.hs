@@ -1,13 +1,13 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances, TemplateHaskell #-}
 -- | useful types and simple accessor functions
 module Web.MangoPay.Types where
 
 
 import Control.Applicative
-import Control.Exception.Base (Exception)
-import Data.Text as T
+import Control.Exception.Base (Exception,throw)
+import Data.Text as T hiding (singleton)
 import Data.Typeable (Typeable)
-import Data.ByteString (ByteString)
+import Data.ByteString  as BS (ByteString,null)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Aeson
 import Data.Default
@@ -15,7 +15,17 @@ import Data.Default
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.UTF8 as UTF8
 import Data.Maybe (listToMaybe)
-import Network.HTTP.Conduit (HttpException)
+import qualified Network.HTTP.Conduit as H
+import qualified Network.HTTP.Types as HT
+import Control.Monad.Logger
+import Data.Aeson.Encode (encodeToTextBuilder)
+import Data.Text.Lazy.Builder (fromText, toLazyText, singleton)
+import Data.Monoid ((<>))
+import Data.Text.Lazy (toStrict)
+import Data.String (fromString)
+import qualified Data.Vector as V (length)
+import Language.Haskell.TH
+import Language.Haskell.TH.Syntax (qLocation)
 
 -- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
@@ -86,7 +96,7 @@ toAccessToken  oa=AccessToken $ TE.encodeUtf8 $ T.concat [oaTokenType oa, " ",oa
 -- | an exception that a call to MangoPay may throw
 data MpException = MpJSONException String -- ^ JSON parsingError
   | MpAppException MpError -- ^ application exception
-  | MpHttpException HttpException (Maybe Value) -- ^ HTTP level exception, maybe with some JSON payload
+  | MpHttpException H.HttpException (Maybe Value) -- ^ HTTP level exception, maybe with some JSON payload
   deriving (Show,Typeable)
 
 -- | make our exception type a normal exception  
@@ -150,7 +160,50 @@ type CardID=Text
 -- | alias for Currency
 type Currency=Text
 
--- | simple class used to hide the serialization of parameters ansd simplify the calling code  
+-- | a structure holding the information of an API call
+data CallRecord a = CallRecord {
+    crReq :: H.Request -- ^ the request to MangoPay
+    ,crResult :: Either MpException (Value,a) -- ^ the error or the JSON value and parsed result
+  }
+
+-- | which level should we log the call
+recordLogLevel :: CallRecord a-> LogLevel
+recordLogLevel cr
+  | HT.methodGet == H.method (crReq cr)=LevelDebug
+  | otherwise = LevelInfo
+
+-- | the log message from a call
+recordLogMessage :: CallRecord a-> Text
+recordLogMessage (CallRecord req res)=let
+  -- we log the method
+  methB=fromString $ show $ H.method req
+  -- we log the uri path
+  pathB=fromText $ TE.decodeUtf8 $ H.path req
+  -- log the query string if any
+  qsB=fromText $ TE.decodeUtf8 $ H.queryString req
+  resB=case res of
+    -- log error
+    Left e->fromString $ show e
+    Right (v,_)->case v of
+      -- we have a list, just log the number of results to avoid polluting the log with too much info
+      Array arr->fromString (show $ V.length arr) <> " values"
+      -- we have a simple value we can log it
+      _->encodeToTextBuilder v
+  in toStrict . toLazyText $ methB <> singleton ' ' <> pathB <> qsB <> ": " <> resB
+
+-- | the result
+-- if we have a proper result we return it
+-- if we have an error we throw it
+recordResult :: CallRecord a-> a
+recordResult (CallRecord _ (Left err))=throw err
+recordResult (CallRecord _ (Right (_,a)))=a
+
+-- | log a CallRecord  
+-- MonadLogger doesn't expose a function with a dynamic log level...
+logCall :: Q Exp
+logCall = [|\a -> monadLoggerLog $(qLocation >>= liftLoc) "mangopay" (recordLogLevel a) (recordLogMessage a)|]
+
+-- | simple class used to hide the serialization of parameters and simplify the calling code  
 class ToHtQuery a where
   (?+) :: ByteString -> a -> (ByteString,Maybe ByteString)
 

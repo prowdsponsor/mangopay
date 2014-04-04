@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell, RankNTypes #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell, RankNTypes, ConstraintKinds #-}
 -- | typeclasses and helpers to access MangoPay from Yesod
 module Yesod.MangoPay where
 
@@ -7,10 +7,9 @@ import Web.MangoPay
 import qualified Yesod.Core as Y
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime, addUTCTime)
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Data.IORef (IORef, readIORef, writeIORef)
 
-import qualified Data.Set as S
 import qualified Data.Map as M
 import Control.Monad (void)
 import qualified Control.Exception.Lifted as L
@@ -35,7 +34,7 @@ class Y.Yesod site => YesodMangoPay site where
   
 -- | Run a 'MangoPayT' action inside a 'Y.GHandler' using your credentials.
 runYesodMPT ::
-  (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
+  (Y.MonadHandler m,MPUsableMonad m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   MangoPayT m a -> m a
 runYesodMPT act = do
   site <- Y.getYesod
@@ -67,7 +66,7 @@ getTokenIfValid site=do
       return $ if v then Just t else Nothing
 
 -- | get a valid token, which could be one we had from before, or a new one
-getValidToken ::  (YesodMangoPay site,Y.MonadBaseControl IO m,Y.MonadResource m) => site -> m (Maybe AccessToken)
+getValidToken ::  (YesodMangoPay site,MPUsableMonad m) => site -> m (Maybe AccessToken)
 getValidToken site=do
   mt<-getTokenIfValid site
   case mt of
@@ -91,7 +90,7 @@ getValidToken site=do
           
 -- | same as 'runYesodMPT': runs a MangoPayT computation, but tries to reuse the current token if valid
 runYesodMPTToken ::
-  (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
+  (Y.MonadHandler m,MPUsableMonad m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   (AccessToken -> MangoPayT m a) -> m a
 runYesodMPTToken act = do
   site <- Y.getYesod
@@ -103,7 +102,7 @@ runYesodMPTToken act = do
 
 -- | register callbacks for each event type on the same url
 -- mango pay does not let register two hooks for the same event, so we replace existing ones
-registerAllMPCallbacks ::  (Y.MonadHandler m,Y.MonadBaseControl IO m,Y.MonadLogger m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
+registerAllMPCallbacks ::  (Y.MonadHandler m,MPUsableMonad m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   Y.Route (Y.HandlerSite m)-> m ()
 registerAllMPCallbacks rt=do
   render<-Y.getUrlRender
@@ -126,7 +125,7 @@ registerAllMPCallbacks rt=do
           _-> return ()
 
 -- | register a call back using the given route
-registerMPCallback :: (Y.MonadHandler m,Y.MonadBaseControl IO m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
+registerMPCallback :: (Y.MonadHandler m,MPUsableMonad m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   Y.Route (Y.HandlerSite m)-> EventType -> Maybe Text -> m (AccessToken -> MangoPayT m Hook)
 registerMPCallback rt et mtag=do
   render<-Y.getUrlRender
