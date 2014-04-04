@@ -1,11 +1,10 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
 -- | handle users
 module Web.MangoPay.Users where
 
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 
-import Data.Conduit
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -14,7 +13,7 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 -- | create or edit a natural user
-storeNaturalUser ::  (MonadBaseControl IO m, MonadResource m) => NaturalUser -> AccessToken -> MangoPayT m NaturalUser
+storeNaturalUser ::  (MPUsableMonad m) => NaturalUser -> AccessToken -> MangoPayT m NaturalUser
 storeNaturalUser u at= 
         case uId u of
                 Nothing-> do
@@ -26,14 +25,14 @@ storeNaturalUser u at=
                 
 
 -- | fetch a natural user from her ID
-fetchNaturalUser :: (MonadBaseControl IO m, MonadResource m) => NaturalUserID -> AccessToken -> MangoPayT m NaturalUser
+fetchNaturalUser :: (MPUsableMonad m) => NaturalUserID -> AccessToken -> MangoPayT m NaturalUser
 fetchNaturalUser uid at=do
         url<-getClientURLMultiple ["/users/natural/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
 -- | create or edit a natural user
-storeLegalUser ::  (MonadBaseControl IO m, MonadResource m) => LegalUser -> AccessToken -> MangoPayT m LegalUser
+storeLegalUser ::  (MPUsableMonad m) => LegalUser -> AccessToken -> MangoPayT m LegalUser
 storeLegalUser u at= 
         case lId u of
                 Nothing-> do
@@ -45,21 +44,21 @@ storeLegalUser u at=
                 
 
 -- | fetch a natural user from her ID
-fetchLegalUser :: (MonadBaseControl IO m, MonadResource m) => LegalUserID -> AccessToken -> MangoPayT m LegalUser
+fetchLegalUser :: (MPUsableMonad m) => LegalUserID -> AccessToken -> MangoPayT m LegalUser
 fetchLegalUser uid at=do
         url<-getClientURLMultiple ["/users/legal/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
 -- | get a user, natural or legal
-getUser :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> AccessToken -> MangoPayT m (Either NaturalUser LegalUser)
+getUser :: (MPUsableMonad m) => AnyUserID -> AccessToken -> MangoPayT m (Either NaturalUser LegalUser)
 getUser uid at=do
         url<-getClientURLMultiple ["/users/",uid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req
 
 -- | list all user references
-listUsers :: (MonadBaseControl IO m, MonadResource m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
+listUsers :: (MPUsableMonad m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
 listUsers mp at=do
         url<-getClientURL "/users/"
         req<-getGetRequest url (Just at) (paginationAttributes mp)

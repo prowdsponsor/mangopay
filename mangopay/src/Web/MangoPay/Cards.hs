@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards, ConstraintKinds #-}
 -- | handle cards
 module Web.MangoPay.Cards where
 
@@ -28,7 +28,7 @@ import Control.Exception.Base (throw)
 type CardRegistrationID=Text
 
 -- | perform the full registration of a card
-fullRegistration :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Currency -> CardInfo -> AccessToken -> MangoPayT m CardRegistration
+fullRegistration :: (MPUsableMonad m) => AnyUserID -> Currency -> CardInfo -> AccessToken -> MangoPayT m CardRegistration
 fullRegistration uid currency cardInfo at=do
   -- create registration
   let cr1=mkCardRegistration uid currency
@@ -40,7 +40,7 @@ fullRegistration uid currency cardInfo at=do
   
 
 -- | create or edit a card registration
-storeCardRegistration ::  (MonadBaseControl IO m, MonadResource m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
+storeCardRegistration ::  (MPUsableMonad m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
 storeCardRegistration cr at= 
         case crId cr of
                 Nothing-> do
@@ -59,7 +59,7 @@ data CardInfo = CardInfo {
   } deriving (Show,Read,Eq,Ord,Typeable)
 
 -- | register a card with the registration URL
-registerCard :: (MonadBaseControl IO m, MonadResource m) => CardInfo -> CardRegistration -> MangoPayT m CardRegistration
+registerCard :: (MPUsableMonad m) => CardInfo -> CardRegistration -> MangoPayT m CardRegistration
 registerCard ci cr |
   Just url <- crCardRegistrationURL cr,
   Just pre <- crPreregistrationData cr,
@@ -136,14 +136,14 @@ instance FromJSON CardRegistration where
         parseJSON _=fail "CardRegistration"  
 
 -- | fetch a card from its ID
-fetchCard :: (MonadBaseControl IO m, MonadResource m) => CardID -> AccessToken -> MangoPayT m Card
+fetchCard :: (MPUsableMonad m) => CardID -> AccessToken -> MangoPayT m Card
 fetchCard cid at=do
         url<-getClientURLMultiple ["/cards/",cid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req 
 
 -- | list all cards for a given user   
-listCards :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)
+listCards :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)
 listCards uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/cards"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)

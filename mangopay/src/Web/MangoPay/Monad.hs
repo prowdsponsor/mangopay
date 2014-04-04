@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, FlexibleInstances,
   MultiParamTypeClasses, UndecidableInstances, TypeFamilies,
   FlexibleContexts, RankNTypes,CPP #-}
@@ -43,6 +43,8 @@ import System.IO (stdout)
 import Data.Conduit.Util (zipSinks)
 #endif
 
+-- | put our constraints in one synonym
+type MPUsableMonad m=(MonadBaseControl IO m, C.MonadResource m)
 
 -- | the mangopay monad transformer
 -- this encapsulates the data necessary to pass the app credentials, etc
@@ -166,7 +168,7 @@ getQueryURL path query=do
 -- If we get an HTTP error code, we try to parse the result and send the proper exception: we have encountered probably a normal error, when the user has filled in incorrect data, etc. 
 -- If we can't even parse the result as JSON or if we can't understand the JSON error message, we throw an MpHttpException.
 mpReq :: forall b (m :: * -> *) wrappedErr c .
-                    (MonadBaseControl IO m, C.MonadResource m,FromJSON b,FromJSON wrappedErr) =>
+                    (MPUsableMonad m,FromJSON b,FromJSON wrappedErr) =>
                     H.Request
                     -> (wrappedErr -> MpError) -- ^ extract the error from the JSON
                     -> (HT.ResponseHeaders -> b -> c)
@@ -205,7 +207,7 @@ mpReq req extractError addHeaders=do
 -- | get a JSON response from a request to MangoPay
 -- MangoPay returns either a result, or an error
 getJSONResponse :: forall (m :: * -> *) v.
-                                 (MonadBaseControl IO m, C.MonadResource m,FromJSON v) =>
+                                 (MPUsableMonad m,FromJSON v) =>
                                  H.Request
                                  -> MangoPayT
                                       m v
@@ -213,7 +215,7 @@ getJSONResponse req=mpReq req id (const id)
 
 -- | get a PagedList from the JSON items
 getJSONList:: forall (m :: * -> *) v.
-                                 (MonadBaseControl IO m, C.MonadResource m,FromJSON v) =>
+                                 (MPUsableMonad m,FromJSON v) =>
                                  H.Request
                                  -> MangoPayT
                                       m (PagedList v)
@@ -230,7 +232,7 @@ buildList headers items=let
       getI =join . fmap ((maybeRead :: String -> Maybe Integer). BSC.unpack) . findAssoc headers
 
 -- | get all items, hiding the pagination system    
-getAll ::  (MonadBaseControl IO m, C.MonadResource m,FromJSON v) => 
+getAll ::  (MPUsableMonad m,FromJSON v) => 
   (Maybe Pagination -> AccessToken -> MangoPayT m (PagedList v)) -> AccessToken -> 
   MangoPayT m [v]
 getAll f at=readAll 1 []
@@ -252,7 +254,7 @@ getJSONHeaders mat=  ("content-type", "application/json") :
 
 -- | send JSON via post, get JSON back                
 postExchange :: forall (m :: * -> *) v p.
-                 (MonadBaseControl IO m, C.MonadResource m,FromJSON v,ToJSON p) =>
+                 (MPUsableMonad m,FromJSON v,ToJSON p) =>
                  ByteString
                  -> Maybe AccessToken
                  -> p
@@ -262,7 +264,7 @@ postExchange=jsonExchange HT.methodPost
 
 -- | send JSON via post, get JSON back                
 putExchange :: forall (m :: * -> *) v p.
-                 (MonadBaseControl IO m, C.MonadResource m,FromJSON v,ToJSON p) =>
+                 (MPUsableMonad m,FromJSON v,ToJSON p) =>
                  ByteString
                  -> Maybe AccessToken
                  -> p
@@ -272,7 +274,7 @@ putExchange=jsonExchange HT.methodPut
    
 -- | send JSON, get JSON back                
 jsonExchange :: forall (m :: * -> *) v p.
-                 (MonadBaseControl IO m, C.MonadResource m,FromJSON v,ToJSON p) =>
+                 (MPUsableMonad m,FromJSON v,ToJSON p) =>
                  HT.Method
                  -> ByteString
                  -> Maybe AccessToken
@@ -283,7 +285,7 @@ jsonExchange meth path mat p= getJSONRequest meth path mat p >>= getJSONResponse
   
 -- | get JSON request                
 getJSONRequest :: forall (m :: * -> *) p.
-                 (MonadBaseControl IO m, C.MonadResource m,ToJSON p) =>
+                 (MPUsableMonad m,ToJSON p) =>
                  HT.Method
                  -> ByteString
                  -> Maybe AccessToken
@@ -307,7 +309,7 @@ getJSONRequest meth path mat p=    do
                          
 -- | post JSON content and ignore the reply                
 postNoReply :: forall (m :: * -> *) p.
-                 (MonadBaseControl IO m, C.MonadResource m,ToJSON p) =>
+                 (MPUsableMonad m,ToJSON p) =>
                   ByteString
                  -> Maybe AccessToken
                  -> p
@@ -323,7 +325,7 @@ getManager :: Monad m => MangoPayT m H.Manager
 getManager = mpManager `liftM` Mp ask
 
 -- | Run a 'ResourceT' inside a 'MangoPayT'.
-runResourceInMp :: (C.MonadResource m, MonadBaseControl IO m) =>
+runResourceInMp :: (MPUsableMonad m) =>
                    MangoPayT (C.ResourceT m) a
                 -> MangoPayT m a
 runResourceInMp (Mp inner) = Mp $ ask >>= lift . C.runResourceT . runReaderT inner    

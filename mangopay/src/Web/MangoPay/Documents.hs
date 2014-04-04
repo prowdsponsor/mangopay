@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
 -- | handle documents and pages
 module Web.MangoPay.Documents where
 
@@ -7,7 +7,6 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
-import Data.Conduit
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -21,7 +20,7 @@ import qualified Data.ByteString.Base64 as BS
 import qualified Data.Text.Encoding as TE
 
 -- | create or edit a document
-storeDocument ::  (MonadBaseControl IO m, MonadResource m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
+storeDocument ::  (MPUsableMonad m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
 storeDocument uid d at= 
         case dId d of
                 Nothing-> do
@@ -33,7 +32,7 @@ storeDocument uid d at=
                 
 
 -- | fetch a document from its ID
-fetchDocument :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> DocumentID -> AccessToken -> MangoPayT m Document
+fetchDocument :: (MPUsableMonad m) => AnyUserID -> DocumentID -> AccessToken -> MangoPayT m Document
 fetchDocument uid did at=do
         url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did]
         req<-getGetRequest url (Just at) ([]::HT.Query)
@@ -42,7 +41,7 @@ fetchDocument uid did at=do
 -- | create a page
 --  note that per the MangoPay API the document HAS to be in CREATED status
 -- should we check it here? Since MangoPay returns a 500 Internal Server Error if the document is in another status...
-storePage :: (MonadBaseControl IO m, MonadResource m) => AnyUserID -> DocumentID -> BS.ByteString -> AccessToken -> MangoPayT m ()
+storePage :: (MPUsableMonad m) => AnyUserID -> DocumentID -> BS.ByteString -> AccessToken -> MangoPayT m ()
 storePage uid did contents at=do
   let val=object ["File" .= TE.decodeLatin1 (BS.encode contents)]
   url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did,"/pages"]

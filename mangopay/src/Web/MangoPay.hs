@@ -14,6 +14,7 @@ module Web.MangoPay (
         ,OAuthToken(..)
         ,Pagination(..)
         ,PagedList(..)
+        ,MPUsableMonad
         
         -- access
         ,createCredentialsSecret

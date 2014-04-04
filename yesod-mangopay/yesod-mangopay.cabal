@@ -1,5 +1,5 @@
 name:           yesod-mangopay
-version:        1.0
+version:        1.1
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -12,7 +12,7 @@ maintainer:     Prowdsponsor <opensource@prowdsponsor.com>
 synopsis:       Yesod library for MangoPay API access
 
 description:
-  This package provides convenince functions when using both
+  This package provides convenience functions when using both
   @yesod@ and @mangopay@ packages.  It also includes a test
   application that is built when the library-only flag is set to
   @False@.
@@ -36,7 +36,7 @@ library
                  base                          >= 4          && < 5
                  , yesod                         >= 1.2.5      && < 1.3
                  , yesod-core                    >= 1.2        && < 1.3
-                 , mangopay == 0.1
+                 , mangopay == 1.1.*
                  , http-conduit                  >= 2.0        && < 2.1
                  , time >=1.4.0 && <1.5
                  , http-types >=0.8.2 && <0.9
@@ -89,7 +89,7 @@ executable         yesod-mangopay
                 DeriveDataTypeable
     build-depends:
                  yesod-mangopay
-                 , mangopay == 0.1
+                 , mangopay == 1.1.*
                  , base                          >= 4          && < 5
                  , yesod                         >= 1.2.5      && < 1.3
                  , yesod-core                    >= 1.2        && < 1.3

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, ConstraintKinds #-}
 -- | access methods for login, creating clients...
 module Web.MangoPay.Access 
 (
@@ -10,7 +10,6 @@ where
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 
-import Data.Conduit
 import Data.Text
 
 import Network.HTTP.Conduit (applyBasicAuth)
@@ -20,7 +19,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Maybe (isNothing)
 
 -- | populate the passphrase for our clientId IFF we don't have one
-createCredentialsSecret ::  (MonadBaseControl IO m, MonadResource m) => MangoPayT m Credentials
+createCredentialsSecret ::  (MPUsableMonad m) => MangoPayT m Credentials
 createCredentialsSecret =do
         creds<- getCreds 
         if isNothing $ cClientSecret creds 
@@ -29,7 +28,7 @@ createCredentialsSecret =do
 
 -- | login with given user name and password
 -- returns the OAuth token that can be used to generate the opaque AccessToken and carries the expiration delay
-oauthLogin :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> MangoPayT m OAuthToken
+oauthLogin :: (MPUsableMonad m) => Text -> Text -> MangoPayT m OAuthToken
 oauthLogin user pass = do
         req<- liftM (applyBasicAuth (TE.encodeUtf8 user) (TE.encodeUtf8 pass)) $ getPostRequest "/v2/oauth/token" Nothing ([("grant_type",Just "client_credentials")]::HT.Query)
         getJSONResponse req
