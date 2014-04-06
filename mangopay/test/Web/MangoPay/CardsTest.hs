@@ -27,7 +27,7 @@ test_Card = do
   assertBool (isJust $ crPreregistrationData cr2)  
   assertBool (isNothing $ crRegistrationData cr2)  
   assertBool (isNothing $ crCardId cr2)  
-  cr3<-testMP (\_->registerCard testCardInfo1 cr2)
+  cr3<-unsafeRegisterCard testCardInfo1 cr2
   assertBool (isJust $ crRegistrationData cr3)  
   cr4<-testMP $ storeCardRegistration cr3
   assertBool (isJust $ crCardId cr4)  

@@ -77,7 +77,7 @@ test_SuccessfulTransfer = do
         let uw2=fromJust $ wId w2'
         assertBool (uw1 /= uw2)
         
-        cr<-testMP $ fullRegistration uid1 "EUR" testCardInfo1
+        cr<-testMP $ unsafeFullRegistration uid1 "EUR" testCardInfo1
         assertBool (isJust $ crCardId cr)
         let cid=fromJust $ crCardId cr
         testEventTypes [PAYIN_NORMAL_CREATED,PAYIN_NORMAL_SUCCEEDED] $ do

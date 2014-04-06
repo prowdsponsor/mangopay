@@ -19,7 +19,7 @@ import Web.MangoPay
 import Data.IORef (IORef)
 import Yesod.Form.Jquery (YesodJquery)
 import Network.Wai (pathInfo,Request)
-import Data.Text (Text)
+import Data.Text as T (Text)
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -60,11 +60,12 @@ mkYesodData "App" $(parseRoutesFile "config/routes")
 
 type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 
--- |  use relative links unless if to register hook
+-- |  use relative links unless if to register hook or for card registration
 -- this is useful when developing since the external address may not be the local address
 approotRequest :: App -> Request -> Text
 approotRequest master request
         | pathInfo request==["runFakeHandler", "pathInfo"] = appRoot $ settings master
+        | (not $ null $ pathInfo request) && (head (pathInfo request) == "card") = appRoot $ settings master 
         | otherwise= ""
 
 -- Please see the documentation for the Yesod typeclass. There are a number
