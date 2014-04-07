@@ -1,0 +1,14 @@
+$(function(){
+	$('#ifr').load(function () {
+		// we pass the query string as is, with leading ?
+		var res=$('#ifr').contents().text().substring(1);
+		// data= ok
+		if (res.indexOf('data')==0){
+			$('#frmdat').val(res);
+			$('#frm').submit();			
+		} else { // error
+			alert(res);	
+		}
+
+	});
+});

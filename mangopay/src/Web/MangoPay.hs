@@ -15,6 +15,7 @@ module Web.MangoPay (
         ,Pagination(..)
         ,PagedList(..)
         ,MPUsableMonad
+        ,ToHtQuery(..)
         
         -- access
         ,createCredentialsSecret
@@ -120,8 +121,6 @@ module Web.MangoPay (
         ,CardValidity(..)
         ,mkCardRegistration
         ,storeCardRegistration
-        ,registerCard
-        ,fullRegistration
         ,fetchCard
         ,listCards
         

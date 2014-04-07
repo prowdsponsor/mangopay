@@ -41,6 +41,8 @@ import Control.Monad.Logger
 import Data.Conduit.Binary (sinkHandle)
 import System.IO (stdout)
 import Data.Conduit.Util (zipSinks)
+import qualified Data.ByteString.Lazy.Char8 as BSLC
+import Control.Monad.IO.Class (liftIO)
 #endif
 
 -- | put our constraints in one synonym

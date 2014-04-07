@@ -16,7 +16,7 @@ test_SimpleCardRefund = do
   usL<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
-  cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
+  cr<-testMP $ unsafeFullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr
   let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing 
@@ -47,7 +47,7 @@ test_AdvancedCardRefund = do
   usL<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
-  cr<-testMP $ fullRegistration uid "EUR" testCardInfo1
+  cr<-testMP $ unsafeFullRegistration uid "EUR" testCardInfo1
   assertBool (isJust $ crCardId cr)
   let cid=fromJust $ crCardId cr
   let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing 
@@ -87,7 +87,7 @@ test_TransferRefund = do
         let uw2=fromJust $ wId w2'
         assertBool (uw1 /= uw2)
         
-        cr<-testMP $ fullRegistration uid1 "EUR" testCardInfo1
+        cr<-testMP $ unsafeFullRegistration uid1 "EUR" testCardInfo1
         assertBool (isJust $ crCardId cr)
         let cid=fromJust $ crCardId cr
         testEventTypes [PAYIN_NORMAL_CREATED,PAYIN_NORMAL_SUCCEEDED] $ do

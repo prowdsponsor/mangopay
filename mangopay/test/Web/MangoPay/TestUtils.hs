@@ -1,10 +1,10 @@
-{-# LANGUAGE RankNTypes,OverloadedStrings,DeriveDataTypeable #-}
+{-# LANGUAGE RankNTypes,OverloadedStrings,DeriveDataTypeable, ConstraintKinds, FlexibleContexts, PatternGuards #-}
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Web.MangoPay.TestUtils where
 
 import Web.MangoPay
 
-import Data.ByteString.Lazy as BS hiding (map,any,null)
+import qualified Data.ByteString.Lazy as BSL hiding (map,any,null)
 import Network.HTTP.Conduit as H
 import Data.Maybe
 import Test.Framework
@@ -20,7 +20,7 @@ import Control.Monad (when, void, liftM)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 
-import Data.Text (Text)
+import Data.Text as T (Text, unpack, isPrefixOf) 
 import Data.List
 import Data.Typeable
 import Control.Applicative
@@ -29,6 +29,12 @@ import Data.Default (def)
 import Data.IORef
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad.Logger
+
+import qualified Data.Conduit.List as EL (consume)
+import qualified Data.Text.Encoding as TE
+import qualified Data.ByteString as BS
+import qualified Network.HTTP.Types as HT
+import Data.Conduit (($$+-))
 
 -- | a test card
 testCardInfo1 :: CardInfo
@@ -69,7 +75,7 @@ data TestState=TestState {
 -- | read end point information from hook.test.conf in current folder
 getHookEndPoint :: IO HookEndPoint
 getHookEndPoint = do
-      js<-BS.readFile "hook.test.conf"
+      js<-BSL.readFile "hook.test.conf"
       let mhook=decode js
       assertBool (isJust mhook)
       return $ fromJust mhook
@@ -232,3 +238,47 @@ startHTTPServer p revts=
                                 print evt
                             Nothing->pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
                 return $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
+
+
+-- | perform the full registration of a card
+-- this function is UNSAFE, because if you use this, YOU manage the user's credit card details
+-- so you need to be PCI compliant!
+unsafeFullRegistration :: (MPUsableMonad m) => AnyUserID -> Currency -> CardInfo -> AccessToken -> MangoPayT m CardRegistration
+unsafeFullRegistration uid currency cardInfo at=do
+  -- create registration
+  let cr1=mkCardRegistration uid currency
+  cr2<-storeCardRegistration cr1 at
+  -- register it
+  cr3<-liftIO $ unsafeRegisterCard cardInfo cr2
+  -- save registered version
+  storeCardRegistration cr3 at
+
+-- | register a card with the registration URL
+-- this function is UNSAFE, because if you use this, YOU manage the user's credit card details
+-- so you need to be PCI compliant!
+unsafeRegisterCard :: CardInfo -> CardRegistration -> IO CardRegistration
+unsafeRegisterCard ci cr |
+  Just url <- crCardRegistrationURL cr,
+  Just pre <- crPreregistrationData cr,
+  Just ak <- crAccessKey cr=do
+    ior<-readIORef testState
+    let mgr=tsManager ior
+    req <-H.parseUrl $ T.unpack url  
+    let b=HT.renderQuery False $ HT.toQuery [
+            "accessKeyRef" ?+ ak
+            ,"data" ?+ pre
+            ,"cardNumber" ?+ ciNumber ci
+            ,"cardExpirationDate" ?+ ciExpire ci
+            ,"cardCvx" ?+ ciCSC ci]
+    let req'=req {H.method=HT.methodPost
+         , H.requestHeaders=[("content-type","application/x-www-form-urlencoded")]
+         , H.requestBody=H.RequestBodyBS b}             
+    reg<- runResourceT $  do 
+      res<-H.http req' mgr
+      H.responseBody res $$+- EL.consume
+    let t=TE.decodeUtf8 $ BS.concat reg
+    assertBool $ "data=" `T.isPrefixOf` t 
+    return cr{crRegistrationData=Just t}
+unsafeRegisterCard _ _=assertFailure "CardRegistration not ready" 
+                                
+                

@@ -5,6 +5,16 @@
 <div>
     <a href=@{CardsR uid}>_{MsgLnkCards}
        
-<form method=post action=@{CardR uid} enctype=#{enctype}>
+<form method=post target=ifr action=#{url}>
+    <input type=hidden name=accessKeyRef value=#{ak}>
+    <input type=hidden name=data value=#{pre}>
+    <input type=hidden name=returnURL value=@{Card2R}>
+    _{MsgCardNumber} <input name=cardNumber><br>
+    _{MsgCardExpire} <input name=cardExpirationDate><br>
+    _{MsgCardCSC} <input name=cardCvx><br>    
+    <button>_{MsgBtnSubmit}
+
+<iframe name=ifr id=ifr>
+
+<form id=frm method=post action=@{CardR uid} enctype=#{enctype}>
     ^{widget}
-     <button>_{MsgBtnSubmit}
