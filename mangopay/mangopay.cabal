@@ -123,7 +123,8 @@ test-suite mangopay-tests
                   Web.MangoPay.CardsTest,
                   Web.MangoPay.RefundsTest,
                   Web.MangoPay.AccountsTest,
-                  Web.MangoPay.PayoutsTest
+                  Web.MangoPay.PayoutsTest,
+                  Web.MangoPay.SimpleTest
   hs-source-dirs:
                   test,
                   src

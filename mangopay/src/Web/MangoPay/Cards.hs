@@ -35,7 +35,7 @@ storeCardRegistration cr at=
 -- | credit card information
 data CardInfo = CardInfo {
   ciNumber :: Text
-  ,ciExpire :: Text
+  ,ciExpire :: CardExpiration
   ,ciCSC :: Text
   } deriving (Show,Read,Eq,Ord,Typeable)
 
@@ -123,7 +123,7 @@ data Card=Card {
   cId :: CardID
   ,cCreationDate :: POSIXTime 
   ,cTag :: Maybe Text  
-  ,cExpirationDate   :: Text -- ^  MMYY
+  ,cExpirationDate   :: CardExpiration -- ^  MMYY
   ,cAlias :: Text -- ^ Example: 497010XXXXXX4414
   ,cCardProvider  :: Text -- ^ The card provider, it could be « CB », « VISA », « MASTERCARD », etc.
   ,cCardType :: Text -- ^ « CB_VISA_MASTERCARD » is the only value available yet

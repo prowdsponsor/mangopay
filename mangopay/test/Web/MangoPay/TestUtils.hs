@@ -268,7 +268,7 @@ unsafeRegisterCard ci cr |
             "accessKeyRef" ?+ ak
             ,"data" ?+ pre
             ,"cardNumber" ?+ ciNumber ci
-            ,"cardExpirationDate" ?+ ciExpire ci
+            ,"cardExpirationDate" ?+ (writeCardExpiration $ ciExpire ci)
             ,"cardCvx" ?+ ciCSC ci]
     let req'=req {H.method=HT.methodPost
          , H.requestHeaders=[("content-type","application/x-www-form-urlencoded")]

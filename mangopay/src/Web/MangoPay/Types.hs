@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances, TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances, TemplateHaskell, PatternGuards #-}
 -- | useful types and simple accessor functions
 module Web.MangoPay.Types where
 
@@ -6,6 +6,7 @@ module Web.MangoPay.Types where
 import Control.Applicative
 import Control.Exception.Base (Exception,throw)
 import Data.Text as T hiding (singleton)
+import Data.Text.Read as T
 import Data.Typeable (Typeable)
 import Data.ByteString  as BS (ByteString)
 import Data.Time.Clock.POSIX (POSIXTime)
@@ -22,10 +23,11 @@ import Data.Aeson.Encode (encodeToTextBuilder)
 import Data.Text.Lazy.Builder (fromText, toLazyText, singleton)
 import Data.Monoid ((<>))
 import Data.Text.Lazy (toStrict)
-import Data.String (fromString)
+import Data.String (fromString, IsString)
 import qualified Data.Vector as V (length)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (qLocation)
+import Text.Printf (printf)
 
 -- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
@@ -160,6 +162,46 @@ type CardID=Text
 -- | alias for Currency
 type Currency=Text
 
+-- | the expiration date of a card
+data CardExpiration = CardExpiration {
+  ceMonth :: Int
+  ,ceYear :: Int
+  }
+  deriving (Show,Read,Eq,Ord,Typeable)
+
+-- | read Card Expiration from text representation (MMYY)
+readCardExpiration :: T.Reader CardExpiration
+readCardExpiration t |
+  4 == T.length t,
+  (m,y)<-T.splitAt 2 t=do
+    im<-T.decimal m
+    iy<-T.decimal y
+    return (CardExpiration (fst im) (fst iy), "")
+readCardExpiration _ =Left "Incorrect length"  
+
+-- | write card expiration
+writeCardExpiration :: CardExpiration -> Text
+writeCardExpiration (CardExpiration m y)=let
+  -- yes I know about text-format, but I don't think performance is that critical here to warrant another dependency
+  sm=printf "%02d" $ checkRng m
+  sy=printf "%02d" $ checkRng y
+  in T.concat [pack sm, pack sy]
+  where 
+    -- | check range fits in two digits
+    checkRng :: Int -> Int
+    checkRng i=if i > 99 then i `mod` 100 else i
+
+-- | read Card Expiration from JSON string (MMYY)
+instance FromJSON CardExpiration where
+  parseJSON (String s) |
+    Right (ce,"")<- readCardExpiration s=pure ce
+  parseJSON _=fail "CardExpiration"
+
+instance IsString CardExpiration where
+  fromString s
+    | Right (ce,"")<-readCardExpiration $ fromString s=ce 
+  fromString _=error "CardExpiration"
+  
 -- | a structure holding the information of an API call
 data CallRecord a = CallRecord {
     crReq :: H.Request -- ^ the request to MangoPay

@@ -36,7 +36,8 @@ test_Card = do
   assertEqual cid $ cId c
   assertBool $ not $ T.null $ cAlias c 
   assertBool $ not $ T.null $ cCardProvider c
-  assertBool $ not $ T.null $ cExpirationDate c
+  assertEqual (ciExpire testCardInfo1) (cExpirationDate c)
+  --assertBool $ not $ T.null $ cExpirationDate c
   assertEqual UNKNOWN $ cValidity c
   assertBool $ cActive c
   assertEqual uid $ cUserId c
