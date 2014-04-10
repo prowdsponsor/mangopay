@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Foundation where
 
 import Prelude
@@ -150,3 +151,14 @@ instance YesodMangoPay App where
   mpHttpManager=httpManager
   mpUseSandbox=mpSandbox . appExtra . settings
   mpToken=appToken
+
+-- | show an error page on a mangopay error
+catchW ::  (Yesod site, RenderMessage site AppMessage) =>
+            HandlerT site IO Html -> HandlerT site IO Html
+catchW a=catchMP a (\e->
+        defaultLayout $ do
+          $(logError) "in error handler"
+          let exception=show e
+          setTitleI MsgRequestFail
+          $(widgetFile "request_fail"))
+        

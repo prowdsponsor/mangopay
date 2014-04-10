@@ -114,3 +114,5 @@ PayOutWallet: From Wallet:
 PayOutAccount: To Account:
 PayOutAmount: Amount:
 PayOutCurrency: Currency:
+
+RequestFail: Request to Mangopay failed

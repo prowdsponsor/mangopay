@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell, RankNTypes, ConstraintKinds #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts,TemplateHaskell, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
 -- | typeclasses and helpers to access MangoPay from Yesod
 module Yesod.MangoPay where
 
@@ -145,4 +145,4 @@ parseMPNotification = do
 catchMP :: forall (m :: * -> *) a.
              Y.MonadBaseControl IO m =>
              m a -> (MpException -> m a) -> m a
-catchMP func =L.catch func 
+catchMP=L.catch

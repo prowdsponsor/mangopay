@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 -- | test cards
 module Web.MangoPay.CardsTest where
@@ -11,14 +11,23 @@ import Test.Framework
 import Test.HUnit (Assertion)
 
 import qualified Data.Text as T
+import qualified Control.Exception.Lifted as L
 
--- | test a card registration
-test_Card :: Assertion
-test_Card = do
+-- | test a card registration using euro currency
+test_CardEUR :: Assertion
+test_CardEUR = doTestCard "EUR"
+
+-- | test a card registration using dollar currency
+test_CardUSD :: Assertion
+test_CardUSD = doTestCard "USD"
+
+-- | perform the actual test of card registration in the provided currency
+doTestCard :: T.Text->Assertion
+doTestCard curr=L.handle (\(e::MpException)->assertFailure (show e)) $ do
   usL<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
-  let cr1=mkCardRegistration uid "EUR"
+  let cr1=mkCardRegistration uid curr
   cr2<-testMP $ storeCardRegistration cr1
   assertBool (isJust $ crId cr2)
   assertBool (isJust $ crCreationDate cr2)
@@ -36,7 +45,8 @@ test_Card = do
   assertEqual cid $ cId c
   assertBool $ not $ T.null $ cAlias c 
   assertBool $ not $ T.null $ cCardProvider c
-  assertBool $ not $ T.null $ cExpirationDate c
+  assertEqual (ciExpire testCardInfo1) (cExpirationDate c)
+  --assertBool $ not $ T.null $ cExpirationDate c
   assertEqual UNKNOWN $ cValidity c
   assertBool $ cActive c
   assertEqual uid $ cUserId c

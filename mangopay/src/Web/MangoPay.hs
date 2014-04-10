@@ -16,6 +16,9 @@ module Web.MangoPay (
         ,PagedList(..)
         ,MPUsableMonad
         ,ToHtQuery(..)
+        ,CardExpiration(..)
+        ,readCardExpiration
+        ,writeCardExpiration
         
         -- access
         ,createCredentialsSecret
