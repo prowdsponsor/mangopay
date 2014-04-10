@@ -9,4 +9,6 @@
                 #{show crd}
     
 <div>
-    <a href=@{CardR uid}>_{MsgLnkCardCreate}
+    <form method=get action=@{CardR uid} enctype=#{enctype}>
+        ^{widget}
+         <button>_{MsgLnkCardCreate}

@@ -12,13 +12,21 @@ import Test.HUnit (Assertion)
 
 import qualified Data.Text as T
 
--- | test a card registration
-test_Card :: Assertion
-test_Card = do
+-- | test a card registration using euro currency
+test_CardEUR :: Assertion
+test_CardEUR = doTestCard "EUR"
+
+-- | test a card registration using dollar currency
+test_CardUSD :: Assertion
+test_CardUSD = doTestCard "USD"
+
+-- | perform the actual test of card registration in the provided currency
+doTestCard :: T.Text->Assertion
+doTestCard curr= do
   usL<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
-  let cr1=mkCardRegistration uid "EUR"
+  let cr1=mkCardRegistration uid curr
   cr2<-testMP $ storeCardRegistration cr1
   assertBool (isJust $ crId cr2)
   assertBool (isJust $ crCreationDate cr2)
