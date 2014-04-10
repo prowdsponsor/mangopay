@@ -177,7 +177,7 @@ readCardExpiration t |
     im<-T.decimal m
     iy<-T.decimal y
     return (CardExpiration (fst im) (fst iy), "")
-readCardExpiration _ =Left "Incorrect length"  
+readCardExpiration _ =Left "Incorrect length"
 
 -- | write card expiration
 writeCardExpiration :: CardExpiration -> Text
@@ -186,7 +186,7 @@ writeCardExpiration (CardExpiration m y)=let
   sm=printf "%02d" $ checkRng m
   sy=printf "%02d" $ checkRng y
   in T.concat [pack sm, pack sy]
-  where 
+  where
     -- | check range fits in two digits
     checkRng :: Int -> Int
     checkRng i=if i > 99 then i `mod` 100 else i
@@ -199,9 +199,9 @@ instance FromJSON CardExpiration where
 
 instance IsString CardExpiration where
   fromString s
-    | Right (ce,"")<-readCardExpiration $ fromString s=ce 
+    | Right (ce,"")<-readCardExpiration $ fromString s=ce
   fromString _=error "CardExpiration"
-  
+
 -- | a structure holding the information of an API call
 data CallRecord a = CallRecord {
     crReq :: H.Request -- ^ the request to MangoPay
