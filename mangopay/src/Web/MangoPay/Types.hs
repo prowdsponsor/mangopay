@@ -1,10 +1,11 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances, TemplateHaskell, PatternGuards #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables, TypeSynonymInstances, FlexibleContexts, FlexibleInstances, TemplateHaskell, PatternGuards #-}
 -- | useful types and simple accessor functions
 module Web.MangoPay.Types where
 
 
 import Control.Applicative
-import Control.Exception.Base (Exception,throw)
+import Control.Exception.Lifted (Exception, throwIO)
+import Control.Monad.Base (MonadBase)
 import Data.Text as T hiding (singleton)
 import Data.Text.Read as T
 import Data.Typeable (Typeable)
@@ -236,9 +237,9 @@ recordLogMessage (CallRecord req res)=let
 -- | the result
 -- if we have a proper result we return it
 -- if we have an error we throw it
-recordResult :: CallRecord a-> a
-recordResult (CallRecord _ (Left err))=throw err
-recordResult (CallRecord _ (Right (_,a)))=a
+recordResult :: MonadBase IO m => CallRecord a -> m a
+recordResult (CallRecord _ (Left err))=throwIO err
+recordResult (CallRecord _ (Right (_,a)))=return a
 
 -- | log a CallRecord
 -- MonadLogger doesn't expose a function with a dynamic log level...

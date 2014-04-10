@@ -213,7 +213,7 @@ mpReq req extractError addHeaders=do
   let cr=CallRecord req' mpres
   -- log call
   $(logCall) cr
-  return $ recordResult cr
+  recordResult cr
 
 -- | get a JSON response from a request to MangoPay
 -- MangoPay returns either a result, or an error
