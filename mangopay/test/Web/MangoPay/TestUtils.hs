@@ -130,7 +130,7 @@ testEventTypes' evtTs ops=do
     res<-liftM tsReceivedEvents $ readIORef testState
     a<-ops
     mapM_ (testSearchEvent a) evtTs
-    er<-waitForEvent res (map (testEvent a) evtTs) 5
+    er<-waitForEvent res (map (testEvent a) evtTs) 30
     assertEqual EventsOK er
     return a
 
@@ -235,7 +235,7 @@ startHTTPServer p revts=
                         liftIO $ case mevt of
                             Just evt->do
                                 pushReceivedEvent revts $ Right evt
-                                print evt
+                                putStrLn $ "Received event:" ++ show evt
                             Nothing->pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
                 return $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
 

@@ -22,13 +22,14 @@ import qualified Network.HTTP.Types as HT
 import Control.Monad.Logger
 import Data.Aeson.Encode (encodeToTextBuilder)
 import Data.Text.Lazy.Builder (fromText, toLazyText, singleton)
-import Data.Monoid ((<>))
+import Data.Monoid ((<>), mempty)
 import Data.Text.Lazy (toStrict)
 import Data.String (fromString, IsString)
 import qualified Data.Vector as V (length)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (qLocation)
 import Text.Printf (printf)
+import qualified Data.ByteString.Lazy as BS (toStrict)
 
 -- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
@@ -224,6 +225,12 @@ recordLogMessage (CallRecord req res)=let
   pathB=fromText $ TE.decodeUtf8 $ H.path req
   -- log the query string if any
   qsB=fromText $ TE.decodeUtf8 $ H.queryString req
+  postB=if H.method req==HT.methodPost 
+    then case H.requestBody req of
+      (H.RequestBodyBS b)->fromText (TE.decodeUtf8 b) <> " -> "
+      (H.RequestBodyLBS b)->fromText $ TE.decodeUtf8 $ BS.toStrict b <> " -> "
+      _->mempty
+    else mempty
   resB=case res of
     -- log error
     Left e->fromString $ show e
@@ -232,7 +239,7 @@ recordLogMessage (CallRecord req res)=let
       Array arr->fromString (show $ V.length arr) <> " values"
       -- we have a simple value we can log it
       _->encodeToTextBuilder v
-  in toStrict . toLazyText $ methB <> singleton ' ' <> pathB <> qsB <> ": " <> resB
+  in toStrict . toLazyText $ methB <> singleton ' ' <> pathB <> qsB <> ": " <> postB <> resB
 
 -- | the result
 -- if we have a proper result we return it

@@ -53,7 +53,7 @@ doTestCard curr=L.handle (\(e::MpException)->assertFailure (show e)) $ do
   assertEqual "CB_VISA_MASTERCARD" $ cCardType c
   cs<-testMP $ getAll $ listCards uid
   assertBool $ not $ null cs
-  assertBool $ any (\ c1 -> cId c == cid) cs
+  assertBool $ any (\ c1 -> cId c1 == cid) cs
   
  
   
