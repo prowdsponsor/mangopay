@@ -14,6 +14,8 @@ import Data.Text.Read (decimal)
 
 import Web.MangoPay
 
+import Data.ISO3166_CountryCodes (CountryCode, readableCountryName)
+
 -- | localized field
 localizedFS :: forall master msg.
             RenderMessage master msg =>
@@ -66,3 +68,8 @@ getPaginationNav (Just (Pagination i _)) l=let
     in (previous,next)
 getPaginationNav _ _= (Nothing,Nothing)             
     
+    
+-- | country field
+countryField :: RenderMessage site FormMessage =>
+                  Field (HandlerT site IO) CountryCode
+countryField = selectFieldList $ map (pack . readableCountryName &&& id) [minBound..maxBound] 

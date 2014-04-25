@@ -114,8 +114,8 @@ naturalUserForm muser= renderDivs $ NaturalUser
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
         }) (localizedFS MsgUserBirthday) (posix2Day <$> uBirthday <$> muser))
-    <*> areq textField (localizedFS MsgUserNationality)  (uNationality <$> muser)
-    <*> areq textField (localizedFS MsgUserCountry) (uCountryOfResidence <$> muser)
+    <*> areq countryField (localizedFS MsgUserNationality)  (uNationality <$> muser)
+    <*> areq countryField (localizedFS MsgUserCountry) (uCountryOfResidence <$> muser)
     <*> aopt textField (localizedFS MsgUserOccupation) (uOccupation <$> muser)
     <*> aopt (selectFieldList ranges) (localizedFS MsgUserIncome) (uIncomeRange <$> muser)
     <*> aopt textField (localizedFS MsgUserCustomData) (uTag <$> muser)
@@ -140,8 +140,8 @@ legalUserForm muser= renderDivs $ LegalUser
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
         }) (localizedFS MsgUserRepBirthday) (posix2Day <$> lLegalRepresentativeBirthday <$> muser))   
-    <*> areq textField (localizedFS MsgUserRepNationality) (lLegalRepresentativeNationality <$> muser)  
-    <*> areq textField (localizedFS MsgUserRepCountry) (lLegalRepresentativeCountryOfResidence <$> muser)
+    <*> areq countryField (localizedFS MsgUserRepNationality) (lLegalRepresentativeNationality <$> muser)  
+    <*> areq countryField (localizedFS MsgUserRepCountry) (lLegalRepresentativeCountryOfResidence <$> muser)
     <*> pure Nothing  -- value comes from Documents uploaded (I think)
     <*> aopt textField (localizedFS MsgUserCustomData) (lTag <$> muser)  
     <*> pure Nothing  -- value comes from Documents uploaded

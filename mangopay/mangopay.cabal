@@ -1,5 +1,5 @@
 name:           mangopay
-version:        1.4
+version:        1.5
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -53,6 +53,8 @@ library
      , monad-logger                  >= 0.3        && < 0.4
      , vector >=0.10.9 && <0.11
      , template-haskell
+     , iso3166-country-codes
+
   if flag(conduit11)
     build-depends:
          conduit              == 1.1.*
@@ -102,7 +104,7 @@ test-suite mangopay-tests
      data-default, http-conduit, http-types, lifted-base,
      monad-control, monad-logger, resourcet, template-haskell,
      text, time, transformers, transformers-base,
-     unordered-containers, utf8-string, vector
+     unordered-containers, utf8-string, vector, iso3166-country-codes
 
      , blaze-builder
      , HTF            >  0.9
