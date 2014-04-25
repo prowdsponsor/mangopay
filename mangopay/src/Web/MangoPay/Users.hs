@@ -5,12 +5,14 @@ module Web.MangoPay.Users where
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 
+import Data.ISO3166_CountryCodes (CountryCode)
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
+
 
 -- | create or edit a natural user
 storeNaturalUser ::  (MPUsableMonad m) => NaturalUser -> AccessToken -> MangoPayT m NaturalUser
@@ -127,8 +129,8 @@ data NaturalUser=NaturalUser {
         ,uLastName :: Text -- ^  User’s lastname
         ,uAddress :: Maybe Text -- ^  User’s address
         ,uBirthday :: POSIXTime -- ^   User’s birthdate
-        ,uNationality :: Text -- ^ User’s Nationality
-        ,uCountryOfResidence:: Text -- ^User’s country of residence
+        ,uNationality :: CountryCode -- ^ User’s Nationality
+        ,uCountryOfResidence:: CountryCode -- ^User’s country of residence
         ,uOccupation :: Maybe Text -- ^User’s occupation (ie. Work)
         ,uIncomeRange :: Maybe IncomeRange -- ^ User’s income range
         ,uTag :: Maybe Text -- ^  Custom data
@@ -194,8 +196,8 @@ data LegalUser=LegalUser {
         ,lLegalRepresentativeAddress :: Maybe Text -- ^ The address of the company’s Legal representative person
         ,lLegalRepresentativeEmail :: Maybe Text -- ^  The email of the company’s Legal representative person
         ,lLegalRepresentativeBirthday :: POSIXTime -- ^ The birthdate of the company’s Legal representative person
-        ,lLegalRepresentativeNationality :: Text -- ^ the nationality of the company’s Legal representative person
-        ,lLegalRepresentativeCountryOfResidence :: Text -- ^  The country of residence of the company’s Legal representative person
+        ,lLegalRepresentativeNationality :: CountryCode -- ^ the nationality of the company’s Legal representative person
+        ,lLegalRepresentativeCountryOfResidence :: CountryCode -- ^  The country of residence of the company’s Legal representative person
         ,lStatute  :: Maybe Text -- ^  The business statute of the company
         ,lTag   :: Maybe Text -- ^  Custom data
         ,lProofOfRegistration :: Maybe Text -- ^   The proof of registration of the company

@@ -9,8 +9,10 @@ import Test.Framework
 import Test.HUnit (Assertion)
 import Data.Maybe (fromJust, isJust)
 
+import Data.ISO3166_CountryCodes (CountryCode(FR))
+
 testNaturalUser :: NaturalUser
-testNaturalUser=NaturalUser Nothing Nothing "jpmoresmau@gmail.com" "JP" "Moresmau" Nothing 11111 "FR" "FR" 
+testNaturalUser=NaturalUser Nothing Nothing "jpmoresmau@gmail.com" "JP" "Moresmau" Nothing 11111 FR FR 
         (Just "Haskell contractor") (Just IncomeRange2) Nothing Nothing Nothing 
 
 test_NaturalUser :: Assertion
@@ -31,7 +33,7 @@ test_NaturalUser = do
 
 testLegalUser :: LegalUser
 testLegalUser = LegalUser Nothing Nothing "jpmoresmau@gmail.com" "JP Moresmau" Business Nothing
-        "JP" "Moresmau" (Just "my house") Nothing 222222 "FR" "FR" Nothing Nothing Nothing Nothing
+        "JP" "Moresmau" (Just "my house") Nothing 222222 FR FR Nothing Nothing Nothing Nothing
         
 test_LegalUser :: Assertion
 test_LegalUser = do

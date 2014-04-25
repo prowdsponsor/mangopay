@@ -1,5 +1,5 @@
 name:           yesod-mangopay
-version:        1.4
+version:        1.5
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -37,7 +37,7 @@ library
     hs-source-dirs:    src
     build-depends:
                    base         >= 4      && < 5
-                 , mangopay     == 1.4.*
+                 , mangopay     == 1.5.*
                  , containers   >= 0.5    && < 0.6
                  , http-conduit >= 2.0    && < 2.2
                  , http-types   >= 0.8.2  && < 0.9
@@ -120,8 +120,9 @@ executable         yesod-mangopay
                  , yesod-auth                    >= 1.2.6
                  , yesod-form                    >= 1.3.0      && < 1.4
                  , yesod-persistent
-                 , yesod-static                  >= 1.2        && < 1.3,
-                 lifted-base >=0.2.2 && <0.3
+                 , yesod-static                  >= 1.2        && < 1.3
+                 , lifted-base                   >=0.2.2 && <0.3
+                 , iso3166-country-codes
     if flag(conduit11)
       build-depends:
           conduit       == 1.1.*
