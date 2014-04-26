@@ -5,7 +5,7 @@ module Web.MangoPay.Users where
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 
-import Data.ISO3166_CountryCodes (CountryCode)
+import Data.CountryCodes (CountryCode)
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson

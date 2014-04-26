@@ -6,6 +6,7 @@ import Yesod
 import Prelude
 import Foundation
 
+import Data.CountryCodes (CountryCode,countryList)
 import Data.Text hiding (map)
 import Control.Arrow ((&&&))
 import Data.Maybe (fromMaybe)
@@ -14,7 +15,8 @@ import Data.Text.Read (decimal)
 
 import Web.MangoPay
 
-import Data.ISO3166_CountryCodes (CountryCode, readableCountryName)
+
+
 
 -- | localized field
 localizedFS :: forall master msg.
@@ -67,9 +69,9 @@ getPaginationNav (Just (Pagination i _)) l=let
               else Nothing
     in (previous,next)
 getPaginationNav _ _= (Nothing,Nothing)             
-    
+
     
 -- | country field
 countryField :: RenderMessage site FormMessage =>
                   Field (HandlerT site IO) CountryCode
-countryField = selectFieldList $ map (pack . readableCountryName &&& id) [minBound..maxBound] 
+countryField = selectFieldList countryList

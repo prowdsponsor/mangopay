@@ -14,7 +14,7 @@ import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
-import Data.ISO3166_CountryCodes (CountryCode)
+import Data.CountryCodes (CountryCode)
 
 -- | create an account
 storeAccount ::  (MPUsableMonad m) => BankAccount -> AccessToken -> MangoPayT m BankAccount

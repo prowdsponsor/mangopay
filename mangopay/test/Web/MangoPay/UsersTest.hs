@@ -9,7 +9,7 @@ import Test.Framework
 import Test.HUnit (Assertion)
 import Data.Maybe (fromJust, isJust)
 
-import Data.ISO3166_CountryCodes (CountryCode(FR))
+import Data.CountryCodes (CountryCode(FR))
 
 testNaturalUser :: NaturalUser
 testNaturalUser=NaturalUser Nothing Nothing "jpmoresmau@gmail.com" "JP" "Moresmau" Nothing 11111 FR FR 

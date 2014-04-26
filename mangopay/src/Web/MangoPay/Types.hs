@@ -31,7 +31,6 @@ import Language.Haskell.TH.Syntax (qLocation)
 import Text.Printf (printf)
 import qualified Data.ByteString.Lazy as BS (toStrict)
 
-import Data.ISO3166_CountryCodes (CountryCode)
 
 -- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
@@ -137,16 +136,6 @@ instance FromJSON POSIXTime where
 -- | to json as per MangoPay format
 instance ToJSON POSIXTime  where
     toJSON pt=toJSON (round pt :: Integer)
-
--- | to json as per MangoPay format
-instance ToJSON CountryCode where
-        toJSON =toJSON . show
-
--- | from json as per MangoPay format
-instance FromJSON CountryCode where
-  parseJSON (String s)
-    | ((a,_):_)<-reads $ unpack s=pure a
-  parseJSON _ =fail "CountryCode"
 
 
 -- | Pagination info for searches
