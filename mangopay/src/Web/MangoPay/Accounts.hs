@@ -14,6 +14,8 @@ import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
+import Data.CountryCodes (CountryCode)
+
 -- | create an account
 storeAccount ::  (MPUsableMonad m) => BankAccount -> AccessToken -> MangoPayT m BankAccount
 storeAccount ba at
@@ -54,7 +56,7 @@ data BankAccountDetails=IBAN {
   } | Other {
   atAccountNumber :: Text
   ,atBIC :: Text
-  ,atCountry :: Text
+  ,atCountry :: CountryCode
   } deriving (Show,Read,Eq,Ord,Typeable)
   
 -- | from json as per MangoPay format 

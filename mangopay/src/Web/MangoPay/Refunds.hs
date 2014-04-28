@@ -41,7 +41,7 @@ data RefundRequest=RefundRequest{
   ,rrFees :: Maybe Amount -- ^ In cents
   }deriving (Show,Eq,Ord,Typeable)
 
- -- | to json as per MangoPay format
+-- | to json as per MangoPay format
 instance ToJSON RefundRequest  where
     toJSON rr=object ["AuthorId" .= rrAuthorId rr,"DebitedFunds" .= rrDebitedFunds rr,
       "Fees" .= rrFees rr] 
@@ -72,7 +72,7 @@ data Refund=Refund{
   ,rCreditedWalletID  :: Maybe WalletID -- ^ The Id of the credited Wallet
   } deriving (Show,Eq,Ord,Typeable)
   
- -- | from json as per MangoPay format 
+-- | from json as per MangoPay format 
 instance FromJSON Refund where
         parseJSON (Object v) =Refund <$>
                          v .: "Id" <*>

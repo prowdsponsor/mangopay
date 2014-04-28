@@ -164,7 +164,7 @@ instance ToJSON Transfer  where
         "Fees" .= tFees t,"DebitedWalletID" .= tDebitedWalletID t,"CreditedWalletID" .= tCreditedWalletID t,
         "Tag" .= tTag t]
     
- -- | from json as per MangoPay format 
+-- | from json as per MangoPay format 
 instance FromJSON Transfer where
         parseJSON (Object v) =Transfer <$>
                          v .: "Id" <*>
@@ -244,7 +244,7 @@ instance ToJSON Transaction  where
         "Fees" .= txFees t,"DebitedWalletID" .= txDebitedWalletID t,"CreditedWalletID" .= txCreditedWalletID t,
         "Tag" .= txTag t,"Type" .= txType t,"Nature" .= txNature t]
     
- -- | from json as per MangoPay format 
+-- | from json as per MangoPay format 
 instance FromJSON Transaction where
         parseJSON (Object v) =Transaction <$>
                          v .: "Id" <*>

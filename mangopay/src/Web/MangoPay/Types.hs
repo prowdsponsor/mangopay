@@ -31,6 +31,7 @@ import Language.Haskell.TH.Syntax (qLocation)
 import Text.Printf (printf)
 import qualified Data.ByteString.Lazy as BS (toStrict)
 
+
 -- | the MangoPay access point
 data AccessPoint = Sandbox | Production | Custom ByteString
         deriving (Show,Read,Eq,Ord,Typeable)
@@ -127,6 +128,7 @@ instance FromJSON MpError where
                          v .: "Date"
     parseJSON _= fail "MpError"
 
+-- | from json as per MangoPay format
 instance FromJSON POSIXTime where
     parseJSON n@(Number _)=(fromIntegral . (round::Double -> Integer)) <$> parseJSON n
     parseJSON _ = fail "POSIXTime"
@@ -134,6 +136,7 @@ instance FromJSON POSIXTime where
 -- | to json as per MangoPay format
 instance ToJSON POSIXTime  where
     toJSON pt=toJSON (round pt :: Integer)
+
 
 -- | Pagination info for searches
 -- <http://docs.mangopay.com/api-references/pagination/>
@@ -151,6 +154,7 @@ paginationAttributes :: Maybe Pagination -> [(ByteString,Maybe ByteString)]
 paginationAttributes (Just p)=["page" ?+ pPage p, "per_page" ?+ pPerPage p]
 paginationAttributes _=[]
 
+-- | A partial list with pagination information.
 data PagedList a= PagedList {
   plData :: [a]
   ,plItemCount :: Integer
