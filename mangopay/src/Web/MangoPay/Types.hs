@@ -154,6 +154,7 @@ paginationAttributes :: Maybe Pagination -> [(ByteString,Maybe ByteString)]
 paginationAttributes (Just p)=["page" ?+ pPage p, "per_page" ?+ pPerPage p]
 paginationAttributes _=[]
 
+-- | A partial list with pagination information.
 data PagedList a= PagedList {
   plData :: [a]
   ,plItemCount :: Integer

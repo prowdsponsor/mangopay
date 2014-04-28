@@ -232,7 +232,8 @@ instance FromJSON LegalUser where
                          v .:? "ProofOfRegistration" <*>
                          v .:? "ShareholderDeclaration" 
     parseJSON _= fail "NaturalUser" 
-     
+    
+-- | Type of user. 
 data PersonType =  Natural | Legal
         deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
      
