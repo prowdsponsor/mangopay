@@ -53,7 +53,8 @@ listHooks mp at=do
         getJSONList req 
 
 -- | Event type
-data EventType=PAYIN_NORMAL_CREATED
+data EventType=
+          PAYIN_NORMAL_CREATED
         | PAYIN_NORMAL_SUCCEEDED
         | PAYIN_NORMAL_FAILED
         | PAYOUT_NORMAL_CREATED
@@ -71,6 +72,10 @@ data EventType=PAYIN_NORMAL_CREATED
         | TRANSFER_REFUND_CREATED
         | TRANSFER_REFUND_SUCCEEDED
         | TRANSFER_REFUND_FAILED
+        | KYC_CREATED
+        | KYC_VALIDATION_ASKED
+        | KYC_SUCCEEDED
+        | KYC_FAILED
         deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
 
 instance ToHtQuery (Maybe EventType) where
