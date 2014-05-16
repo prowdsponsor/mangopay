@@ -35,6 +35,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString as BS
 import qualified Network.HTTP.Types as HT
 import Data.Conduit (($$+-))
+import Data.Monoid ((<>))
 
 -- | a test card
 testCardInfo1 :: CardInfo
@@ -145,7 +146,7 @@ testSearchEvent tid evtT=do
 createHook :: EventType -> Assertion
 createHook evtT= do
     hook<-liftM tsHookEndPoint $ readIORef testState
-    h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing evtT)
+    h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook <> "/mphook") Enabled Nothing evtT)
     assertBool (isJust $ hId h)
     h2<-testMP $ fetchHook (fromJust $ hId h)
     assertEqual (hId h) (hId h2)
