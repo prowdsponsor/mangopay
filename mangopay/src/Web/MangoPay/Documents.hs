@@ -7,7 +7,7 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
-import Data.Text
+import Data.Text hiding (any)
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
@@ -111,3 +111,35 @@ instance FromJSON Document where
                          v .:? "RefusedReasonType" <*>
                          v .:? "RefusedReasonMessage"
         parseJSON _=fail "Document"
+
+
+-- | Do we have a validated document of the given type?
+hasValidatedDocument
+  :: DocumentType
+     -- ^ The document type.
+  -> [Document]
+     -- ^ The documents we know about.
+  -> Bool
+hasValidatedDocument dtype = any (\d -> dtype == dType d && Just VALIDATED == dStatus d)
+
+
+-- | Calculate the MangoPay authorization level.
+-- <http://docs.mangopay.com/api-references/kyc-rules/>
+getKindOfMangoPayAuth
+  :: Either NaturalUser LegalUser
+  -> [Document]
+  -> KindOfAuthentication
+getKindOfMangoPayAuth _ [] = Light
+getKindOfMangoPayAuth (Left nu) docs =
+  case (uAddress nu,uOccupation nu,uIncomeRange nu,hasValidatedDocument IDENTITY_PROOF docs) of
+    (Just _,Just _, Just _,True) -> if hasValidatedDocument ADDRESS_PROOF docs
+      then Strong
+      else Regular
+    _ -> Light
+getKindOfMangoPayAuth (Right lu) docs=
+  case (lHeadquartersAddress lu,lLegalRepresentativeEmail lu,lLegalRepresentativeAddress lu,
+    hasValidatedDocument ARTICLES_OF_ASSOCIATION docs,
+    hasValidatedDocument REGISTRATION_PROOF docs,
+    hasValidatedDocument SHAREHOLDER_DECLARATION docs) of
+    (Just _, Just _, Just _, True, True, True) -> Regular
+    _ -> Light

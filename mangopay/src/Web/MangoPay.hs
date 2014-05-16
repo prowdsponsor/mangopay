@@ -19,6 +19,7 @@ module Web.MangoPay (
         ,CardExpiration(..)
         ,readCardExpiration
         ,writeCardExpiration
+        ,KindOfAuthentication(..)
         
         -- access
         ,createCredentialsSecret
@@ -85,6 +86,7 @@ module Web.MangoPay (
         ,storeDocument
         ,fetchDocument
         ,storePage
+        ,getKindOfMangoPayAuth
         
         -- Accounts
         ,BankAccount(..)

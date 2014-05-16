@@ -208,6 +208,23 @@ instance IsString CardExpiration where
     | Right (ce,"")<-readCardExpiration $ fromString s=ce
   fromString _=error "CardExpiration"
 
+
+-- | the kind of authentication data the user has provided
+data KindOfAuthentication = 
+    Light
+  | Regular
+  | Strong
+    deriving (Eq, Ord, Show, Read, Bounded, Enum, Typeable)
+
+
+instance ToJSON KindOfAuthentication where
+        toJSON =toJSON . show
+
+instance FromJSON KindOfAuthentication where
+        parseJSON (String s)=pure $ read $ unpack s
+        parseJSON _ =fail "KindOfAuthentication"
+
+
 -- | a structure holding the information of an API call
 data CallRecord a = CallRecord {
     crReq :: H.Request -- ^ the request to MangoPay
