@@ -13,16 +13,18 @@ import qualified Data.ByteString as BS
 
 -- | test document API
 test_Document :: Assertion
-test_Document=do
+test_Document = do
   usL<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
+  euser <- testMP $ getUser uid
   let d=Document Nothing Nothing Nothing IDENTITY_PROOF (Just CREATED) Nothing Nothing
   testEventTypes [KYC_CREATED,KYC_VALIDATION_ASKED] $ do
     d2<-testMP $ storeDocument uid d
     assertBool (isJust $ dId d2)
     assertBool (isJust $ dCreationDate d2)
     assertEqual IDENTITY_PROOF (dType d2)
+    assertEqual Light $ getKindOfAuthentication euser [d2]
     tf<-BS.readFile "data/test.jpg"
     -- document has to be in CREATED status
     testMP $ storePage uid (fromJust $ dId d2) tf
@@ -33,3 +35,12 @@ test_Document=do
     assertEqual (Just VALIDATION_ASKED) (dStatus d4)
     return $ dId d2
   
+
+-- | test type of authentication
+test_KindOfAuthentication :: Assertion
+test_KindOfAuthentication = do
+  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  assertEqual 1 (length $ plData usL)
+  let uid=urId $ head $ plData usL
+  euser <- testMP $ getUser uid
+  assertEqual Light $ getKindOfAuthentication euser []

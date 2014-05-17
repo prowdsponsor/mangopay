@@ -13,6 +13,7 @@ import Data.IORef (IORef, readIORef, writeIORef)
 import qualified Data.Map as M
 import Control.Monad (void)
 import qualified Control.Exception.Lifted as L
+import Database.Persist.TH (derivePersistField)
 
 -- | The 'YesodMangoPay' class for foundation datatypes that
 -- support running 'MangoPayT' actions.
@@ -146,3 +147,9 @@ catchMP :: forall (m :: * -> *) a.
              Y.MonadBaseControl IO m =>
              m a -> (MpException -> m a) -> m a
 catchMP=L.catch
+
+-----------------------------------------------------------------------------------------------
+-- Instances for MangoPay types that may be useful in a Persistent/Yesod context
+
+$(derivePersistField "KindOfAuthentication")
+

@@ -7,6 +7,7 @@ import Import
 import Yesod.MangoPay
 import Web.MangoPay
 import Data.IORef (modifyIORef, readIORef)
+import Control.Monad (when)
 
 -- | Home page
 getHomeR :: Handler Html
@@ -26,8 +27,10 @@ getMPHookR :: Handler Text
 getMPHookR = do
   evt<-parseMPNotification
   site <- getYesod
-  -- prepend event to list
-  liftIO $ modifyIORef (appEvents site) (evt :)
+  ok <- runYesodMPTToken $ checkEvent evt
+  when ok $ 
+      -- prepend event to list
+      liftIO $ modifyIORef (appEvents site) (evt :)
   -- send simple response
   sendResponse ("ok"::Text)
 

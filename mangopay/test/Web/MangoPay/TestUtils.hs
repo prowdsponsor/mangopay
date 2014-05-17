@@ -35,6 +35,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString as BS
 import qualified Network.HTTP.Types as HT
 import Data.Conduit (($$+-))
+import Data.Monoid ((<>))
 
 -- | a test card
 testCardInfo1 :: CardInfo
@@ -137,7 +138,7 @@ testEventTypes' evtTs ops=do
 -- | assert that we find an event for the given resource id and event type
 testSearchEvent :: Maybe Text -> EventType -> Assertion
 testSearchEvent tid evtT=do
-  es<-testMP $ searchEvents (def{espEventType=Just evtT})
+  es<-testMP $ searchAllEvents (def{espEventType=Just evtT})
   assertBool (not $ null es)
   assertBool (any ((tid ==) . Just . eResourceId) es)
 
@@ -145,7 +146,7 @@ testSearchEvent tid evtT=do
 createHook :: EventType -> Assertion
 createHook evtT= do
     hook<-liftM tsHookEndPoint $ readIORef testState
-    h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook) Enabled Nothing evtT)
+    h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook <> "/mphook") Enabled Nothing evtT)
     assertBool (isJust $ hId h)
     h2<-testMP $ fetchHook (fromJust $ hId h)
     assertEqual (hId h) (hId h2)
@@ -165,6 +166,7 @@ testEvents ops tests=do
 data EventResult = Timeout -- ^ didn't receive all expected events
   | EventsOK -- ^ OK: everything expected received, nothing unexpected
   | ExtraEvent Event -- ^ unexpected
+  | UncheckedEvent Event -- ^ event not found in MangoPay
   | UnhandledNotification String -- ^ notification we couldn't parse
   deriving (Show,Eq,Ord,Typeable)
 
@@ -183,11 +185,14 @@ waitForEvent rc fs del=do
           (Nothing,_)->do -- no event yet
              threadDelay 1000000
              waitForEvent rc fs (del-1)
-          (Just (Right evt),_)-> -- an event, does it match
-                case Data.List.foldl' (match1 evt) ([],False) fs of
-                  (_,False)->return $ ExtraEvent evt -- doesn't match
-                  (fs2,_)-> waitForEvent rc fs2 del -- matched, either we have more to do or we need to check no unexpected event was found
-
+          (Just (Right evt),_)-> do -- an event, does it match
+                ok <- testMP $ checkEvent evt
+                if ok 
+                  then 
+                    case Data.List.foldl' (match1 evt) ([],False) fs of
+                      (_,False)->return $ ExtraEvent evt -- doesn't match
+                      (fs2,_)-> waitForEvent rc fs2 del -- matched, either we have more to do or we need to check no unexpected event was found
+                  else  return $ UncheckedEvent evt
   where
     -- | match the first event function and return all the non matching function, and a flag indicating if we matched
     match1 :: Event -> ([Event -> Bool],Bool) -> (Event -> Bool) -> ([Event -> Bool],Bool)

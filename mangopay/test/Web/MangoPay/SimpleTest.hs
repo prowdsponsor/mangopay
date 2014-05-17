@@ -26,4 +26,23 @@ test_CardExpiration = do
   assertEqual "1503" $ writeCardExpiration ce2
   let ce3 = CardExpiration 10 2034
   assertEqual "1034" $ writeCardExpiration ce3
+
   
+-- | test income ranges
+test_IncomeRanges :: Assertion
+test_IncomeRanges = mapM_ testIncomeRange [minBound .. maxBound]
+
+-- | test one income range
+testIncomeRange :: IncomeRange -> Assertion
+testIncomeRange ir=do
+  let (Amount c1 a1,Amount c2 a2) = incomeBounds ir
+  assertEqual "EUR" c1
+  assertEqual "EUR" c2
+  if a2 > (-1)
+    then do 
+      let mid = div (a1+a2) 2
+      assertEqual ir $ incomeRange (Amount c1 mid)
+    else do
+      assertEqual IncomeRange6 ir
+      let mid = a1 * 2
+      assertEqual ir $ incomeRange (Amount c1 mid)

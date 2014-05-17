@@ -19,6 +19,7 @@ module Web.MangoPay (
         ,CardExpiration(..)
         ,readCardExpiration
         ,writeCardExpiration
+        ,KindOfAuthentication(..)
         
         -- access
         ,createCredentialsSecret
@@ -28,6 +29,8 @@ module Web.MangoPay (
         -- Users
         ,NaturalUser(..)
         ,IncomeRange(..)
+        ,incomeBounds
+        ,incomeRange
         ,NaturalUserID
         ,LegalUser(..)
         ,LegalUserType(..)
@@ -67,6 +70,8 @@ module Web.MangoPay (
         ,EventType(..)
         ,EventSearchParams(..)
         ,searchEvents
+        ,searchAllEvents
+        ,checkEvent
         ,HookStatus(..)
         ,HookValidity(..)
         ,HookID
@@ -85,6 +90,7 @@ module Web.MangoPay (
         ,storeDocument
         ,fetchDocument
         ,storePage
+        ,getKindOfAuthentication
         
         -- Accounts
         ,BankAccount(..)
