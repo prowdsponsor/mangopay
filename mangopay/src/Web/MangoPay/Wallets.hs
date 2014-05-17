@@ -69,23 +69,6 @@ listTransactionsForUser uid mp at=do
         req<-getGetRequest url (Just at) (paginationAttributes mp)
         getJSONList req 
 
--- | currency amount 
-data Amount=Amount {
-        aCurrency :: Currency
-        ,aAmount :: Integer -- ^ all amounts should be in cents!
-        }
-        deriving (Show,Read,Eq,Ord,Typeable)
- 
--- | to json as per MangoPay format        
-instance ToJSON Amount where
-        toJSON b=object ["Currency"  .= aCurrency b,"Amount" .= aAmount b]
-
--- | from json as per MangoPay format 
-instance FromJSON Amount where
-        parseJSON (Object v) =Amount <$>
-                         v .: "Currency" <*>
-                         v .: "Amount" 
-        parseJSON _=fail "Amount"
 
 -- | ID of a wallet
 type WalletID=Text 

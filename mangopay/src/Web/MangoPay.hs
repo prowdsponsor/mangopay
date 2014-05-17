@@ -29,6 +29,8 @@ module Web.MangoPay (
         -- Users
         ,NaturalUser(..)
         ,IncomeRange(..)
+        ,incomeBounds
+        ,incomeRange
         ,NaturalUserID
         ,LegalUser(..)
         ,LegalUserType(..)

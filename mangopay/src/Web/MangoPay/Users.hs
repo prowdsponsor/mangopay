@@ -88,36 +88,7 @@ type AnyUserID = Text
 -- | User ID
 type NaturalUserID = Text
 
--- | supported income ranges
-data IncomeRange=IncomeRange1 | IncomeRange2 | IncomeRange3 | IncomeRange4 | IncomeRange5 | IncomeRange6
-      deriving (Show,Read,Eq,Ord,Bounded, Enum, Typeable)   
-
--- | to json as per MangoPay format
--- the samples do show string format when writing, integer format when reading...
-instance ToJSON IncomeRange  where
-    toJSON IncomeRange1="1"
-    toJSON IncomeRange2="2"
-    toJSON IncomeRange3="3"
-    toJSON IncomeRange4="4"
-    toJSON IncomeRange5="5"
-    toJSON IncomeRange6="6"
- 
--- | from json as per MangoPay format
--- the samples do show string format when writing, integer format when reading...
-instance FromJSON IncomeRange where
-    parseJSON (String "1") =pure IncomeRange1                  
-    parseJSON (String "2") =pure IncomeRange2 
-    parseJSON (String "3") =pure IncomeRange3  
-    parseJSON (String "4") =pure IncomeRange4  
-    parseJSON (String "5") =pure IncomeRange5  
-    parseJSON (String "6") =pure IncomeRange6                 
-    parseJSON (Number 1) =pure IncomeRange1                  
-    parseJSON (Number 2) =pure IncomeRange2 
-    parseJSON (Number 3) =pure IncomeRange3  
-    parseJSON (Number 4) =pure IncomeRange4  
-    parseJSON (Number 5) =pure IncomeRange5  
-    parseJSON (Number 6) =pure IncomeRange6    
-    parseJSON _= fail "IncomeRange"    
+  
 
 -- | a natural user
 -- <http://docs.mangopay.com/api-references/users/natural-users/>
