@@ -19,12 +19,26 @@ import qualified Data.Text.Encoding as TE
 import Control.Monad (join)
 import qualified Data.ByteString.Char8 as BS
 
--- | create or edit a natural user
-searchEvents ::  (MPUsableMonad m) => EventSearchParams -> AccessToken -> MangoPayT m  [Event]
+-- | search events, returns a paginated list
+searchEvents ::  (MPUsableMonad m) => EventSearchParams -> AccessToken -> MangoPayT m  (PagedList Event)
 searchEvents esp at=do
         url<-getClientURL "/events"
         req<-getGetRequest url (Just at) esp
-        getJSONResponse req
+        getJSONList req
+
+
+-- | search events, returns the full result
+searchAllEvents ::  (MPUsableMonad m) => EventSearchParams -> AccessToken -> MangoPayT m  [Event]
+searchAllEvents esp at=getAll (\p -> searchEvents esp{espPagination=p}) at
+
+
+-- | checks an event came from MangoPay
+checkEvent :: (MPUsableMonad m) => Event -> AccessToken ->  MangoPayT m Bool
+checkEvent evt at= do
+  let esp = EventSearchParams (Just $ eEventType evt) (Just $ (eDate evt) + 1) (Just $ (eDate evt) - 1) Nothing
+  evts <- searchAllEvents esp at
+  return $ evt `elem` evts
+
 
 -- | create or edit a hook
 storeHook ::  (MPUsableMonad m) => Hook -> AccessToken -> MangoPayT m Hook

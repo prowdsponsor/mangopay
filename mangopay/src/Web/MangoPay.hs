@@ -68,6 +68,8 @@ module Web.MangoPay (
         ,EventType(..)
         ,EventSearchParams(..)
         ,searchEvents
+        ,searchAllEvents
+        ,checkEvent
         ,HookStatus(..)
         ,HookValidity(..)
         ,HookID
