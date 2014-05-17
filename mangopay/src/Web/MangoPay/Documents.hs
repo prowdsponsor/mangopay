@@ -123,20 +123,20 @@ hasValidatedDocument
 hasValidatedDocument dtype = any (\d -> dtype == dType d && Just VALIDATED == dStatus d)
 
 
--- | Calculate the MangoPay authorization level.
+-- | Calculate the MangoPay authentication level.
 -- <http://docs.mangopay.com/api-references/kyc-rules/>
-getKindOfMangoPayAuth
+getKindOfAuthentication
   :: Either NaturalUser LegalUser
   -> [Document]
   -> KindOfAuthentication
-getKindOfMangoPayAuth _ [] = Light
-getKindOfMangoPayAuth (Left nu) docs =
+getKindOfAuthentication _ [] = Light
+getKindOfAuthentication (Left nu) docs =
   case (uAddress nu,uOccupation nu,uIncomeRange nu,hasValidatedDocument IDENTITY_PROOF docs) of
     (Just _,Just _, Just _,True) -> if hasValidatedDocument ADDRESS_PROOF docs
       then Strong
       else Regular
     _ -> Light
-getKindOfMangoPayAuth (Right lu) docs=
+getKindOfAuthentication (Right lu) docs=
   case (lHeadquartersAddress lu,lLegalRepresentativeEmail lu,lLegalRepresentativeAddress lu,
     hasValidatedDocument ARTICLES_OF_ASSOCIATION docs,
     hasValidatedDocument REGISTRATION_PROOF docs,

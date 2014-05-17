@@ -17,12 +17,14 @@ test_Document = do
   usL<-testMP $ listUsers (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
+  euser <- testMP $ getUser uid
   let d=Document Nothing Nothing Nothing IDENTITY_PROOF (Just CREATED) Nothing Nothing
   testEventTypes [KYC_CREATED,KYC_VALIDATION_ASKED] $ do
     d2<-testMP $ storeDocument uid d
     assertBool (isJust $ dId d2)
     assertBool (isJust $ dCreationDate d2)
     assertEqual IDENTITY_PROOF (dType d2)
+    assertEqual Light $ getKindOfAuthentication euser [d2]
     tf<-BS.readFile "data/test.jpg"
     -- document has to be in CREATED status
     testMP $ storePage uid (fromJust $ dId d2) tf
@@ -41,4 +43,4 @@ test_KindOfAuthentication = do
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   euser <- testMP $ getUser uid
-  assertEqual Light $ getKindOfMangoPayAuth euser []
+  assertEqual Light $ getKindOfAuthentication euser []

@@ -88,7 +88,7 @@ module Web.MangoPay (
         ,storeDocument
         ,fetchDocument
         ,storePage
-        ,getKindOfMangoPayAuth
+        ,getKindOfAuthentication
         
         -- Accounts
         ,BankAccount(..)
