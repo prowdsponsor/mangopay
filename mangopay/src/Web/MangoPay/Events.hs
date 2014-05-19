@@ -38,7 +38,9 @@ searchAllEvents esp at=getAll (\p -> searchEvents esp{espPagination=p}) at
 -- <https://mangopay.desk.com/customer/portal/questions/6493147>).
 checkEvent :: (MPUsableMonad m) => Event -> AccessToken ->  MangoPayT m Bool
 checkEvent evt at= do
-  let esp = EventSearchParams (Just $ eEventType evt) (Just $ (eDate evt) + 1) (Just $ (eDate evt) - 1) Nothing
+  -- documentation doesn't say it, but tests show dates are inclusive
+  let dt = Just $ eDate evt
+  let esp = EventSearchParams (Just $ eEventType evt) dt dt Nothing
   evts <- searchAllEvents esp at
   return $ evt `elem` evts
 
