@@ -44,6 +44,7 @@ module Web.MangoPay (
         ,fetchLegalUser
         ,getUser
         ,listUsers
+        ,getExistingUserID
         
         -- Wallets
         ,Wallet(..)

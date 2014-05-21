@@ -33,18 +33,18 @@ main = H.withManager (\mgr->liftIO $ do
     res<-newReceivedEvents
     -- initial state
     modifyIORef testState (\ts->ts{tsManager=mgr,tsHookEndPoint=hook,tsReceivedEvents=res})
-    bracket 
+    bracket
           (startHTTPServer (hepPort hook) res)
           killThread
           (\_->htfMain $ htf_importedTests ++ [htf_thisModulesTests])
     )
 
--- | test there are no unprocessed events    
+-- | test there are no unprocessed events
 test_Final :: Assertion
 test_Final=do
   -- wait in case events still arrive
   threadDelay $ 5 * 1000000
-  res<-liftM tsReceivedEvents $ readIORef testState         
+  res<-liftM tsReceivedEvents $ readIORef testState
   evts<-popReceivedEvents res
   assertEqual [] evts
-  
+
