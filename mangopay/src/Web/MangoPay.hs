@@ -6,7 +6,7 @@ module Web.MangoPay (
         ,runResourceInMp
         ,MpException
         ,getAll
-        
+
         -- useful types
         ,Credentials(..)
         ,AccessPoint(..)
@@ -20,12 +20,12 @@ module Web.MangoPay (
         ,readCardExpiration
         ,writeCardExpiration
         ,KindOfAuthentication(..)
-        
+
         -- access
         ,createCredentialsSecret
         ,oauthLogin
         ,toAccessToken
-        
+
         -- Users
         ,NaturalUser(..)
         ,IncomeRange(..)
@@ -45,7 +45,7 @@ module Web.MangoPay (
         ,getUser
         ,listUsers
         ,getExistingUserID
-        
+
         -- Wallets
         ,Wallet(..)
         ,Amount(..)
@@ -65,7 +65,7 @@ module Web.MangoPay (
         ,fetchTransfer
         ,listTransactions
         ,listTransactionsForUser
-        
+
         -- Events and Hooks
         ,Event(..)
         ,EventType(..)
@@ -82,7 +82,7 @@ module Web.MangoPay (
         ,listHooks
         ,eventFromQueryString
         ,eventFromQueryStringT
-        
+
         -- Documents and pages
         ,Document(..)
         ,DocumentID
@@ -92,7 +92,8 @@ module Web.MangoPay (
         ,fetchDocument
         ,storePage
         ,getKindOfAuthentication
-        
+        ,getRequiredDocumentTypes
+
         -- Accounts
         ,BankAccount(..)
         ,BankAccountID
@@ -101,7 +102,7 @@ module Web.MangoPay (
         ,storeAccount
         ,fetchAccount
         ,listAccounts
-        
+
         -- Payins
         ,PaymentExecution(..)
         ,BankWireID
@@ -114,14 +115,14 @@ module Web.MangoPay (
         ,storeCardPayin
         ,fetchCardPayin
         ,mkCardPayin
-        
+
         -- Payouts
         ,PayoutID
         ,Payout(..)
         ,mkPayout
         ,storePayout
         ,fetchPayout
-                
+
         -- Cards
         ,CardRegistration(..)
         ,CardRegistrationID
@@ -133,7 +134,7 @@ module Web.MangoPay (
         ,storeCardRegistration
         ,fetchCard
         ,listCards
-        
+
         -- Refunds
         ,RefundID
         ,Refund(..)

@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
+             FlexibleInstances, OverloadedStrings, ScopedTypeVariables #-}
 -- | handle documents and pages
 module Web.MangoPay.Documents where
 
@@ -85,12 +86,12 @@ instance FromJSON DocumentStatus where
 
 -- | a document
 data Document = Document {
-  dId :: Maybe DocumentID
-  ,dCreationDate :: Maybe POSIXTime
-  ,dTag :: Maybe Text -- ^  custom data for client
-  ,dType :: DocumentType
-  ,dStatus :: Maybe DocumentStatus
-  ,dRefusedReasonType :: Maybe Text
+  dId                    :: Maybe DocumentID
+  ,dCreationDate         :: Maybe POSIXTime
+  ,dTag                  :: Maybe Text -- ^  custom data for client
+  ,dType                 :: DocumentType
+  ,dStatus               :: Maybe DocumentStatus
+  ,dRefusedReasonType    :: Maybe Text
   ,dRefusedReasonMessage :: Maybe Text
   } deriving (Show,Ord,Eq,Typeable)
 
@@ -143,3 +144,12 @@ getKindOfAuthentication (Right lu) docs=
     hasValidatedDocument SHAREHOLDER_DECLARATION docs) of
     (Just _, Just _, Just _, True, True, True) -> Regular
     _ -> Light
+
+
+-- | Get the document types that may be required from the given user to enhance authorization level.
+getRequiredDocumentTypes
+  :: Either NaturalUser LegalUser
+     -- ^ The MangoPay user.
+  -> [DocumentType]
+getRequiredDocumentTypes (Left _) = [IDENTITY_PROOF, ADDRESS_PROOF]
+getRequiredDocumentTypes (Right _) = [ARTICLES_OF_ASSOCIATION, REGISTRATION_PROOF, SHAREHOLDER_DECLARATION]
