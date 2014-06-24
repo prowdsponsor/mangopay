@@ -1,5 +1,5 @@
 name:           yesod-mangopay
-version:        1.6
+version:        1.6.1
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -113,7 +113,7 @@ executable         yesod-mangopay
                  , shakespeare-js
                  , shakespeare-text
                  , template-haskell
-                 , wai
+                 , wai                           >= 2.1        && < 2.2
                  , wai-extra
                  , wai-logger                    >= 2.1        && < 2.2
                  , warp
