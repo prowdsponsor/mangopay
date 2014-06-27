@@ -20,13 +20,16 @@ import qualified Data.HashMap.Lazy as HM
 type CardRegistrationID=Text
 
 
--- | create or edit a card registration
-storeCardRegistration ::  (MPUsableMonad m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
-storeCardRegistration cr at=
+-- | create a card registration
+createCardRegistration ::  (MPUsableMonad m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
+createCardRegistration = createGeneric "/cardregistrations"
+
+
+-- | modify a card registration
+modifyCardRegistration ::  (MPUsableMonad m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
+modifyCardRegistration cr at=
         case crId cr of
-                Nothing-> do
-                        url<-getClientURL "/cardregistrations"
-                        postExchange url (Just at) cr
+                Nothing-> error "Web.MangoPay.Cards.modifyCardRegistration : Nothing"
                 Just i-> do
                         url<-getClientURLMultiple ["/cardregistrations/",i]
                         let Object m=toJSON cr

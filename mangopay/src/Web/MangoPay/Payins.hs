@@ -14,13 +14,6 @@ import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
-
--- | create or edit a bankwire
-storeBankWire ::  (MPUsableMonad m) => BankWire -> AccessToken -> MangoPayT m BankWire
-storeBankWire bw at= do
-  url<-getClientURL "/payins/bankwire/direct"
-  postExchange url (Just at) bw
-
 -- | fetch a bank wire from its ID
 fetchBankWire :: (MPUsableMonad m) => BankWireID -> AccessToken -> MangoPayT m BankWire
 fetchBankWire bwid at=do
@@ -28,13 +21,16 @@ fetchBankWire bwid at=do
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req
 
--- | create or edit a direct card pay in
-storeCardPayin ::  (MPUsableMonad m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
-storeCardPayin cp at= do
-  url<-getClientURL "/payins/card/direct"
-  postExchange url (Just at) cp
-
 -- | fetch a direct pay in from its ID
+
+-- | create a bankwire pay-in
+createBankWirePayIn ::  (MPUsableMonad m) => BankWire -> AccessToken -> MangoPayT m BankWire
+createBankWirePayIn = createGeneric "/payins/bankwire/direct"
+
+-- | create a direct card pay in
+createCardPayin ::  (MPUsableMonad m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
+createCardPayin = createGeneric "/payins/card/direct"
+
 fetchCardPayin :: (MPUsableMonad m) => CardPayinID -> AccessToken -> MangoPayT m CardPayin
 fetchCardPayin cpid at=do
         url<-getClientURLMultiple ["/payins/",cpid]

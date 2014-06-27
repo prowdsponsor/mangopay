@@ -16,10 +16,8 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 -- | create a payout
-storePayout ::  (MPUsableMonad m) => Payout -> AccessToken -> MangoPayT m Payout
-storePayout pt at= do
-    url<-getClientURL "/payouts/bankwire"
-    postExchange url (Just at) pt
+createPayout ::  (MPUsableMonad m) => Payout -> AccessToken -> MangoPayT m Payout
+createPayout = createGeneric "/payouts/bankwire"
 
 -- | fetch an payout from its ID
 fetchPayout :: (MPUsableMonad m) => PayoutID -> AccessToken -> MangoPayT m Payout

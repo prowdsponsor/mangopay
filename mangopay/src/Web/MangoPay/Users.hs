@@ -16,16 +16,15 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 
 
--- | create or edit a natural user
-storeNaturalUser ::  (MPUsableMonad m) => NaturalUser -> AccessToken -> MangoPayT m NaturalUser
-storeNaturalUser u at=
-        case uId u of
-                Nothing-> do
-                        url<-getClientURL "/users/natural"
-                        postExchange url (Just at) u
-                Just i-> do
-                        url<-getClientURLMultiple ["/users/natural/",i]
-                        putExchange url (Just at) u{uProofOfIdentity=Nothing,uProofOfAddress=Nothing}
+-- | create a natural user
+createNaturalUser ::  (MPUsableMonad m) => NaturalUser -> AccessToken -> MangoPayT m NaturalUser
+createNaturalUser = createGeneric "/users/natural"
+
+
+-- | modify a natural user
+modifyNaturalUser ::  (MPUsableMonad m) => NaturalUser -> AccessToken -> MangoPayT m NaturalUser
+modifyNaturalUser u = modifyGeneric "/users/natural/" u' uId
+        where u' = u{uProofOfIdentity = Nothing, uProofOfAddress = Nothing}
 
 
 -- | fetch a natural user from her ID
@@ -36,16 +35,14 @@ fetchNaturalUser uid at=do
         getJSONResponse req
 
 
--- | create or edit a natural user
-storeLegalUser ::  (MPUsableMonad m) => LegalUser -> AccessToken -> MangoPayT m LegalUser
-storeLegalUser u at =
-        case lId u of
-                Nothing-> do
-                        url<-getClientURL "/users/legal"
-                        postExchange url (Just at) u
-                Just i-> do
-                        url<-getClientURLMultiple ["/users/legal/",i]
-                        putExchange url (Just at) u
+-- | create a legal user
+createLegalUser ::  (MPUsableMonad m) => LegalUser -> AccessToken -> MangoPayT m LegalUser
+createLegalUser = createGeneric "/users/legal"
+
+
+-- | modify a legal user
+modifyLegalUser ::  (MPUsableMonad m) => LegalUser -> AccessToken -> MangoPayT m LegalUser
+modifyLegalUser u = modifyGeneric "/users/legal/" u lId
 
 
 -- | fetch a natural user from her ID
@@ -77,7 +74,7 @@ getExistingUserID
   :: Either NaturalUser LegalUser
   -> AnyUserID
 getExistingUserID u | Just uid <- either uId lId u = uid
-getExistingUserID   _   = error $ "Web.MangoPay.Users.getExistingUserID: Nothing"
+getExistingUserID   _   = error "Web.MangoPay.Users.getExistingUserID: Nothing"
 
 
 instance FromJSON (Either NaturalUser LegalUser) where

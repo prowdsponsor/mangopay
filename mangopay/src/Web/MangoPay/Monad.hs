@@ -17,6 +17,7 @@ import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
                                    , ComposeSt, defaultLiftBaseWith
                                    , defaultRestoreM )
 import Control.Monad.Trans.Reader (ReaderT(..), ask, mapReaderT)
+import Data.Monoid ((<>))
 import Data.Typeable (Typeable)
 import Data.Default
 import qualified Control.Monad.Trans.Resource as R
@@ -358,3 +359,23 @@ isOkay :: HT.Status -> Bool
 isOkay status =
   let sc = HT.statusCode status
   in 200 <= sc && sc < 300
+
+
+-- | helper function to create an entity using POST
+createGeneric :: (MPUsableMonad m, FromJSON a, ToJSON a) =>
+  ByteString -> a -> AccessToken -> MangoPayT m a
+createGeneric path x at = do
+        url<-getClientURL path
+        postExchange url (Just at) x
+
+
+-- | helper function to create an entity using PUT
+modifyGeneric :: (MPUsableMonad m, FromJSON a, ToJSON a) =>
+  T.Text -> a -> (a -> Maybe T.Text) -> AccessToken -> MangoPayT m a
+modifyGeneric path x fid at =
+        case fid x of
+          Nothing -> error $ show $
+            "Web.MangoPay.Users.modifyGeneric : Nothing (" <> path <> ")"
+          Just i -> do
+            url<-getClientURLMultiple [path ,i]
+            putExchange url (Just at) x

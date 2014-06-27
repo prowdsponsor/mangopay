@@ -15,17 +15,20 @@ import Control.Applicative
 import qualified Network.HTTP.Types as HT
 import qualified Data.HashMap.Lazy as HM (delete)
 
--- | create or edit a wallet
-storeWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
-storeWallet w at=
+-- | create a wallet
+createWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
+createWallet = createGeneric "/wallets"
+
+
+-- | modify a wallet
+modifyWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
+modifyWallet w at = do
         case wId w of
-                Nothing-> do
-                        url<-getClientURL "/wallets"
-                        postExchange url (Just at) w
-                Just i-> do
-                        url<-getClientURLMultiple ["/wallets/",i]
-                        let Object m=toJSON w
-                        putExchange url (Just at) (Object $ HM.delete "Currency" m)
+          Nothing -> error "Web.MangoPay.Users.modifyWallet : Nothing"
+          Just i -> do
+                    url<-getClientURLMultiple ["/wallets/",i]
+                    let Object m=toJSON w
+                    putExchange url (Just at) (Object $ HM.delete "Currency" m)
 
 
 -- | fetch a wallet from its ID
@@ -44,9 +47,7 @@ listWallets uid mp at=do
 
 -- | create a new fund transfer
 createTransfer :: (MPUsableMonad m) => Transfer -> AccessToken -> MangoPayT m Transfer
-createTransfer t at= do
-        url<-getClientURL "/transfers"
-        postExchange url (Just at) t
+createTransfer = createGeneric "/transfers"
 
 -- | fetch a transfer from its ID
 fetchTransfer :: (MPUsableMonad m) => TransferID -> AccessToken -> MangoPayT m Transfer

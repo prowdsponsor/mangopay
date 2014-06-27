@@ -45,13 +45,16 @@ checkEvent evt at= do
   return $ evt `elem` evts
 
 
--- | create or edit a hook
-storeHook ::  (MPUsableMonad m) => Hook -> AccessToken -> MangoPayT m Hook
-storeHook h at=
+-- | create a hook
+createHook ::  (MPUsableMonad m) => Hook -> AccessToken -> MangoPayT m Hook
+createHook = createGeneric "/hooks"
+
+
+-- | modify a hook
+modifyHook ::  (MPUsableMonad m) => Hook -> AccessToken -> MangoPayT m Hook
+modifyHook h at=
         case hId h of
-                Nothing-> do
-                        url<-getClientURL "/hooks"
-                        postExchange url (Just at) h
+                Nothing -> error "Web.MangoPay.Events.modifyHook : Nothing"
                 Just i-> do
                         url<-getClientURLMultiple ["/hooks/",i]
                         let Object m=toJSON h

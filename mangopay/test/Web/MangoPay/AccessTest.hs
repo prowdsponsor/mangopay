@@ -4,7 +4,7 @@
 module Web.MangoPay.AccessTest where
 
 
-import Web.MangoPay
+import Web.MangoPay hiding (createHook)
 import Web.MangoPay.TestUtils
 
 import Test.Framework

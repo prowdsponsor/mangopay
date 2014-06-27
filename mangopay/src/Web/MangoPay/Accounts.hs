@@ -7,22 +7,23 @@ import Web.MangoPay.Types
 import Web.MangoPay.Users
 
 import Data.Text
+import Data.Text.Encoding (encodeUtf8)
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Aeson.Types
+import Data.Maybe (fromMaybe)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
+import qualified Data.ByteString as BS
 
 import Data.CountryCodes (CountryCode)
 
 -- | create an account
-storeAccount ::  (MPUsableMonad m) => BankAccount -> AccessToken -> MangoPayT m BankAccount
-storeAccount ba at
-  | Just uid<-baUserId ba= do
-    url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/",typeName $ baDetails ba]
-    postExchange url (Just at) ba
-  | otherwise=error "no user provided for account"
+createAccount ::  (MPUsableMonad m) => BankAccount -> AccessToken -> MangoPayT m BankAccount
+createAccount ba = createGeneric path ba
+        where path = BS.concat ["/users/",encodeUtf8 uid,"/bankaccounts/",encodeUtf8 $ typeName $ baDetails ba]
+              uid = fromMaybe (error "no user provided for account") $ baUserId ba
 
 -- | fetch an account from its ID
 fetchAccount :: (MPUsableMonad m) => AnyUserID -> BankAccountID -> AccessToken -> MangoPayT m BankAccount
