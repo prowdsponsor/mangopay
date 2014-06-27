@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, ConstraintKinds #-}
 -- | access methods for login, creating clients...
-module Web.MangoPay.Access 
+module Web.MangoPay.Access
 (
 createCredentialsSecret
 ,oauthLogin
@@ -21,9 +21,9 @@ import Data.Maybe (isNothing)
 -- | populate the passphrase for our clientId IFF we don't have one
 createCredentialsSecret ::  (MPUsableMonad m) => MangoPayT m Credentials
 createCredentialsSecret =do
-        creds<- getCreds 
-        if isNothing $ cClientSecret creds 
-                then postExchange "/v2/clients" Nothing creds 
+        creds<- getCreds
+        if isNothing $ cClientSecret creds
+                then postExchange "/v2/clients" Nothing creds
                 else return creds
 
 -- | login with given user name and password

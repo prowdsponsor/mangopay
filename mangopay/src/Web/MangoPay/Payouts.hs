@@ -26,7 +26,7 @@ fetchPayout :: (MPUsableMonad m) => PayoutID -> AccessToken -> MangoPayT m Payou
 fetchPayout ptid at=do
         url<-getClientURLMultiple ["/payouts/",ptid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req 
+        getJSONResponse req
 
 -- | make a simplep payout for creation
 mkPayout :: AnyUserID -> WalletID -> Amount -> Amount -> BankAccountID -> Payout
@@ -57,15 +57,15 @@ data Payout=Payout {
   ,ptPaymentType :: Maybe PaymentType
   ,ptMeanOfPaymentType :: Maybe PaymentType -- ^  « BANK_WIRE »,
   } deriving (Show,Eq,Ord,Typeable)
-  
 
--- | to json as per MangoPay format        
+
+-- | to json as per MangoPay format
 instance ToJSON Payout where
         toJSON pt=object ["Tag" .= ptTag pt,"AuthorId" .= ptAuthorId  pt
           ,"DebitedWalletId" .= ptDebitedWalletId pt
           ,"DebitedFunds" .= ptDebitedFunds pt,"Fees" .= ptFees pt,"BankAccountId" .= ptBankAccountId pt]
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON Payout where
         parseJSON (Object v) =Payout <$>
                          v .: "Id" <*>
@@ -85,7 +85,7 @@ instance FromJSON Payout where
                          v .:? "Type" <*>
                          v .:? "Nature" <*>
                          v .:? "PaymentType" <*>
-                         v .:? "MeanOfPaymentType" 
-        parseJSON _=fail "Payout"   
-  
+                         v .:? "MeanOfPaymentType"
+        parseJSON _=fail "Payout"
+
 

@@ -176,27 +176,27 @@ data CardExpiration = CardExpiration {
   deriving (Show,Read,Eq,Ord,Typeable)
 
 
--- | currency amount 
+-- | currency amount
 data Amount=Amount {
         aCurrency :: Currency
         ,aAmount :: Integer -- ^ all amounts should be in cents!
         }
         deriving (Show,Read,Eq,Ord,Typeable)
- 
--- | to json as per MangoPay format        
+
+-- | to json as per MangoPay format
 instance ToJSON Amount where
         toJSON b=object ["Currency"  .= aCurrency b,"Amount" .= aAmount b]
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON Amount where
         parseJSON (Object v) =Amount <$>
                          v .: "Currency" <*>
-                         v .: "Amount" 
+                         v .: "Amount"
         parseJSON _=fail "Amount"
-        
+
 -- | supported income ranges
 data IncomeRange=IncomeRange1 | IncomeRange2 | IncomeRange3 | IncomeRange4 | IncomeRange5 | IncomeRange6
-      deriving (Show,Read,Eq,Ord,Bounded, Enum, Typeable)   
+      deriving (Show,Read,Eq,Ord,Bounded, Enum, Typeable)
 
 
 -- | to json as per MangoPay format
@@ -208,23 +208,23 @@ instance ToJSON IncomeRange  where
     toJSON IncomeRange4="4"
     toJSON IncomeRange5="5"
     toJSON IncomeRange6="6"
- 
+
 -- | from json as per MangoPay format
 -- the samples do show string format when writing, integer format when reading...
 instance FromJSON IncomeRange where
-    parseJSON (String "1") =pure IncomeRange1                  
-    parseJSON (String "2") =pure IncomeRange2 
-    parseJSON (String "3") =pure IncomeRange3  
-    parseJSON (String "4") =pure IncomeRange4  
-    parseJSON (String "5") =pure IncomeRange5  
-    parseJSON (String "6") =pure IncomeRange6                 
-    parseJSON (Number 1) =pure IncomeRange1                  
-    parseJSON (Number 2) =pure IncomeRange2 
-    parseJSON (Number 3) =pure IncomeRange3  
-    parseJSON (Number 4) =pure IncomeRange4  
-    parseJSON (Number 5) =pure IncomeRange5  
-    parseJSON (Number 6) =pure IncomeRange6    
-    parseJSON _= fail "IncomeRange"  
+    parseJSON (String "1") =pure IncomeRange1
+    parseJSON (String "2") =pure IncomeRange2
+    parseJSON (String "3") =pure IncomeRange3
+    parseJSON (String "4") =pure IncomeRange4
+    parseJSON (String "5") =pure IncomeRange5
+    parseJSON (String "6") =pure IncomeRange6
+    parseJSON (Number 1) =pure IncomeRange1
+    parseJSON (Number 2) =pure IncomeRange2
+    parseJSON (Number 3) =pure IncomeRange3
+    parseJSON (Number 4) =pure IncomeRange4
+    parseJSON (Number 5) =pure IncomeRange5
+    parseJSON (Number 6) =pure IncomeRange6
+    parseJSON _= fail "IncomeRange"
 
 -- | bounds in euros for income range
 incomeBounds :: IncomeRange -> (Amount,Amount)
@@ -234,11 +234,11 @@ incomeBounds IncomeRange3 = (kEuros 30,kEuros 50)
 incomeBounds IncomeRange4 = (kEuros 50,kEuros 80)
 incomeBounds IncomeRange5 = (kEuros 80,kEuros 120)
 incomeBounds IncomeRange6 = (kEuros 120,kEuros (-1))
-  
+
 
 -- | get Income Range for given Euro amount
 incomeRange :: Amount -> IncomeRange
-incomeRange (Amount "EUR" cents) 
+incomeRange (Amount "EUR" cents)
   | cents < kCents 18  = IncomeRange1
   | cents < kCents 30  = IncomeRange2
   | cents < kCents 50  = IncomeRange3
@@ -290,7 +290,7 @@ instance IsString CardExpiration where
 
 
 -- | the kind of authentication data the user has provided
-data KindOfAuthentication = 
+data KindOfAuthentication =
     Light
   | Regular
   | Strong
@@ -326,7 +326,7 @@ recordLogMessage (CallRecord req res)=let
   pathB=fromText $ TE.decodeUtf8 $ H.path req
   -- log the query string if any
   qsB=fromText $ TE.decodeUtf8 $ H.queryString req
-  postB=if H.method req==HT.methodPost 
+  postB=if H.method req==HT.methodPost
     then case H.requestBody req of
       (H.RequestBodyBS b)->fromText (TE.decodeUtf8 b) <> " -> "
       (H.RequestBodyLBS b)->fromText $ TE.decodeUtf8 $ BS.toStrict b <> " -> "

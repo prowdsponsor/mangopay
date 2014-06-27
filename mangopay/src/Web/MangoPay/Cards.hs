@@ -19,10 +19,10 @@ import qualified Data.HashMap.Lazy as HM
 -- | card registration ID
 type CardRegistrationID=Text
 
- 
+
 -- | create or edit a card registration
 storeCardRegistration ::  (MPUsableMonad m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
-storeCardRegistration cr at= 
+storeCardRegistration cr at=
         case crId cr of
                 Nothing-> do
                         url<-getClientURL "/cardregistrations"
@@ -63,14 +63,14 @@ data CardRegistration = CardRegistration {
 } deriving (Show,Eq,Ord,Typeable)
 
 
--- | to json as per MangoPay format        
+-- | to json as per MangoPay format
 instance ToJSON CardRegistration where
         toJSON cr=object ["Id".= crId cr -- we store the ID, because in the registration workflow we may need to hang on to the registration object for a while, so let's use JSON serialization to keep it!
           , "Tag" .= crTag cr,"UserId" .= crUserId cr
           ,"Currency" .= crCurrency cr,"RegistrationData" .= crRegistrationData cr
           ,"CardRegistrationURL" .= crCardRegistrationURL cr]
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON CardRegistration where
         parseJSON (Object v) =CardRegistration <$>
                          v .: "Id" <*>
@@ -86,22 +86,22 @@ instance FromJSON CardRegistration where
                          v .:? "CardId"  <*>
                          v .:? "ResultCode"  <*>
                          v .:? "ResultMessage"  <*>
-                         v .:? "Status"  
-        parseJSON _=fail "CardRegistration"  
+                         v .:? "Status"
+        parseJSON _=fail "CardRegistration"
 
 -- | fetch a card from its ID
 fetchCard :: (MPUsableMonad m) => CardID -> AccessToken -> MangoPayT m Card
 fetchCard cid at=do
         url<-getClientURLMultiple ["/cards/",cid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req 
+        getJSONResponse req
 
--- | list all cards for a given user   
+-- | list all cards for a given user
 listCards :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)
 listCards uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/cards"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req 
+        getJSONList req
 
 -- | validity of a card
 data CardValidity=UNKNOWN | VALID | INVALID
@@ -121,22 +121,22 @@ instance FromJSON CardValidity where
 -- | a registered card
 data Card=Card {
   cId :: CardID
-  ,cCreationDate :: POSIXTime 
-  ,cTag :: Maybe Text  
+  ,cCreationDate :: POSIXTime
+  ,cTag :: Maybe Text
   ,cExpirationDate   :: CardExpiration -- ^  MMYY
   ,cAlias :: Text -- ^ Example: 497010XXXXXX4414
   ,cCardProvider  :: Text -- ^ The card provider, it could be « CB », « VISA », « MASTERCARD », etc.
   ,cCardType :: Text -- ^ « CB_VISA_MASTERCARD » is the only value available yet
-  ,cProduct :: Maybe Text  
-  ,cBankCode  :: Maybe Text  
+  ,cProduct :: Maybe Text
+  ,cBankCode  :: Maybe Text
   ,cActive :: Bool
   ,cCurrency :: Currency
   ,cValidity :: CardValidity -- ^ Once we proceed (or attempted to process) a payment with the card we are able to indicate if it is « valid » or « invalid ». If we didn’t process a payment yet the « Validity » stay at « unknown ».
   ,cCountry :: Text
   ,cUserId :: AnyUserID
   } deriving (Show,Eq,Ord,Typeable)
-  
--- | from json as per MangoPay format 
+
+-- | from json as per MangoPay format
 instance FromJSON Card where
         parseJSON (Object v) =Card <$>
                          v .: "Id" <*>
@@ -152,6 +152,6 @@ instance FromJSON Card where
                          v .: "Currency"  <*>
                          v .: "Validity" <*>
                          v .: "Country" <*>
-                         v .: "UserId" 
-        parseJSON _=fail "Card"  
-  
+                         v .: "UserId"
+        parseJSON _=fail "Card"
+

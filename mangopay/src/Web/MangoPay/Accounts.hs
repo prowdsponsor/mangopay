@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards, ConstraintKinds #-}
--- | handle bank accounts 
+-- | handle bank accounts
 module Web.MangoPay.Accounts where
 
 import Web.MangoPay.Monad
@@ -22,21 +22,21 @@ storeAccount ba at
   | Just uid<-baUserId ba= do
     url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/",typeName $ baDetails ba]
     postExchange url (Just at) ba
-  | otherwise=error "no user provided for account"    
+  | otherwise=error "no user provided for account"
 
 -- | fetch an account from its ID
 fetchAccount :: (MPUsableMonad m) => AnyUserID -> BankAccountID -> AccessToken -> MangoPayT m BankAccount
 fetchAccount uid aid at=do
         url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/",aid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req 
+        getJSONResponse req
 
--- | list all accounts for a given user   
+-- | list all accounts for a given user
 listAccounts :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
 listAccounts uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req 
+        getJSONList req
 
 -- | account details, depending on the type
 data BankAccountDetails=IBAN {
@@ -58,18 +58,18 @@ data BankAccountDetails=IBAN {
   ,atBIC :: Text
   ,atCountry :: CountryCode
   } deriving (Show,Read,Eq,Ord,Typeable)
-  
--- | from json as per MangoPay format 
+
+-- | from json as per MangoPay format
 instance FromJSON BankAccountDetails where
-  parseJSON (Object v) =do  
+  parseJSON (Object v) =do
     typ<-v .: "Type"
     case typ of
       "IBAN"->IBAN <$>
                 v .: "IBAN" <*>
-                v .: "BIC" 
+                v .: "BIC"
       "GB"->GB <$>
                 v .: "AccountNumber" <*>
-                v .: "SortCode" 
+                v .: "SortCode"
       "US"->US <$>
                 v .: "AccountNumber" <*>
                 v .: "ABA"
@@ -81,10 +81,10 @@ instance FromJSON BankAccountDetails where
       "OTHER"->Other <$>
                 v .: "AccountNumber" <*>
                 v .: "BIC" <*>
-                v .: "Country"                      
+                v .: "Country"
       _->fail $ "BankAccountDetails: unknown type:" ++ typ
-  parseJSON _=fail "BankAccountDetails"    
-  
+  parseJSON _=fail "BankAccountDetails"
+
 -- | type name for details
 typeName :: BankAccountDetails -> Text
 typeName (IBAN {})="IBAN"
@@ -92,18 +92,18 @@ typeName (GB {})="GB"
 typeName (US {})="US"
 typeName (CA {})="CA"
 typeName (Other {})="OTHER"
- 
--- | the details attribute to be added to the account object  
+
+-- | the details attribute to be added to the account object
 toJSONPairs :: BankAccountDetails -> [Pair]
 toJSONPairs (IBAN iban bic)=["IBAN" .= iban,"BIC" .= bic]
-toJSONPairs (GB nb sc)=["AccountNumber" .= nb,"SortCode" .= sc]       
+toJSONPairs (GB nb sc)=["AccountNumber" .= nb,"SortCode" .= sc]
 toJSONPairs (US nb aba)=["AccountNumber" .= nb,"ABA" .= aba]
 toJSONPairs (CA nb bn inb bc)=["AccountNumber" .= nb,"BankName" .= bn,"InstitutionNumber" .= inb, "BranchCode" .= bc]
-toJSONPairs (Other nb bic c)=["AccountNumber" .= nb,"BIC" .= bic,"Country" .= c]                      
-                      
--- | ID of a bank account  
+toJSONPairs (Other nb bic c)=["AccountNumber" .= nb,"BIC" .= bic,"Country" .= c]
+
+-- | ID of a bank account
 type BankAccountID = Text
-  
+
 -- | bank account details
 data BankAccount = BankAccount {
   baId :: Maybe BankAccountID
@@ -115,15 +115,15 @@ data BankAccount = BankAccount {
   ,baOwnerAddress :: Maybe Text
 } deriving (Show,Eq,Ord,Typeable)
 
--- | to json as per MangoPay format        
+-- | to json as per MangoPay format
 instance ToJSON BankAccount where
         toJSON ba=object $ ["OwnerName" .= baOwnerName ba,"Type" .= typeName (baDetails ba)
            ,"OwnerAddress" .= baOwnerAddress ba, "UserId" .= baUserId ba, "Tag" .= baTag ba]
             ++ toJSONPairs (baDetails ba)
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON BankAccount where
-  parseJSON o@(Object v) = 
+  parseJSON o@(Object v) =
     BankAccount <$>
        v .:? "Id" <*>
        v .:? "CreationDate" <*>

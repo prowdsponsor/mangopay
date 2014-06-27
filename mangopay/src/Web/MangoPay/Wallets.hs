@@ -17,7 +17,7 @@ import qualified Data.HashMap.Lazy as HM (delete)
 
 -- | create or edit a wallet
 storeWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
-storeWallet w at= 
+storeWallet w at=
         case wId w of
                 Nothing-> do
                         url<-getClientURL "/wallets"
@@ -26,54 +26,54 @@ storeWallet w at=
                         url<-getClientURLMultiple ["/wallets/",i]
                         let Object m=toJSON w
                         putExchange url (Just at) (Object $ HM.delete "Currency" m)
-                
+
 
 -- | fetch a wallet from its ID
 fetchWallet :: (MPUsableMonad m) => WalletID -> AccessToken -> MangoPayT m Wallet
 fetchWallet wid at=do
         url<-getClientURLMultiple ["/wallets/",wid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req 
+        getJSONResponse req
 
--- | list all wallets for a given user   
+-- | list all wallets for a given user
 listWallets :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
 listWallets uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/wallets"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req 
+        getJSONList req
 
--- | create a new fund transfer 
+-- | create a new fund transfer
 createTransfer :: (MPUsableMonad m) => Transfer -> AccessToken -> MangoPayT m Transfer
 createTransfer t at= do
         url<-getClientURL "/transfers"
-        postExchange url (Just at) t      
-        
+        postExchange url (Just at) t
+
 -- | fetch a transfer from its ID
 fetchTransfer :: (MPUsableMonad m) => TransferID -> AccessToken -> MangoPayT m Transfer
 fetchTransfer wid at=do
         url<-getClientURLMultiple ["/transfers/",wid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req         
+        getJSONResponse req
 
--- | list transfers for a given wallet 
+-- | list transfers for a given wallet
 listTransactions ::  (MPUsableMonad m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
 listTransactions wid mp at=do
         url<-getClientURLMultiple ["/wallets/",wid,"/transactions"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req 
+        getJSONList req
 
 -- | list transfer for a given user
 listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
 listTransactionsForUser uid mp at=do
         url<-getClientURLMultiple ["/users/",uid,"/transactions"]
         req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req 
+        getJSONList req
 
 
 -- | ID of a wallet
-type WalletID=Text 
+type WalletID=Text
 
--- | a wallet       
+-- | a wallet
 data Wallet = Wallet {
         wId:: Maybe WalletID -- ^ The Id of the wallet
         ,wCreationDate :: Maybe POSIXTime -- ^ The creation date of the object
@@ -85,11 +85,11 @@ data Wallet = Wallet {
         }
         deriving (Show,Eq,Ord,Typeable)
 
--- | to json as per MangoPay format        
+-- | to json as per MangoPay format
 instance ToJSON Wallet where
         toJSON w=object ["Tag"  .= wTag w,"Owners" .= wOwners w,"Description" .= wDescription w,"Currency" .= wCurrency w]
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON Wallet where
         parseJSON (Object v) =Wallet <$>
                          v .: "Id" <*>
@@ -98,30 +98,30 @@ instance FromJSON Wallet where
                          v .: "Owners" <*>
                          v .: "Description" <*>
                          v .: "Currency" <*>
-                         v .: "Balance" 
+                         v .: "Balance"
         parseJSON _=fail "Wallet"
- 
- 
+
+
 -- | ID of a transfer
-type TransferID=Text 
-  
--- | status of a transfer  
-data TransferStatus= Created | Succeeded | Failed  
+type TransferID=Text
+
+-- | status of a transfer
+data TransferStatus= Created | Succeeded | Failed
      deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
-     
+
 -- | to json as per MangoPay format
 instance ToJSON TransferStatus  where
     toJSON Created="CREATED"
     toJSON Succeeded="SUCCEEDED"
     toJSON Failed="FAILED"
- 
+
 -- | from json as per MangoPay format
 instance FromJSON TransferStatus where
-    parseJSON (String "CREATED") =pure Created                  
+    parseJSON (String "CREATED") =pure Created
     parseJSON (String "SUCCEEDED") =pure Succeeded
-    parseJSON (String "FAILED") =pure Failed                
-    parseJSON _= fail "TransferStatus"        
-     
+    parseJSON (String "FAILED") =pure Failed
+    parseJSON _= fail "TransferStatus"
+
 -- | transfer between wallets
 data Transfer = Transfer{
         tId :: Maybe TransferID -- ^ Id of the transfer
@@ -140,14 +140,14 @@ data Transfer = Transfer{
         ,tExecutionDate   :: Maybe POSIXTime -- ^  The execution date of the transfer
         }
         deriving (Show,Eq,Ord,Typeable)
-        
+
 -- | to json as per MangoPay format
 instance ToJSON Transfer  where
     toJSON t=object ["AuthorId" .= tAuthorId t,"CreditedUserId" .= tCreditedUserId t,"DebitedFunds" .= tDebitedFunds t,
         "Fees" .= tFees t,"DebitedWalletID" .= tDebitedWalletID t,"CreditedWalletID" .= tCreditedWalletID t,
         "Tag" .= tTag t]
-    
--- | from json as per MangoPay format 
+
+-- | from json as per MangoPay format
 instance FromJSON Transfer where
         parseJSON (Object v) =Transfer <$>
                          v .: "Id" <*>
@@ -163,13 +163,13 @@ instance FromJSON Transfer where
                          v .:? "Status" <*>
                          v .:? "ResultCode" <*>
                          v .:? "ResultMessage" <*>
-                         v .:? "ExecutionDate" 
-        parseJSON _=fail "Transfer"   
-        
+                         v .:? "ExecutionDate"
+        parseJSON _=fail "Transfer"
+
 -- | type of transaction
-data TransactionType = PAYIN 
+data TransactionType = PAYIN
   | PAYOUT
-  | TRANSFER 
+  | TRANSFER
   deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
 
 -- | to json as per MangoPay format
@@ -196,10 +196,10 @@ instance FromJSON TransactionNature where
         parseJSON (String s)
           | ((a,_):_)<-reads $ unpack s=pure a
         parseJSON _ =fail "TransactionNature"
-    
-      
+
+
 type TransactionID = Text
-    
+
 -- | any transaction
 data Transaction = Transaction{
         txId :: Maybe TransactionID -- ^ Id of the transfer
@@ -220,14 +220,14 @@ data Transaction = Transaction{
         ,txNature  :: TransactionNature -- ^  The nature of the transaction:
         }
         deriving (Show,Eq,Ord,Typeable)
-        
+
 -- | to json as per MangoPay format
 instance ToJSON Transaction  where
     toJSON t=object ["AuthorId" .= txAuthorId t,"CreditedUserId" .= txCreditedUserId t,"DebitedFunds" .= txDebitedFunds t,
         "Fees" .= txFees t,"DebitedWalletID" .= txDebitedWalletID t,"CreditedWalletID" .= txCreditedWalletID t,
         "Tag" .= txTag t,"Type" .= txType t,"Nature" .= txNature t]
-    
--- | from json as per MangoPay format 
+
+-- | from json as per MangoPay format
 instance FromJSON Transaction where
         parseJSON (Object v) =Transaction <$>
                          v .: "Id" <*>
@@ -245,5 +245,5 @@ instance FromJSON Transaction where
                          v .:? "ResultMessage" <*>
                          v .:? "ExecutionDate" <*>
                          v .: "Type"  <*>
-                         v .: "Nature" 
-        parseJSON _=fail "Transfer"   
+                         v .: "Nature"
+        parseJSON _=fail "Transfer"
