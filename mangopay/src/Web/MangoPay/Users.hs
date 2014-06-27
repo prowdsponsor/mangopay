@@ -53,10 +53,7 @@ getUser = fetchGeneric "/users/"
 
 -- | list all user references
 listUsers :: (MPUsableMonad m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
-listUsers mp at = do
-        url <- getClientURL "/users/"
-        req <- getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listUsers = genericList ["/users/"]
 
 
 -- | Convenience function to extract the user ID of an EXISTING user (one with an id).

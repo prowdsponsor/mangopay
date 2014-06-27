@@ -92,10 +92,7 @@ fetchCard = fetchGeneric "/cards/"
 
 -- | list all cards for a given user
 listCards :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)
-listCards uid mp at=do
-        url<-getClientURLMultiple ["/users/",uid,"/cards"]
-        req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listCards uid = genericList ["/users/",uid,"/cards"]
 
 -- | validity of a card
 data CardValidity=UNKNOWN | VALID | INVALID

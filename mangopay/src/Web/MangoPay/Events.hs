@@ -60,10 +60,7 @@ fetchHook = fetchGeneric "/hooks/"
 
 -- | list all wallets for a given user
 listHooks :: (MPUsableMonad m) =>  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Hook)
-listHooks mp at=do
-        url<-getClientURL "/hooks"
-        req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listHooks = genericList ["/hooks"]
 
 -- | Event type
 data EventType=

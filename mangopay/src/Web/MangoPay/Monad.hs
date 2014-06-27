@@ -401,3 +401,12 @@ fetchGeneric path xid at = do
         url<-getClientURLMultiple [path ,xid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req
+
+
+-- | helper function to fetch paginated lists of an entity
+genericList :: (MPUsableMonad m, FromJSON a) =>
+  [T.Text] -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList a)
+genericList path mp at = do
+        url <- getClientURLMultiple path
+        req <- getGetRequest url (Just at) (paginationAttributes mp)
+        getJSONList req
