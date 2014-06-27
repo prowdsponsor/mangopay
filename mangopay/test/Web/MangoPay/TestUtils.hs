@@ -1,4 +1,5 @@
-{-# LANGUAGE RankNTypes,OverloadedStrings,DeriveDataTypeable, ConstraintKinds, FlexibleContexts, PatternGuards #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
+             OverloadedStrings, PatternGuards, RankNTypes #-}
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Web.MangoPay.TestUtils where
 
@@ -20,7 +21,7 @@ import Control.Monad (when, void, liftM)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 
-import Data.Text as T (Text, unpack, isPrefixOf) 
+import Data.Text as T (Text, unpack, isPrefixOf)
 import Data.List
 import Data.Typeable
 import Control.Applicative
@@ -65,10 +66,10 @@ testState = unsafePerformIO (newIORef $ TestState zero zero zero zero zero)
 
 -- | the test state we keep over all tests
 data TestState=TestState {
-    tsAccessToken :: AccessToken -- ^ the access token if we're logged in
-    ,tsCredentials :: Credentials -- ^ the credentials
-    ,tsManager :: H.Manager -- ^ the http manager
-    ,tsHookEndPoint :: HookEndPoint -- ^ the end point for notifications
+    tsAccessToken     :: AccessToken -- ^ the access token if we're logged in
+    ,tsCredentials    :: Credentials -- ^ the credentials
+    ,tsManager        :: H.Manager -- ^ the http manager
+    ,tsHookEndPoint   :: HookEndPoint -- ^ the end point for notifications
     ,tsReceivedEvents :: ReceivedEvents -- ^ the received events
   }
 
@@ -83,7 +84,7 @@ getHookEndPoint = do
 
 -- | simple configuration to tell the tests what endpoint to use for notifications
 data HookEndPoint = HookEndPoint{
-        hepUrl :: Text
+        hepUrl   :: Text
         ,hepPort :: Int
         } deriving (Show,Read,Eq,Ord,Typeable)
 
@@ -187,8 +188,8 @@ waitForEvent rc fs del=do
              waitForEvent rc fs (del-1)
           (Just (Right evt),_)-> do -- an event, does it match
                 ok <- testMP $ checkEvent evt
-                if ok 
-                  then 
+                if ok
+                  then
                     case Data.List.foldl' (match1 evt) ([],False) fs of
                       (_,False)->return $ ExtraEvent evt -- doesn't match
                       (fs2,_)-> waitForEvent rc fs2 del -- matched, either we have more to do or we need to check no unexpected event was found
@@ -234,7 +235,7 @@ startHTTPServer :: Port -> ReceivedEvents -> IO ThreadId
 startHTTPServer p revts=
   forkIO $ run p app
   where
-    app req = do
+    app req respond = do
                 when (pathInfo req == ["mphook"]) $ do
                         let mevt=eventFromQueryString $ W.queryString req
                         liftIO $ case mevt of
@@ -242,7 +243,7 @@ startHTTPServer p revts=
                                 pushReceivedEvent revts $ Right evt
                                 putStrLn $ "Received event:" ++ show evt
                             Nothing->pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
-                return $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
+                respond $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
 
 
 -- | perform the full registration of a card
@@ -268,7 +269,7 @@ unsafeRegisterCard ci cr |
   Just ak <- crAccessKey cr=do
     ior<-readIORef testState
     let mgr=tsManager ior
-    req <-H.parseUrl $ T.unpack url  
+    req <-H.parseUrl $ T.unpack url
     let b=HT.renderQuery False $ HT.toQuery [
             "accessKeyRef" ?+ ak
             ,"data" ?+ pre
@@ -277,13 +278,13 @@ unsafeRegisterCard ci cr |
             ,"cardCvx" ?+ ciCSC ci]
     let req'=req {H.method=HT.methodPost
          , H.requestHeaders=[("content-type","application/x-www-form-urlencoded")]
-         , H.requestBody=H.RequestBodyBS b}             
-    reg<- runResourceT $  do 
+         , H.requestBody=H.RequestBodyBS b}
+    reg<- runResourceT $  do
       res<-H.http req' mgr
       H.responseBody res $$+- EL.consume
     let t=TE.decodeUtf8 $ BS.concat reg
-    assertBool $ "data=" `T.isPrefixOf` t 
+    assertBool $ "data=" `T.isPrefixOf` t
     return cr{crRegistrationData=Just t}
-unsafeRegisterCard _ _=assertFailure "CardRegistration not ready" 
-                                
-                
+unsafeRegisterCard _ _=assertFailure "CardRegistration not ready"
+
+

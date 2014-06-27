@@ -40,7 +40,7 @@ import Control.Monad.Logger
 #if DEBUG
 import Data.Conduit.Binary (sinkHandle)
 import System.IO (stdout)
-import Data.Conduit.Util (zipSinks)
+import Data.Conduit.Internal (zipSinks)
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import Control.Monad.IO.Class (liftIO)
 #endif
