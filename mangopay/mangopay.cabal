@@ -1,5 +1,5 @@
 name:           mangopay
-version:        1.6.3
+version:        1.7.0
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -108,8 +108,8 @@ test-suite mangopay-tests
      , blaze-builder
      , HTF            >  0.9
      , HUnit          >= 1.2.5
-     , wai            == 2.1.*
-     , warp
+     , wai            >= 3.0        && < 3.1
+     , warp           >= 3.0        && < 3.1
   if flag(conduit11)
     build-depends: conduit-extra
   else
