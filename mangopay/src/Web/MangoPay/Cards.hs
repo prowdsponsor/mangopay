@@ -26,13 +26,8 @@ createCardRegistration = createGeneric "/cardregistrations"
 
 -- | modify a card registration
 modifyCardRegistration ::  (MPUsableMonad m) => CardRegistration -> AccessToken -> MangoPayT m CardRegistration
-modifyCardRegistration cr at=
-        case crId cr of
-                Nothing-> error "Web.MangoPay.Cards.modifyCardRegistration : Nothing"
-                Just i-> do
-                        url<-getClientURLMultiple ["/cardregistrations/",i]
-                        let Object m=toJSON cr
-                        putExchange url (Just at) $ Object $ HM.filterWithKey (\k _->k=="RegistrationData") m
+modifyCardRegistration cr = modifyGGeneric
+    (Just $  HM.filterWithKey (\k _->k=="RegistrationData")) "/cardregistrations/" cr crId
 
 -- | credit card information
 data CardInfo = CardInfo {

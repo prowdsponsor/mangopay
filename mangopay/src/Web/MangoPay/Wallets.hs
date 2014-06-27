@@ -21,13 +21,7 @@ createWallet = createGeneric "/wallets"
 
 -- | modify a wallet
 modifyWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
-modifyWallet w at = do
-        case wId w of
-          Nothing -> error "Web.MangoPay.Users.modifyWallet : Nothing"
-          Just i -> do
-                    url<-getClientURLMultiple ["/wallets/",i]
-                    let Object m=toJSON w
-                    putExchange url (Just at) (Object $ HM.delete "Currency" m)
+modifyWallet w = modifyGGeneric (Just $ HM.delete "Currency") "/wallets/" w wId
 
 
 -- | fetch a wallet from its ID
