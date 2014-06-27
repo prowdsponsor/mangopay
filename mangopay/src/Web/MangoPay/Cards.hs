@@ -12,7 +12,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
 import qualified Data.HashMap.Lazy as HM
 
@@ -94,10 +93,7 @@ instance FromJSON CardRegistration where
 
 -- | fetch a card from its ID
 fetchCard :: (MPUsableMonad m) => CardID -> AccessToken -> MangoPayT m Card
-fetchCard cid at=do
-        url<-getClientURLMultiple ["/cards/",cid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchCard = fetchGeneric "/cards/"
 
 -- | list all cards for a given user
 listCards :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)

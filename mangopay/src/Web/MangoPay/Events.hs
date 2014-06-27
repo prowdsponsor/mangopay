@@ -62,10 +62,7 @@ modifyHook h at=
 
 -- | fetch a wallet from its ID
 fetchHook :: (MPUsableMonad m) => HookID -> AccessToken -> MangoPayT m Hook
-fetchHook wid at=do
-        url<-getClientURLMultiple ["/hooks/",wid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchHook = fetchGeneric "/hooks/"
 
 -- | list all wallets for a given user
 listHooks :: (MPUsableMonad m) =>  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Hook)

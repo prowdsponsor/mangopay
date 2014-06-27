@@ -13,7 +13,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
 -- | refund a transfer
 refundTransfer ::  (MPUsableMonad m) => TransferID -> AnyUserID -> AccessToken -> MangoPayT m Refund
@@ -29,10 +28,7 @@ refundPayin pid rr at= do
 
 -- | fetch a refund from its ID
 fetchRefund :: (MPUsableMonad m) => RefundID -> AccessToken -> MangoPayT m Refund
-fetchRefund rid at=do
-        url<-getClientURLMultiple ["/refunds/",rid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchRefund = fetchGeneric "/refunds/"
 
 -- | refund request
 data RefundRequest=RefundRequest{

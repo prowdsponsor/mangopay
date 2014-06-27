@@ -13,7 +13,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
 
 -- | create a natural user
@@ -29,10 +28,7 @@ modifyNaturalUser u = modifyGeneric "/users/natural/" u' uId
 
 -- | fetch a natural user from her ID
 fetchNaturalUser :: (MPUsableMonad m) => NaturalUserID -> AccessToken -> MangoPayT m NaturalUser
-fetchNaturalUser uid at=do
-        url<-getClientURLMultiple ["/users/natural/",uid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchNaturalUser = fetchGeneric "/users/natural/"
 
 
 -- | create a legal user
@@ -47,18 +43,12 @@ modifyLegalUser u = modifyGeneric "/users/legal/" u lId
 
 -- | fetch a natural user from her ID
 fetchLegalUser :: (MPUsableMonad m) => LegalUserID -> AccessToken -> MangoPayT m LegalUser
-fetchLegalUser uid at = do
-        url <- getClientURLMultiple ["/users/legal/",uid]
-        req <- getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchLegalUser = fetchGeneric "/users/legal/"
 
 
 -- | get a user, natural or legal
 getUser :: (MPUsableMonad m) => AnyUserID -> AccessToken -> MangoPayT m (Either NaturalUser LegalUser)
-getUser uid at = do
-        url <- getClientURLMultiple ["/users/",uid]
-        req <- getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+getUser = fetchGeneric "/users/"
 
 
 -- | list all user references

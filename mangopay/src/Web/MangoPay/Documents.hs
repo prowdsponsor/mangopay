@@ -13,7 +13,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
@@ -34,10 +33,8 @@ modifyDocument uid d = modifyGeneric path d dId
 
 -- | fetch a document from its ID
 fetchDocument :: (MPUsableMonad m) => AnyUserID -> DocumentID -> AccessToken -> MangoPayT m Document
-fetchDocument uid did at=do
-        url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchDocument uid = fetchGeneric path
+        where path = T.concat ["/users/",uid,"/KYC/documents/"]
 
 -- | create a page
 --  note that per the MangoPay API the document HAS to be in CREATED status

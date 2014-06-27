@@ -14,7 +14,6 @@ import Data.Aeson.Types
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 import qualified Data.ByteString as BS
 
 import Data.CountryCodes (CountryCode)
@@ -27,10 +26,8 @@ createAccount ba = createGeneric path ba
 
 -- | fetch an account from its ID
 fetchAccount :: (MPUsableMonad m) => AnyUserID -> BankAccountID -> AccessToken -> MangoPayT m BankAccount
-fetchAccount uid aid at=do
-        url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/",aid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchAccount uid = fetchGeneric path
+        where path = Data.Text.concat ["/users/",uid,"/bankaccounts/"]
 
 -- | list all accounts for a given user
 listAccounts :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)

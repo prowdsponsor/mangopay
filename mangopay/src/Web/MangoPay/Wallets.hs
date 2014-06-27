@@ -12,7 +12,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 import qualified Data.HashMap.Lazy as HM (delete)
 
 -- | create a wallet
@@ -33,10 +32,7 @@ modifyWallet w at = do
 
 -- | fetch a wallet from its ID
 fetchWallet :: (MPUsableMonad m) => WalletID -> AccessToken -> MangoPayT m Wallet
-fetchWallet wid at=do
-        url<-getClientURLMultiple ["/wallets/",wid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchWallet = fetchGeneric "/wallets/"
 
 -- | list all wallets for a given user
 listWallets :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
@@ -51,10 +47,7 @@ createTransfer = createGeneric "/transfers"
 
 -- | fetch a transfer from its ID
 fetchTransfer :: (MPUsableMonad m) => TransferID -> AccessToken -> MangoPayT m Transfer
-fetchTransfer wid at=do
-        url<-getClientURLMultiple ["/transfers/",wid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchTransfer = fetchGeneric "/transfers/"
 
 -- | list transfers for a given wallet
 listTransactions ::  (MPUsableMonad m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)

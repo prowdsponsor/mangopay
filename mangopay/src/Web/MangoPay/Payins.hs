@@ -13,29 +13,22 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
--- | fetch a bank wire from its ID
-fetchBankWire :: (MPUsableMonad m) => BankWireID -> AccessToken -> MangoPayT m BankWire
-fetchBankWire bwid at=do
-        url<-getClientURLMultiple ["/payins/",bwid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
-
--- | fetch a direct pay in from its ID
 
 -- | create a bankwire pay-in
 createBankWirePayIn ::  (MPUsableMonad m) => BankWire -> AccessToken -> MangoPayT m BankWire
 createBankWirePayIn = createGeneric "/payins/bankwire/direct"
 
+-- | fetch a bank wire pay-in from its ID
+fetchBankWirePayIn :: (MPUsableMonad m) => BankWireID -> AccessToken -> MangoPayT m BankWire
+fetchBankWirePayIn = fetchGeneric "/payins/"
+
 -- | create a direct card pay in
 createCardPayin ::  (MPUsableMonad m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
 createCardPayin = createGeneric "/payins/card/direct"
 
+-- | fetch a direct card pay in from its ID
 fetchCardPayin :: (MPUsableMonad m) => CardPayinID -> AccessToken -> MangoPayT m CardPayin
-fetchCardPayin cpid at=do
-        url<-getClientURLMultiple ["/payins/",cpid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchCardPayin = fetchGeneric "/payins/"
 
 data PaymentExecution = WEB  -- ^ through a web interface
  | DIRECT -- ^ with a tokenized card

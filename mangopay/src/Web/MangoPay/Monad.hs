@@ -379,3 +379,12 @@ modifyGeneric path x fid at =
           Just i -> do
             url<-getClientURLMultiple [path ,i]
             putExchange url (Just at) x
+
+
+-- | helper function to fetch an entity from its id
+fetchGeneric :: (MPUsableMonad m, FromJSON a) =>
+  T.Text -> T.Text -> AccessToken -> MangoPayT m a
+fetchGeneric path xid at = do
+        url<-getClientURLMultiple [path ,xid]
+        req<-getGetRequest url (Just at) ([]::HT.Query)
+        getJSONResponse req

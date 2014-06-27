@@ -13,7 +13,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
 -- | create a payout
 createPayout ::  (MPUsableMonad m) => Payout -> AccessToken -> MangoPayT m Payout
@@ -21,10 +20,7 @@ createPayout = createGeneric "/payouts/bankwire"
 
 -- | fetch an payout from its ID
 fetchPayout :: (MPUsableMonad m) => PayoutID -> AccessToken -> MangoPayT m Payout
-fetchPayout ptid at=do
-        url<-getClientURLMultiple ["/payouts/",ptid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchPayout = fetchGeneric "/payouts/"
 
 -- | make a simplep payout for creation
 mkPayout :: AnyUserID -> WalletID -> Amount -> Amount -> BankAccountID -> Payout
