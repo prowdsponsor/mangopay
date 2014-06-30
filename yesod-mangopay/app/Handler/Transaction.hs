@@ -18,7 +18,6 @@ getTransactionsR uid= do
     let (previous,next)=getPaginationNav pg txsL
     let txs=plData txsL
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleTransactions
         $(widgetFile "transactions")
 
@@ -30,7 +29,6 @@ getPayinR uid=do
     wallets<-runYesodMPTToken $ getAll $ listWallets uid
     (widget, enctype) <- generateFormPost $ payinInForm cards wallets
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitlePayIn
         $(widgetFile "payin")
 
@@ -52,14 +50,12 @@ postPayinR uid=do
               (\e->do
                 setMessage $ toHtml $ show e
                 defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitlePayIn
                   $(widgetFile "payin")
               )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitlePayIn
                   $(widgetFile "payin")
 
@@ -68,7 +64,6 @@ getTransfer1R :: AnyUserID -> Handler Html
 getTransfer1R uid=do
   users<-runYesodMPTToken $ getAll listUsers
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleTransfer
         $(widgetFile "transfer1")
 
@@ -79,7 +74,6 @@ getTransfer2R uid touid=do
     toWallets<-runYesodMPTToken $ getAll $ listWallets touid
     (widget, enctype) <- generateFormPost $ transferForm fromWallets toWallets
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleTransfer
         $(widgetFile "transfer2")
 
@@ -102,14 +96,12 @@ postTransfer2R uid touid=do
               (\e->do
                 setMessage $ toHtml $ show e
                 defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitleTransfer
                   $(widgetFile "transfer2")
               )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitleTransfer
                   $(widgetFile "transfer2")
 
@@ -121,7 +113,6 @@ getPayoutR uid=do
 
     (widget, enctype) <- generateFormPost $ payoutForm wallets accounts
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitlePayOut
         $(widgetFile "payout")
 
@@ -143,14 +134,12 @@ postPayoutR uid=do
               (\e->do
                 setMessage $ toHtml $ show e
                 defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitlePayOut
                   $(widgetFile "payout")
               )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitlePayOut
                   $(widgetFile "payout")
 

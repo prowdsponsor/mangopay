@@ -16,7 +16,6 @@ getDocR :: AnyUserID -> Handler Html
 getDocR uid= do
   (widget, enctype) <- generateFormPost uploadForm
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleDocument
         $(widgetFile "docupload")
 
@@ -34,7 +33,6 @@ postDocR uid=do
           -- setting to validated causes internal server error...
           docWritten<-runYesodMPTToken $ storeDocument uid (docWritten0{dStatus=Just VALIDATION_ASKED})
           defaultLayout $ do
-            aDomId <- newIdent
             setTitleI MsgDocDone
             $(widgetFile "doc")
           )

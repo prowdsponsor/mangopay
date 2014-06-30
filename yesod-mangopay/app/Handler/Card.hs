@@ -22,7 +22,6 @@ getCardsR uid=do
   cards<-runYesodMPTToken $ getAll $ listCards uid
   ((_,widget), enctype) <- generateFormGet currencyForm
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleCards
         $(widgetFile "cards")
 
@@ -57,7 +56,6 @@ getCardR uid=do
         (widget, enctype) <- generateFormPost cardTokenForm
 
         defaultLayout $ do
-            aDomId <- newIdent
             -- JQuery is useful!
             addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"
             setTitleI MsgTitleCard

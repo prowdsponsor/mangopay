@@ -12,7 +12,6 @@ getWalletsR uid=do
   -- no paging, should be reasonable
   wallets<-runYesodMPTToken $ getAll $ listWallets uid
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleWallets
         $(widgetFile "wallets")
 
@@ -25,7 +24,6 @@ getWalletR uid=do
           _->return Nothing
     (widget, enctype) <- generateFormPost $ walletForm mwallet
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleWallet
         $(widgetFile "wallet")
 
@@ -50,7 +48,6 @@ postWalletR uid=do
             setMessageI MsgErrorData
             return Nothing
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleWallet
         $(widgetFile "wallet")
 

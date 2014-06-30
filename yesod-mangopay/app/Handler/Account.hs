@@ -12,7 +12,6 @@ getAccountsR uid=do
   -- no paging, should be reasonable
   accounts<-runYesodMPTToken $ getAll $ listAccounts uid
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleAccounts
         $(widgetFile "accounts")
 
@@ -21,7 +20,6 @@ getAccountR :: AnyUserID -> Handler Html
 getAccountR uid=do
     (widget, enctype) <- generateFormPost accountForm
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleAccount
         $(widgetFile "account")
 
@@ -39,14 +37,12 @@ postAccountR uid=do
                (\e->do
                 setMessage $ toHtml $ show e
                 defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitleAccount
                   $(widgetFile "account")
                   )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
-                  aDomId <- newIdent
                   setTitleI MsgTitleAccount
                   $(widgetFile "account")
 

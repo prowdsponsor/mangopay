@@ -18,14 +18,12 @@ getUserR uid=do
       let muser=Just nu
       (widget, enctype) <- generateFormPost $ naturalUserForm muser
       defaultLayout $ do
-            aDomId <- newIdent
             setTitleI MsgTitleNUser
             $(widgetFile "nuser")
     (Right lu)->do
       let muser=Just lu
       (widget, enctype) <- generateFormPost $ legalUserForm muser
       defaultLayout $ do
-            aDomId <- newIdent
             setTitleI MsgTitleLUser
             $(widgetFile "luser")
 
@@ -34,7 +32,6 @@ getNUserR :: Handler Html
 getNUserR =do
   (muser,widget,enctype)<- userGet naturalUserForm fetchNaturalUser
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleNUser
         $(widgetFile "nuser")
 
@@ -43,7 +40,6 @@ postNUserR :: Handler Html
 postNUserR = do
   (muser,widget,enctype)<- userPost naturalUserForm storeNaturalUser
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleNUser
         $(widgetFile "nuser")
 
@@ -52,7 +48,6 @@ getLUserR :: Handler Html
 getLUserR = do
   (muser,widget,enctype)<- userGet legalUserForm fetchLegalUser
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleLUser
         $(widgetFile "luser")
 
@@ -61,7 +56,6 @@ postLUserR :: Handler Html
 postLUserR = do
   (muser,widget,enctype)<- userPost legalUserForm storeLegalUser
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleLUser
         $(widgetFile "luser")
 

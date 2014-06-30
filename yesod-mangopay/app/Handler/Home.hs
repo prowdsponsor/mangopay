@@ -18,7 +18,6 @@ getHomeR = do
     let (previous,next)=getPaginationNav pg usersL
     let users=plData usersL
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgHello
         $(widgetFile "homepage")
 
@@ -40,6 +39,5 @@ getMPEventsR = do
   site <- getYesod
   events<-liftIO $ readIORef  (appEvents site)
   defaultLayout $ do
-      aDomId <- newIdent
       setTitleI MsgTitleEvents
       $(widgetFile "events")
