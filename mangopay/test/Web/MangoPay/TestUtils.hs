@@ -132,7 +132,7 @@ testEventTypes' evtTs ops=do
     res<-liftM tsReceivedEvents $ readIORef testState
     a<-ops
     mapM_ (testSearchEvent a) evtTs
-    er<-waitForEvent res (map (testEvent a) evtTs) 30
+    er<-waitForEvent res (map (testEvent a) evtTs) 5
     assertEqual EventsOK er
     return a
 
@@ -160,7 +160,7 @@ testEvents :: IO a -- ^ the test, returning a value
 testEvents ops tests=do
     res<-liftM tsReceivedEvents $ readIORef testState
     a<-ops
-    er<-waitForEvent res (map ($ a) tests) 30
+    er<-waitForEvent res (map ($ a) tests) 5
     assertEqual EventsOK er
 
 -- | result of waiting for event
