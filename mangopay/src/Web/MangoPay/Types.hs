@@ -102,10 +102,30 @@ toAccessToken  oa=AccessToken $ TE.encodeUtf8 $ T.concat [oaTokenType oa, " ",oa
 data MpException = MpJSONException String -- ^ JSON parsingError
   | MpAppException MpError -- ^ application exception
   | MpHttpException H.HttpException (Maybe Value) -- ^ HTTP level exception, maybe with some JSON payload
+  | MpHttpExceptionS String (Maybe Value) -- ^ HTTP level exception for which we only have a string (no Read instance)
+                                          -- , maybe with some JSON payload
   deriving (Show,Typeable)
 
 -- | make our exception type a normal exception
 instance Exception MpException
+
+-- | to json
+instance ToJSON MpException  where
+    toJSON (MpJSONException j)  = object ["Type" .= ("MpJSONException"::Text), "Error" .= j]
+    toJSON (MpAppException mpe)  = object ["Type" .= ("MpAppException"::Text), "Error" .= toJSON mpe]
+    toJSON (MpHttpException e v) = object ["Type" .= ("MpHttpException"::Text), "Error" .= (show e), "Value" .= v]
+    toJSON (MpHttpExceptionS e v) = object ["Type" .= ("MpHttpException"::Text), "Error" .= e, "Value" .= v]
+
+
+instance FromJSON MpException where
+  parseJSON (Object v) = do
+    typ::String <- v .: "Type"
+    case typ of
+      "MpJSONException" -> MpJSONException <$> v .: "Error"
+      "MpAppException"  -> MpAppException <$> v .: "Error"
+      "MpHttpException"  -> MpHttpExceptionS <$> v .: "Error" <*> v .:? "Value"
+      _ -> fail $ "MpException:" ++ typ
+  parseJSON _= fail "MpException"
 
 
 -- | an error returned to us by MangoPay
@@ -117,6 +137,10 @@ data MpError = MpError {
   }
   deriving (Show,Eq,Ord,Typeable)
 
+
+-- | to json as per MangoPay format
+instance ToJSON MpError  where
+    toJSON mpe=object ["Id" .= igeID mpe, "Type" .= igeType mpe, "Message" .= igeMessage mpe, "Date" .= igeDate mpe]
 
 
 -- | from json as per MangoPay format
