@@ -18,7 +18,7 @@ test_BankAccount=do
   let uid=urId $ head $ plData usL
   let details=IBAN "FR3020041010124530725S03383" "CRLYFRPP"
   let acc1=BankAccount Nothing Nothing (Just uid) Nothing details "JP Moresmau" (Just "Earth")
-  acc2<-testMP $ storeAccount acc1
+  acc2<-testMP $ createAccount acc1
   assertBool $ isJust $ baId acc2
   assertBool $ isJust $ baCreationDate acc2
   assertEqual details $ baDetails acc2
@@ -26,4 +26,4 @@ test_BankAccount=do
   assertEqual details $ baDetails acc3
   accs<-testMP $ listAccounts uid Nothing
   assertBool $ acc3  `elem` (plData accs)
-  
+

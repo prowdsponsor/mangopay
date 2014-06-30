@@ -38,9 +38,11 @@ module Web.MangoPay (
         ,UserRef(..)
         ,PersonType(..)
         ,AnyUserID
-        ,storeNaturalUser
+        ,createNaturalUser
+        ,modifyNaturalUser
         ,fetchNaturalUser
-        ,storeLegalUser
+        ,createLegalUser
+        ,modifyLegalUser
         ,fetchLegalUser
         ,getUser
         ,listUsers
@@ -51,7 +53,8 @@ module Web.MangoPay (
         ,Amount(..)
         ,WalletID
         ,Currency
-        ,storeWallet
+        ,createWallet
+        ,modifyWallet
         ,fetchWallet
         ,listWallets
         ,Transfer(..)
@@ -77,7 +80,8 @@ module Web.MangoPay (
         ,HookValidity(..)
         ,HookID
         ,Hook(..)
-        ,storeHook
+        ,createHook
+        ,modifyHook
         ,fetchHook
         ,listHooks
         ,eventFromQueryString
@@ -88,9 +92,10 @@ module Web.MangoPay (
         ,DocumentID
         ,DocumentType(..)
         ,DocumentStatus(..)
-        ,storeDocument
+        ,createDocument
+        ,modifyDocument
         ,fetchDocument
-        ,storePage
+        ,createPage
         ,getKindOfAuthentication
         ,getRequiredDocumentTypes
 
@@ -99,7 +104,7 @@ module Web.MangoPay (
         ,BankAccountID
         ,BankAccountDetails(..)
         ,PaymentType(..)
-        ,storeAccount
+        ,createAccount
         ,fetchAccount
         ,listAccounts
 
@@ -107,12 +112,12 @@ module Web.MangoPay (
         ,PaymentExecution(..)
         ,BankWireID
         ,BankWire(..)
-        ,storeBankWire
-        ,fetchBankWire
+        ,createBankWirePayIn
+        ,fetchBankWirePayIn
         ,mkBankWire
         ,CardPayinID
         ,CardPayin(..)
-        ,storeCardPayin
+        ,createCardPayin
         ,fetchCardPayin
         ,mkCardPayin
 
@@ -120,7 +125,7 @@ module Web.MangoPay (
         ,PayoutID
         ,Payout(..)
         ,mkPayout
-        ,storePayout
+        ,createPayout
         ,fetchPayout
 
         -- Cards
@@ -131,7 +136,8 @@ module Web.MangoPay (
         ,Card(..)
         ,CardValidity(..)
         ,mkCardRegistration
-        ,storeCardRegistration
+        ,createCardRegistration
+        ,modifyCardRegistration
         ,fetchCard
         ,listCards
 

@@ -147,7 +147,7 @@ testSearchEvent tid evtT=do
 createHook :: EventType -> Assertion
 createHook evtT= do
     hook<-liftM tsHookEndPoint $ readIORef testState
-    h<-testMP $ storeHook (Hook Nothing Nothing Nothing (hepUrl hook <> "/mphook") Enabled Nothing evtT)
+    h<-testMP $ Web.MangoPay.createHook (Hook Nothing Nothing Nothing (hepUrl hook <> "/mphook") Enabled Nothing evtT)
     assertBool (isJust $ hId h)
     h2<-testMP $ fetchHook (fromJust $ hId h)
     assertEqual (hId h) (hId h2)
@@ -253,11 +253,11 @@ unsafeFullRegistration :: (MPUsableMonad m) => AnyUserID -> Currency -> CardInfo
 unsafeFullRegistration uid currency cardInfo at=do
   -- create registration
   let cr1=mkCardRegistration uid currency
-  cr2<-storeCardRegistration cr1 at
+  cr2<-createCardRegistration cr1 at
   -- register it
   cr3<-liftIO $ unsafeRegisterCard cardInfo cr2
   -- save registered version
-  storeCardRegistration cr3 at
+  modifyCardRegistration cr3 at
 
 -- | register a card with the registration URL
 -- this function is UNSAFE, because if you use this, YOU manage the user's credit card details

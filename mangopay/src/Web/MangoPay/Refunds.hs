@@ -13,7 +13,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
 -- | refund a transfer
 refundTransfer ::  (MPUsableMonad m) => TransferID -> AnyUserID -> AccessToken -> MangoPayT m Refund
@@ -29,10 +28,7 @@ refundPayin pid rr at= do
 
 -- | fetch a refund from its ID
 fetchRefund :: (MPUsableMonad m) => RefundID -> AccessToken -> MangoPayT m Refund
-fetchRefund rid at=do
-        url<-getClientURLMultiple ["/refunds/",rid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req 
+fetchRefund = fetchGeneric "/refunds/"
 
 -- | refund request
 data RefundRequest=RefundRequest{
@@ -44,7 +40,7 @@ data RefundRequest=RefundRequest{
 -- | to json as per MangoPay format
 instance ToJSON RefundRequest  where
     toJSON rr=object ["AuthorId" .= rrAuthorId rr,"DebitedFunds" .= rrDebitedFunds rr,
-      "Fees" .= rrFees rr] 
+      "Fees" .= rrFees rr]
 
 
 -- | id of a refund
@@ -59,10 +55,10 @@ data Refund=Refund{
   ,rDebitedFunds :: Amount -- ^ Strictly positive amount. In cents.
   ,rFees :: Amount -- ^ In cents
   ,rCreditedFunds :: Amount -- ^ In cents
-  ,rStatus  :: TransferStatus 
+  ,rStatus  :: TransferStatus
   ,rResultCode  :: Text -- ^ The transaction result code
   ,rResultMessage :: Maybe Text -- ^ The transaction result Message
-  ,rExecutionDate :: POSIXTime 
+  ,rExecutionDate :: POSIXTime
   ,rType :: TransactionType
   ,rNature :: TransactionNature
   ,rCreditedUserId :: Maybe AnyUserID -- ^ Id of the user owner of the credited wallet
@@ -71,8 +67,8 @@ data Refund=Refund{
   ,rDebitedWalletId :: WalletID -- ^ The Id of the debited Wallet
   ,rCreditedWalletID  :: Maybe WalletID -- ^ The Id of the credited Wallet
   } deriving (Show,Eq,Ord,Typeable)
-  
--- | from json as per MangoPay format 
+
+-- | from json as per MangoPay format
 instance FromJSON Refund where
         parseJSON (Object v) =Refund <$>
                          v .: "Id" <*>
@@ -81,8 +77,8 @@ instance FromJSON Refund where
                          v .: "AuthorId" <*>
                          v .: "DebitedFunds" <*>
                          v .: "Fees" <*>
-                         v .: "CreditedFunds" <*> 
-                         v .: "Status" <*> 
+                         v .: "CreditedFunds" <*>
+                         v .: "Status" <*>
                          v .: "ResultCode" <*>
                          v .:? "ResultMessage" <*>
                          v .: "ExecutionDate" <*>
@@ -93,4 +89,4 @@ instance FromJSON Refund where
                          v .: "InitialTransactionType" <*>
                          v .: "DebitedWalletId" <*>
                          v .:? "CreditedWalletID"
-        parseJSON _=fail "Refund"  
+        parseJSON _=fail "Refund"

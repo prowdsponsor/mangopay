@@ -13,37 +13,34 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
--- | create or edit a document
-storeDocument ::  (MPUsableMonad m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
-storeDocument uid d at=
-        case dId d of
-                Nothing-> do
-                        url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/"]
-                        postExchange url (Just at) d
-                Just i-> do
-                        url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",i]
-                        putExchange url (Just at) d
+-- | create a document
+createDocument ::  (MPUsableMonad m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
+createDocument uid d = createGeneric path d
+        where path = BS.concat ["/users/",TE.encodeUtf8 uid,"/KYC/documents/"]
+
+
+modifyDocument ::  (MPUsableMonad m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
+modifyDocument uid d = modifyGeneric path d dId
+        where path = T.concat ["/users/", uid, "/KYC/documents/"]
 
 
 -- | fetch a document from its ID
 fetchDocument :: (MPUsableMonad m) => AnyUserID -> DocumentID -> AccessToken -> MangoPayT m Document
-fetchDocument uid did at=do
-        url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req
+fetchDocument uid = fetchGeneric path
+        where path = T.concat ["/users/",uid,"/KYC/documents/"]
 
 -- | create a page
 --  note that per the MangoPay API the document HAS to be in CREATED status
 -- should we check it here? Since MangoPay returns a 500 Internal Server Error if the document is in another status...
-storePage :: (MPUsableMonad m) => AnyUserID -> DocumentID -> BS.ByteString -> AccessToken -> MangoPayT m ()
-storePage uid did contents at=do
+createPage :: (MPUsableMonad m) => AnyUserID -> DocumentID -> BS.ByteString -> AccessToken -> MangoPayT m ()
+createPage uid did contents at=do
   let val=object ["File" .= TE.decodeUtf8 (B64.encode contents)]
   url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did,"/pages"]
   postNoReply url (Just at) val

@@ -13,34 +13,23 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Network.HTTP.Types as HT
 
--- | create or edit a bankwire
-storeBankWire ::  (MPUsableMonad m) => BankWire -> AccessToken -> MangoPayT m BankWire
-storeBankWire bw at= do
-  url<-getClientURL "/payins/bankwire/direct" 
-  postExchange url (Just at) bw
-   
--- | fetch a bank wire from its ID
-fetchBankWire :: (MPUsableMonad m) => BankWireID -> AccessToken -> MangoPayT m BankWire
-fetchBankWire bwid at=do
-        url<-getClientURLMultiple ["/payins/",bwid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req    
+-- | create a bankwire pay-in
+createBankWirePayIn ::  (MPUsableMonad m) => BankWire -> AccessToken -> MangoPayT m BankWire
+createBankWirePayIn = createGeneric "/payins/bankwire/direct"
 
--- | create or edit a direct card pay in
-storeCardPayin ::  (MPUsableMonad m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
-storeCardPayin cp at= do
-  url<-getClientURL "/payins/card/direct" 
-  postExchange url (Just at) cp
-   
--- | fetch a direct pay in from its ID
+-- | fetch a bank wire pay-in from its ID
+fetchBankWirePayIn :: (MPUsableMonad m) => BankWireID -> AccessToken -> MangoPayT m BankWire
+fetchBankWirePayIn = fetchGeneric "/payins/"
+
+-- | create a direct card pay in
+createCardPayin ::  (MPUsableMonad m) => CardPayin -> AccessToken -> MangoPayT m CardPayin
+createCardPayin = createGeneric "/payins/card/direct"
+
+-- | fetch a direct card pay in from its ID
 fetchCardPayin :: (MPUsableMonad m) => CardPayinID -> AccessToken -> MangoPayT m CardPayin
-fetchCardPayin cpid at=do
-        url<-getClientURLMultiple ["/payins/",cpid]
-        req<-getGetRequest url (Just at) ([]::HT.Query)
-        getJSONResponse req   
-   
+fetchCardPayin = fetchGeneric "/payins/"
+
 data PaymentExecution = WEB  -- ^ through a web interface
  | DIRECT -- ^ with a tokenized card
   deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
@@ -93,13 +82,13 @@ data BankWire=BankWire {
   ,bwExecutionType :: Maybe PaymentExecution -- ^  How the payment has been executed:
   } deriving (Show,Eq,Ord,Typeable)
 
--- | to json as per MangoPay format        
+-- | to json as per MangoPay format
 instance ToJSON BankWire where
         toJSON bw=object ["Tag" .= bwTag bw,"AuthorId" .= bwAuthorId  bw
           ,"CreditedUserId" .= bwCreditedUserId bw,"CreditedWalletId" .= bwCreditedWalletId bw
           ,"DeclaredDebitedFunds" .= bwDeclaredDebitedFunds bw,"DeclaredFees" .= bwDeclaredFees bw]
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON BankWire where
         parseJSON (Object v) =BankWire <$>
                          v .: "Id" <*>
@@ -123,19 +112,19 @@ instance FromJSON BankWire where
                          v .:? "Type" <*>
                          v .:? "Nature" <*>
                          v .:? "PaymentType" <*>
-                         v .:? "ExecutionType" 
-        parseJSON _=fail "BankWire"  
- 
+                         v .:? "ExecutionType"
+        parseJSON _=fail "BankWire"
+
 -- | ID of a direct pay in
-type CardPayinID=Text 
-  
+type CardPayinID=Text
+
 -- | helper function to create a new direct payin with the needed information
 -- | the url is only used in secure mode but is REQUIRED by MangoPay
 mkCardPayin :: AnyUserID -> AnyUserID -> WalletID -> Amount -> Amount -> Text -> CardID -> CardPayin
 mkCardPayin aid uid wid amount fees url cid= CardPayin Nothing Nothing Nothing aid uid fees
   wid Nothing amount Nothing (Just url) Nothing Nothing cid Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
-  
-  
+
+
 -- | direct pay in via registered card
 data CardPayin=CardPayin {
   cpId :: Maybe CardPayinID
@@ -161,8 +150,8 @@ data CardPayin=CardPayin {
   ,cpPaymentType :: Maybe Text -- ^  The type of the payment (which type of mean of payment is used).
   ,cpExecutionType :: Maybe PaymentExecution -- ^  How the payment has been executed:
   } deriving (Show,Eq,Ord,Typeable)
-  
--- | to json as per MangoPay format        
+
+-- | to json as per MangoPay format
 instance ToJSON CardPayin where
         toJSON cp=object ["Tag" .= cpTag cp,"AuthorId" .= cpAuthorId  cp
           ,"CreditedUserId" .= cpCreditedUserId cp,"CreditedWalletId" .= cpCreditedWalletId cp
@@ -170,7 +159,7 @@ instance ToJSON CardPayin where
           ,"SecureModeReturnURL" .= cpSecureModeReturnURL cp
           ,"SecureMode" .= cpSecureMode cp]
 
--- | from json as per MangoPay format 
+-- | from json as per MangoPay format
 instance FromJSON CardPayin where
         parseJSON (Object v) =CardPayin <$>
                          v .: "Id" <*>
@@ -194,6 +183,6 @@ instance FromJSON CardPayin where
                          v .:? "Type" <*>
                          v .:? "Nature" <*>
                          v .:? "PaymentType" <*>
-                         v .:? "ExecutionType" 
-        parseJSON _=fail "CardPayin"   
-   
+                         v .:? "ExecutionType"
+        parseJSON _=fail "CardPayin"
+

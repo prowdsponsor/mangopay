@@ -28,22 +28,22 @@ doTestCard curr=L.handle (\(e::MpException)->assertFailure (show e)) $ do
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   let cr1=mkCardRegistration uid curr
-  cr2<-testMP $ storeCardRegistration cr1
+  cr2<-testMP $ createCardRegistration cr1
   assertBool (isJust $ crId cr2)
   assertBool (isJust $ crCreationDate cr2)
   assertBool (isJust $ crCardRegistrationURL cr2)
   assertBool (isJust $ crAccessKey cr2)
-  assertBool (isJust $ crPreregistrationData cr2)  
-  assertBool (isNothing $ crRegistrationData cr2)  
-  assertBool (isNothing $ crCardId cr2)  
+  assertBool (isJust $ crPreregistrationData cr2)
+  assertBool (isNothing $ crRegistrationData cr2)
+  assertBool (isNothing $ crCardId cr2)
   cr3<-unsafeRegisterCard testCardInfo1 cr2
-  assertBool (isJust $ crRegistrationData cr3)  
-  cr4<-testMP $ storeCardRegistration cr3
-  assertBool (isJust $ crCardId cr4)  
+  assertBool (isJust $ crRegistrationData cr3)
+  cr4<-testMP $ modifyCardRegistration cr3
+  assertBool (isJust $ crCardId cr4)
   let cid=fromJust $ crCardId cr4
   c<-testMP $ fetchCard cid
   assertEqual cid $ cId c
-  assertBool $ not $ T.null $ cAlias c 
+  assertBool $ not $ T.null $ cAlias c
   assertBool $ not $ T.null $ cCardProvider c
   assertEqual (ciExpire testCardInfo1) (cExpirationDate c)
   --assertBool $ not $ T.null $ cExpirationDate c
@@ -54,7 +54,7 @@ doTestCard curr=L.handle (\(e::MpException)->assertFailure (show e)) $ do
   cs<-testMP $ getAll $ listCards uid
   assertBool $ not $ null cs
   assertBool $ any (\ c1 -> cId c1 == cid) cs
-  
- 
-  
-  
+
+
+
+

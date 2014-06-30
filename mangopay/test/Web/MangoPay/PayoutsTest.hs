@@ -18,23 +18,23 @@ test_PayoutOK=do
   let uid=urId $ head $ plData usL
   accs<-testMP $ listAccounts uid Nothing
   assertBool $ not $ null $ plData accs
-  let aid=fromJust $ baId $ head $ plData accs 
+  let aid=fromJust $ baId $ head $ plData accs
   ws<- testMP $ listWallets uid Nothing
   assertBool $ not $ null $ plData ws
-  let wid=fromJust $ wId $ head $ plData ws 
+  let wid=fromJust $ wId $ head $ plData ws
   let Just (Amount _ nb) =wBalance $ head $ plData ws
   assertBool $ nb >= 100
   -- no events triggered !!!
   --testEventTypes [PAYOUT_NORMAL_SUCCEEDED] $ do
   let pt1=mkPayout uid wid (Amount "EUR" 100) (Amount "EUR" 0) aid
-  pt2<-testMP $ storePayout pt1
+  pt2<-testMP $ createPayout pt1
   assertBool $ isJust $ ptId pt2
   assertEqual (Just Created) (ptStatus pt2)
   assertEqual (Just (Amount "EUR" 100)) (ptCreditedFunds pt2)
   pt3 <- testMP $ fetchPayout $ fromJust $  ptId pt2
   assertEqual (Just BANK_WIRE) (ptPaymentType pt3)
  --   return $ ptId pt2
-  
+
 -- | test failing payout
 test_PayoutKO :: Assertion
 test_PayoutKO=do
@@ -43,13 +43,13 @@ test_PayoutKO=do
   let uid=urId $ head $ plData usL
   accs<-testMP $ listAccounts uid Nothing
   assertBool $ not $ null $ plData accs
-  let aid=fromJust $ baId $ head $ plData accs 
+  let aid=fromJust $ baId $ head $ plData accs
   ws<- testMP $ listWallets uid Nothing
   assertBool $ not $ null $ plData ws
-  let wid=fromJust $ wId $ head $ plData ws 
+  let wid=fromJust $ wId $ head $ plData ws
   testEventTypes [PAYOUT_NORMAL_FAILED] $ do
     let pt1=mkPayout uid wid (Amount "EUR" 100000) (Amount "EUR" 0) aid
-    pt2<-testMP $ storePayout pt1
+    pt2<-testMP $ createPayout pt1
     assertBool $ isJust $ ptId pt2
     assertEqual (Just Failed) (ptStatus pt2)
     pt3 <- testMP $ fetchPayout $ fromJust $  ptId pt2
@@ -57,5 +57,5 @@ test_PayoutKO=do
     assertEqual (Just "001001") (ptResultCode pt3)
     assertEqual (Just "Unsufficient wallet balance") (ptResultMessage pt3)
     return $ ptId pt2
-    
-  
+
+

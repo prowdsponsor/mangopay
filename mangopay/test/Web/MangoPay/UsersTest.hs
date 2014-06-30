@@ -17,13 +17,13 @@ testNaturalUser=NaturalUser Nothing Nothing "jpmoresmau@gmail.com" "JP" "Moresma
 
 test_NaturalUser :: Assertion
 test_NaturalUser = do
-        u<-testMP $ storeNaturalUser testNaturalUser
+        u<-testMP $ createNaturalUser testNaturalUser
         assertBool (isJust $ uId u)
         assertBool (isJust $ uCreationDate u)
         uf<-testMP $ fetchNaturalUser (fromJust $ uId u)
         assertEqual (uEmail testNaturalUser) (uEmail uf)
         assertEqual Nothing (uAddress uf)
-        ue<-testMP $ storeNaturalUser (uf{uAddress=Just "St Guilhem"})
+        ue<-testMP $ modifyNaturalUser (uf{uAddress=Just "St Guilhem"})
         assertEqual (Just "St Guilhem") (uAddress ue)
         assertEqual (Just IncomeRange2) (uIncomeRange ue)
         eu<-testMP $ getUser (fromJust $ uId u)
@@ -38,13 +38,13 @@ testLegalUser = LegalUser Nothing Nothing "jpmoresmau@gmail.com" "JP Moresmau" B
 
 test_LegalUser :: Assertion
 test_LegalUser = do
-        l<-testMP $ storeLegalUser testLegalUser
+        l<-testMP $ createLegalUser testLegalUser
         assertBool (isJust $ lId l)
         assertBool (isJust $ lCreationDate l)
         lf<-testMP $ fetchLegalUser (fromJust $ lId l)
         assertEqual (lEmail testLegalUser) (lEmail lf)
         assertEqual Nothing (lHeadquartersAddress lf)
-        le<-testMP $ storeLegalUser (lf{lHeadquartersAddress=Just "St Guilhem"})
+        le<-testMP $ modifyLegalUser (lf{lHeadquartersAddress=Just "St Guilhem"})
         assertEqual (Just "St Guilhem") (lHeadquartersAddress le)
         assertEqual "Moresmau" (lLegalRepresentativeLastName le)
         assertEqual (Just "my house") (lLegalRepresentativeAddress le) -- this is lost, see https://mangopay.desk.com/customer/portal/questions/5980417-legalrepresentativeaddress-in-legaluser-api
