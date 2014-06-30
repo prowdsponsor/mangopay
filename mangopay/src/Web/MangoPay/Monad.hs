@@ -29,7 +29,8 @@ import qualified Network.HTTP.Types as HT
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
-import Data.Aeson (json,fromJSON,Result(..),FromJSON, ToJSON,encode)
+import Data.Aeson (json, fromJSON, toJSON, Result(..)
+                  ,FromJSON, ToJSON,encode, Object, Value(..))
 import Data.Conduit.Attoparsec (sinkParser, ParseError)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text as T (Text)
@@ -372,13 +373,25 @@ createGeneric path x at = do
 -- | helper function to create an entity using PUT
 modifyGeneric :: (MPUsableMonad m, FromJSON a, ToJSON a) =>
   T.Text -> a -> (a -> Maybe T.Text) -> AccessToken -> MangoPayT m a
-modifyGeneric path x fid at =
+modifyGeneric = modifyGGeneric Nothing
+
+
+-- | even more generic version of 'modifyGeneric' that can put an
+-- arbitrary json value
+modifyGGeneric :: (MPUsableMonad m, FromJSON a, ToJSON a) =>
+  Maybe (Object -> Object) -> T.Text -> a -> (a -> Maybe T.Text) ->
+    AccessToken -> MangoPayT m a
+modifyGGeneric mf path x fid at =
         case fid x of
           Nothing -> error $ show $
-            "Web.MangoPay.Users.modifyGeneric : Nothing (" <> path <> ")"
+            "Web.MangoPay.Users.modifyGGeneric : Nothing (" <> path <> ")"
           Just i -> do
             url<-getClientURLMultiple [path ,i]
-            putExchange url (Just at) x
+            case mf of
+              Nothing -> putExchange url (Just at) x
+              Just f -> do
+                let Object o = toJSON x
+                putExchange url (Just at) $ f o
 
 
 -- | helper function to fetch an entity from its id
@@ -388,3 +401,12 @@ fetchGeneric path xid at = do
         url<-getClientURLMultiple [path ,xid]
         req<-getGetRequest url (Just at) ([]::HT.Query)
         getJSONResponse req
+
+
+-- | helper function to fetch paginated lists of an entity
+genericList :: (MPUsableMonad m, FromJSON a) =>
+  [T.Text] -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList a)
+genericList path mp at = do
+        url <- getClientURLMultiple path
+        req <- getGetRequest url (Just at) (paginationAttributes mp)
+        getJSONList req

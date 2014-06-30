@@ -52,13 +52,7 @@ createHook = createGeneric "/hooks"
 
 -- | modify a hook
 modifyHook ::  (MPUsableMonad m) => Hook -> AccessToken -> MangoPayT m Hook
-modifyHook h at=
-        case hId h of
-                Nothing -> error "Web.MangoPay.Events.modifyHook : Nothing"
-                Just i-> do
-                        url<-getClientURLMultiple ["/hooks/",i]
-                        let Object m=toJSON h
-                        putExchange url (Just at) (Object $ HM.delete "EventType" m)
+modifyHook h = modifyGGeneric (Just $ HM.delete "EventType") "/hooks/" h hId
 
 -- | fetch a wallet from its ID
 fetchHook :: (MPUsableMonad m) => HookID -> AccessToken -> MangoPayT m Hook
@@ -66,10 +60,7 @@ fetchHook = fetchGeneric "/hooks/"
 
 -- | list all wallets for a given user
 listHooks :: (MPUsableMonad m) =>  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Hook)
-listHooks mp at=do
-        url<-getClientURL "/hooks"
-        req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listHooks = genericList ["/hooks"]
 
 -- | Event type
 data EventType=

@@ -21,13 +21,7 @@ createWallet = createGeneric "/wallets"
 
 -- | modify a wallet
 modifyWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
-modifyWallet w at = do
-        case wId w of
-          Nothing -> error "Web.MangoPay.Users.modifyWallet : Nothing"
-          Just i -> do
-                    url<-getClientURLMultiple ["/wallets/",i]
-                    let Object m=toJSON w
-                    putExchange url (Just at) (Object $ HM.delete "Currency" m)
+modifyWallet w = modifyGGeneric (Just $ HM.delete "Currency") "/wallets/" w wId
 
 
 -- | fetch a wallet from its ID
@@ -36,10 +30,7 @@ fetchWallet = fetchGeneric "/wallets/"
 
 -- | list all wallets for a given user
 listWallets :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
-listWallets uid mp at=do
-        url<-getClientURLMultiple ["/users/",uid,"/wallets"]
-        req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listWallets uid = genericList ["/users/",uid,"/wallets"]
 
 -- | create a new fund transfer
 createTransfer :: (MPUsableMonad m) => Transfer -> AccessToken -> MangoPayT m Transfer
@@ -51,17 +42,11 @@ fetchTransfer = fetchGeneric "/transfers/"
 
 -- | list transfers for a given wallet
 listTransactions ::  (MPUsableMonad m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactions wid mp at=do
-        url<-getClientURLMultiple ["/wallets/",wid,"/transactions"]
-        req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listTransactions wid = genericList ["/wallets/",wid,"/transactions"]
 
 -- | list transfer for a given user
 listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactionsForUser uid mp at=do
-        url<-getClientURLMultiple ["/users/",uid,"/transactions"]
-        req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listTransactionsForUser uid = genericList ["/users/",uid,"/transactions"]
 
 
 -- | ID of a wallet

@@ -31,10 +31,7 @@ fetchAccount uid = fetchGeneric path
 
 -- | list all accounts for a given user
 listAccounts :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
-listAccounts uid mp at=do
-        url<-getClientURLMultiple ["/users/",uid,"/bankaccounts/"]
-        req<-getGetRequest url (Just at) (paginationAttributes mp)
-        getJSONList req
+listAccounts uid = genericList ["/users/",uid,"/bankaccounts/"]
 
 -- | account details, depending on the type
 data BankAccountDetails=IBAN {
