@@ -58,11 +58,11 @@ data BankAccountPartial=BankAccountPartial {
   ,bapOwnerName :: Text
   ,bapOwnerAddress :: Maybe Text
   }
-  
+
 -- | get the proper BankAccount structure
 toBankAccount :: AnyUserID -> BankAccountPartial -> BankAccount
 toBankAccount uid bap=BankAccount Nothing Nothing (Just uid) (bapTag bap) (IBAN (bapIBAN bap) (bapBIC bap))
-  (bapOwnerName bap) (bapOwnerAddress bap) 
+  (bapOwnerName bap) (bapOwnerAddress bap)
 
 -- | form for bank account
 accountForm :: Html -> MForm Handler (FormResult BankAccountPartial, Widget)
@@ -70,5 +70,5 @@ accountForm = renderDivs $ BankAccountPartial
   <$> aopt textField (localizedFS MsgAccountCustomData) Nothing
   <*> areq textField (localizedFS MsgAccountIBAN) Nothing
   <*> areq textField (localizedFS MsgAccountBIC) Nothing
-  <*> areq textField (localizedFS MsgAccountOwnerName) Nothing          
-  <*> aopt textField (localizedFS MsgAccountOwnerAddress) Nothing            
+  <*> areq textField (localizedFS MsgAccountOwnerName) Nothing
+  <*> aopt textField (localizedFS MsgAccountOwnerAddress) Nothing

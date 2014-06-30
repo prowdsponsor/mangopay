@@ -28,7 +28,7 @@ getMPHookR = do
   evt<-parseMPNotification
   site <- getYesod
   ok <- runYesodMPTToken $ checkEvent evt
-  when ok $ 
+  when ok $
       -- prepend event to list
       liftIO $ modifyIORef (appEvents site) (evt :)
   -- send simple response

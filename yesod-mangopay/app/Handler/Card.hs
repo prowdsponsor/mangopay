@@ -25,7 +25,7 @@ getCardsR uid=do
         aDomId <- newIdent
         setTitleI MsgTitleCards
         $(widgetFile "cards")
-        
+
 -- | get card registration form
 -- this form will not be sent to this server, but to the validation server!
 -- we have an iframe in that page
@@ -55,7 +55,7 @@ getCardR uid=do
         setSession "cardReg" $ toStrict $ toLazyText $ encodeToTextBuilder $ toJSON cr2
         -- generate hidden form
         (widget, enctype) <- generateFormPost cardTokenForm
-       
+
         defaultLayout $ do
             aDomId <- newIdent
             -- JQuery is useful!
@@ -75,8 +75,8 @@ getCard2R :: Handler TypedContent
 getCard2R =do
   qs<-liftM rawQueryString waiRequest
   respond typePlain qs
-  
--- | this gets the token via JavaScript submission  
+
+-- | this gets the token via JavaScript submission
 postCardR :: AnyUserID -> Handler Html
 postCardR uid=do
   ((result, _), _) <- runFormPost cardTokenForm
@@ -108,7 +108,7 @@ postCardR uid=do
 -- | token for card registration
 data Token=Token Text
     deriving Show
-        
+
 -- | simple form for card registration
 -- the field is hidden and populated via JavaScript (card.julius)
 cardTokenForm ::   Html -> MForm Handler (FormResult Token, Widget)
@@ -119,4 +119,4 @@ cardTokenForm = renderDivs $ Token
 currencyForm :: Html -> MForm Handler (FormResult Currency, Widget)
 currencyForm = renderDivs $ id
   <$> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgCardCurrency) (Just "EUR")
-  
+

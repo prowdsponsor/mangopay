@@ -58,7 +58,7 @@ makeApplication conf = do
                 else Apache FromSocket
         , destination = RequestLogger.Logger $ loggerSet $ appLogger foundation
         }
-    
+
     -- register all notification callbacks
     -- we need a handler to resolve the Route URL
     -- so we use runFakeHandler, because all the caveats the doc outlines don't apply to us
@@ -66,7 +66,7 @@ makeApplication conf = do
     err<-runFakeHandler M.empty appLogger foundation (registerAllMPCallbacks MPHookR)
     print err
     hFlush stdout
-    
+
     -- Create the WAI application and apply middlewares
     app <- toWaiAppPlain foundation
     return $ logWare app
@@ -79,7 +79,7 @@ makeFoundation conf = do
     s <- staticSite
     loggerSet' <- newStdoutLoggerSet defaultBufSize
     (getter, updater) <- clockDateCacher
-    iorToken<-newIORef Nothing 
+    iorToken<-newIORef Nothing
     iorEvents<-newIORef []
     -- If the Yesod logger (as opposed to the request logger middleware) is
     -- used less than once a second on average, you may prefer to omit this

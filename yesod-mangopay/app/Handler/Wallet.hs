@@ -45,7 +45,7 @@ postWalletR uid=do
               (\e->do
                 setMessage $ toHtml $ show e
                 return (Just wo)
-              )    
+              )
     _ -> do
             setMessageI MsgErrorData
             return Nothing
@@ -53,12 +53,12 @@ postWalletR uid=do
         aDomId <- newIdent
         setTitleI MsgTitleWallet
         $(widgetFile "wallet")
-        
--- | form for wallet  
+
+-- | form for wallet
 walletForm ::  HtmlForm Wallet
 walletForm mwallet= renderDivs $ Wallet
     <$> aopt hiddenField "" (wId <$> mwallet)
-    <*> pure (join $ wCreationDate <$> mwallet)        
+    <*> pure (join $ wCreationDate <$> mwallet)
     <*> aopt textField (localizedFS MsgWalletCustomData) (wTag <$> mwallet)
     <*> pure []
     <*> areq textField (localizedFS MsgWalletDescription) (wDescription <$> mwallet)

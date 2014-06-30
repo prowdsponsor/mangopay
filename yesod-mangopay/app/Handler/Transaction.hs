@@ -21,7 +21,7 @@ getTransactionsR uid= do
         aDomId <- newIdent
         setTitleI MsgTitleTransactions
         $(widgetFile "transactions")
-        
+
 
 -- | get payin form
 getPayinR :: AnyUserID -> Handler Html
@@ -39,7 +39,7 @@ postPayinR :: AnyUserID -> Handler Html
 postPayinR uid=do
   cards<-runYesodMPTToken $ getAll $ listCards uid
   wallets<-runYesodMPTToken $ getAll $ listWallets uid
-    
+
   ((result, widget), enctype) <- runFormPost $ payinInForm cards wallets
   case result of
     FormSuccess (PayIn cid wid am cur)->do
@@ -55,7 +55,7 @@ postPayinR uid=do
                   aDomId <- newIdent
                   setTitleI MsgTitlePayIn
                   $(widgetFile "payin")
-              )    
+              )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
@@ -88,7 +88,7 @@ postTransfer2R :: AnyUserID -> AnyUserID -> Handler Html
 postTransfer2R uid touid=do
   fromWallets<-runYesodMPTToken $ getAll $ listWallets uid
   toWallets<-runYesodMPTToken $ getAll $ listWallets touid
-    
+
   ((result, widget), enctype) <- runFormPost $ transferForm fromWallets toWallets
   case result of
     FormSuccess (MPTransfer from to am cur)->do
@@ -105,7 +105,7 @@ postTransfer2R uid touid=do
                   aDomId <- newIdent
                   setTitleI MsgTitleTransfer
                   $(widgetFile "transfer2")
-              )    
+              )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
@@ -118,7 +118,7 @@ getPayoutR :: AnyUserID -> Handler Html
 getPayoutR uid=do
     wallets<-runYesodMPTToken $ getAll $ listWallets uid
     accounts<-runYesodMPTToken $ getAll $ listAccounts uid
-    
+
     (widget, enctype) <- generateFormPost $ payoutForm wallets accounts
     defaultLayout $ do
         aDomId <- newIdent
@@ -130,7 +130,7 @@ postPayoutR :: AnyUserID -> Handler Html
 postPayoutR uid=do
   wallets<-runYesodMPTToken $ getAll $ listWallets uid
   accounts<-runYesodMPTToken $ getAll $ listAccounts uid
-    
+
   ((result, widget), enctype) <- runFormPost $ payoutForm wallets accounts
   case result of
     FormSuccess (PayOut wid aid am cur)->do
@@ -146,7 +146,7 @@ postPayoutR uid=do
                   aDomId <- newIdent
                   setTitleI MsgTitlePayOut
                   $(widgetFile "payout")
-              )    
+              )
     _ -> do
             setMessageI MsgErrorData
             defaultLayout $ do
@@ -169,7 +169,7 @@ payinInForm cards wallets= renderDivs $ PayIn
 
 -- | data necessary for transfer
 data MPTransfer= MPTransfer WalletID WalletID Integer Currency
-  
+
 -- | transfer form
 transferForm :: [Wallet] -> [Wallet] -> Html -> MForm Handler (FormResult MPTransfer, Widget)
 transferForm fromWallets toWallets=renderDivs $ MPTransfer
@@ -188,4 +188,4 @@ payoutForm wallets accounts= renderDivs $ PayOut
   <*> areq (selectFieldList (map ((pack . show . baDetails) &&& (fromJust . baId)) accounts)) (localizedFS MsgPayOutAccount) Nothing
   <*> areq intField (localizedFS MsgPayOutAmount) Nothing
   <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgPayOutCurrency) Nothing
-  
+
