@@ -16,8 +16,6 @@ import Data.Text.Read (decimal)
 import Web.MangoPay
 
 
-
-
 -- | localized field
 localizedFS :: forall master msg.
             RenderMessage master msg =>
@@ -28,13 +26,6 @@ localizedFS n=FieldSettings (SomeMessage n) Nothing Nothing Nothing []
 disabled :: forall master.
               FieldSettings master -> FieldSettings master
 disabled fs= fs{fsAttrs= ("disabled",""):fsAttrs fs}
-
-
--- | disable field if the maybe is just (for fields you can set when creating but not when editing)
-disabledIfJust :: forall t master.
-                    Maybe t -> FieldSettings master -> FieldSettings master
-disabledIfJust (Just _)=disabled
-disabledIfJust _=id
 
 -- | show text and identifier for all values of an enum
 ranges :: forall a. (Bounded a, Enum a, Show a) => [(Text, a)]

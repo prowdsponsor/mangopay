@@ -74,7 +74,8 @@ walletForm mwallet= renderDivs $ Wallet
     <*> aopt textField (localizedFS MsgWalletCustomData) (wTag <$> mwallet)
     <*> pure []
     <*> areq textField (localizedFS MsgWalletDescription) (wDescription <$> mwallet)
-    <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (disabledIfJust mwallet $ localizedFS MsgWalletCurrency) (wCurrency <$> mwallet)
+    <*> areq (selectFieldList (map (id &&& id) $ maybe supportedCurrencies (\mw -> [wCurrency mw]) mwallet))
+        (localizedFS MsgWalletCurrency) (wCurrency <$> mwallet)
     -- we can't edit the amount anyway, so we show it as disabled and return a const 0 value
     <*> (fmap (const $ Amount "EUR" 0) <$> aopt intField (disabled $ localizedFS MsgWalletBalance) (fmap aAmount <$> wBalance <$> mwallet))
 
