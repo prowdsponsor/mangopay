@@ -194,6 +194,8 @@ mpReq req extractError addHeaders=do
       err=H.StatusCodeException status headers cookies
   mpres<-L.catch (do
 #if DEBUG
+    liftIO $ BSC.putStrLn ""
+    liftIO $ print $ show req'
     (value,_)<-H.responseBody res C.$$+- zipSinks (sinkParser json) (sinkHandle stdout)
     liftIO $ BSC.putStrLn ""
     liftIO $ print headers
