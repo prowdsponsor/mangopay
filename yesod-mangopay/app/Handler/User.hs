@@ -19,11 +19,13 @@ getUserR uid=do
       (widget, enctype) <- generateFormPost $ naturalUserForm muser
       defaultLayout $ do
             setTitleI MsgTitleNUser
+            let (formMethod, msgFormTitle) = formVariables $ Left muser
             $(widgetFile "nuser")
     (Right lu)->do
       let muser=Just lu
       (widget, enctype) <- generateFormPost $ legalUserForm muser
       defaultLayout $ do
+            let (formMethod, msgFormTitle) = formVariables $ Right muser
             setTitleI MsgTitleLUser
             $(widgetFile "luser")
 
@@ -32,15 +34,26 @@ getNUserR :: Handler Html
 getNUserR =do
   (muser,widget,enctype)<- userGet naturalUserForm fetchNaturalUser
   defaultLayout $ do
+        let (formMethod, msgFormTitle) = formVariables $ Left muser
         setTitleI MsgTitleNUser
         $(widgetFile "nuser")
 
 -- | post a natural user form
 postNUserR :: Handler Html
 postNUserR = do
-  (muser,widget,enctype)<- userPost naturalUserForm storeNaturalUser
+  (muser,widget,enctype)<- userPost naturalUserForm createNaturalUser
+  defaultLayout $ do
+        let (formMethod, msgFormTitle) = formVariables $ Left muser
+        setTitleI MsgTitleNUser
+        $(widgetFile "nuser")
+
+-- | put a natural user form, to modify an existing natural user
+putNUserR :: Handler Html
+putNUserR = do
+  (muser,widget,enctype)<- userPost naturalUserForm modifyNaturalUser
   defaultLayout $ do
         setTitleI MsgTitleNUser
+        let (formMethod, msgFormTitle) = formVariables $ Left muser
         $(widgetFile "nuser")
 
 -- | get a legal user form
@@ -48,14 +61,26 @@ getLUserR :: Handler Html
 getLUserR = do
   (muser,widget,enctype)<- userGet legalUserForm fetchLegalUser
   defaultLayout $ do
+        let (formMethod, msgFormTitle) = formVariables $ Right muser
         setTitleI MsgTitleLUser
         $(widgetFile "luser")
 
 -- | post a legal user form
 postLUserR :: Handler Html
 postLUserR = do
-  (muser,widget,enctype)<- userPost legalUserForm storeLegalUser
+  (muser,widget,enctype)<- userPost legalUserForm createLegalUser
   defaultLayout $ do
+        let (formMethod, msgFormTitle) = formVariables $ Right muser
+        setTitleI MsgTitleLUser
+        $(widgetFile "luser")
+
+
+-- | post a legal user form
+putLUserR :: Handler Html
+putLUserR = do
+  (muser,widget,enctype)<- userPost legalUserForm modifyLegalUser
+  defaultLayout $ do
+        let (formMethod, msgFormTitle) = formVariables $ Right muser
         setTitleI MsgTitleLUser
         $(widgetFile "luser")
 
@@ -142,3 +167,9 @@ legalUserForm muser= renderDivs $ LegalUser
     <*> pure Nothing -- value comes from Documents uploaded
 
 
+formVariables :: Either (Maybe NaturalUser) (Maybe LegalUser) -> (Text, AppMessage)
+formVariables = either (\n -> process $ mid uId n) (\l -> process $ mid lId l)
+  where mid getId mu = do
+              u  <- mu
+              getId u
+        process = maybe ("", MsgUserCreate) (\i -> ("?_method=PUT", MsgUserModify $ i))

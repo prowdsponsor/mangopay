@@ -6,12 +6,12 @@
 /                                   HomeR GET
 /mphook                             MPHookR GET
 /events                             MPEventsR GET
-/nuser                              NUserR GET POST
-/luser                              LUserR GET POST
+/nuser                              NUserR GET POST PUT
+/luser                              LUserR GET POST PUT
 /user/#AnyUserID                    UserR GET
 /doc/#AnyUserID                     DocR GET POST
 /wallets/#AnyUserID                 WalletsR GET
-/wallet/#AnyUserID                  WalletR GET POST
+/wallet/#AnyUserID                  WalletR GET POST PUT
 /cards/#AnyUserID                   CardsR GET
 /card/#AnyUserID                    CardR GET POST
 /card2                              Card2R GET

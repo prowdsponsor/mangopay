@@ -19,6 +19,7 @@ import System.Log.FastLogger (newStdoutLoggerSet, defaultBufSize)
 import Network.Wai.Logger (clockDateCacher)
 import Data.Default (def)
 import Yesod.Core.Types (loggerSet, Logger (Logger))
+import Network.Wai.Middleware.MethodOverride (methodOverride)
 
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
@@ -68,8 +69,10 @@ makeApplication conf = do
     hFlush stdout
 
     -- Create the WAI application and apply middlewares
+    -- Using MethodOverride middleware to allow PUT forms see:
+    -- http://stackoverflow.com/questions/22902419
     app <- toWaiAppPlain foundation
-    return $ logWare app
+    return $ logWare $ methodOverride app
 
 -- | Loads up any necessary settings, creates your foundation datatype, and
 -- performs some initialization.

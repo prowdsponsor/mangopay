@@ -27,11 +27,11 @@ postDocR uid=do
      FormSuccess (DocUpload fi tag typ)->
         catchMP (do
           let doc=Document Nothing Nothing tag typ (Just CREATED) Nothing Nothing
-          docWritten0<-runYesodMPTToken $ storeDocument uid doc
+          docWritten0<-runYesodMPTToken $ createDocument uid doc
           bs<-liftIO $ runResourceT $ fileSourceRaw fi $$ sinkLbs
-          runYesodMPTToken $ storePage uid (fromJust $ dId docWritten0) $ toStrict bs
+          runYesodMPTToken $ createPage uid (fromJust $ dId docWritten0) $ toStrict bs
           -- setting to validated causes internal server error...
-          docWritten<-runYesodMPTToken $ storeDocument uid (docWritten0{dStatus=Just VALIDATION_ASKED})
+          docWritten<-runYesodMPTToken $ modifyDocument uid (docWritten0{dStatus=Just VALIDATION_ASKED})
           defaultLayout $ do
             setTitleI MsgDocDone
             $(widgetFile "doc")

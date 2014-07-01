@@ -43,7 +43,7 @@ postPayinR uid=do
     FormSuccess (PayIn cid wid am cur)->do
             let cpi=mkCardPayin uid uid wid (Amount cur am) (Amount cur 0) "http://dummy" cid
             catchMP (do
-              _<-runYesodMPTToken $ storeCardPayin cpi
+              _<-runYesodMPTToken $ createCardPayin cpi
               setMessageI MsgPayInDone
               redirect $ TransactionsR uid
               )
@@ -127,7 +127,7 @@ postPayoutR uid=do
     FormSuccess (PayOut wid aid am cur)->do
             let po=mkPayout uid wid (Amount cur am) (Amount cur 0) aid
             catchMP (do
-              _<-runYesodMPTToken $ storePayout po
+              _<-runYesodMPTToken $ createPayout po
               setMessageI MsgPayOutDone
               redirect $ TransactionsR uid
               )

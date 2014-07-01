@@ -45,8 +45,8 @@ getCardR uid=do
     case result of
       FormSuccess curr->catchW $ do
         let cr1=mkCardRegistration uid curr
-        -- step 1: store pending registration
-        cr2<-runYesodMPTToken $ storeCardRegistration cr1
+        -- step 1: create pending registration
+        cr2<-runYesodMPTToken $ createCardRegistration cr1
         let Just url = crCardRegistrationURL cr2 -- the url of the validation server
             Just pre = crPreregistrationData cr2
             Just ak = crAccessKey cr2
@@ -91,7 +91,7 @@ postCardR uid=do
           let ecr=eitherDecode $ fromChunks [TE.encodeUtf8 jcr]
           case ecr of
             Right cr->do
-              _<-runYesodMPTToken $ storeCardRegistration cr{crRegistrationData=Just dat}
+              _<-runYesodMPTToken $ modifyCardRegistration cr{crRegistrationData=Just dat}
               setMessageI MsgCardDone
               redirect $ CardsR uid
             Left err->do

@@ -30,7 +30,7 @@ postAccountR uid=do
   case result of
     FormSuccess bap->
             catchMP (do
-              _<-runYesodMPTToken $ storeAccount (toBankAccount uid bap)
+              _<-runYesodMPTToken $ createAccount (toBankAccount uid bap)
               setMessageI MsgAccountDone
               redirect $ AccountsR uid
               )
