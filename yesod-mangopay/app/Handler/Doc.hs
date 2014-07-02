@@ -16,25 +16,23 @@ getDocR :: AnyUserID -> Handler Html
 getDocR uid= do
   (widget, enctype) <- generateFormPost uploadForm
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleDocument
         $(widgetFile "docupload")
 
 -- | upload doc and file and show result
 postDocR :: AnyUserID -> Handler Html
 postDocR uid=do
-   ((result, widget), enctype) <- runFormPost uploadForm
+   ((result, _), _) <- runFormPost uploadForm
    case result of
      FormSuccess (DocUpload fi tag typ)->
         catchMP (do
           let doc=Document Nothing Nothing tag typ (Just CREATED) Nothing Nothing
-          docWritten0<-runYesodMPTToken $ storeDocument uid doc
+          docWritten0<-runYesodMPTToken $ createDocument uid doc
           bs<-liftIO $ runResourceT $ fileSourceRaw fi $$ sinkLbs
-          runYesodMPTToken $ storePage uid (fromJust $ dId docWritten0) $ toStrict bs
+          runYesodMPTToken $ createPage uid (fromJust $ dId docWritten0) $ toStrict bs
           -- setting to validated causes internal server error...
-          docWritten<-runYesodMPTToken $ storeDocument uid (docWritten0{dStatus=Just VALIDATION_ASKED})
+          docWritten<-runYesodMPTToken $ modifyDocument uid (docWritten0{dStatus=Just VALIDATION_ASKED})
           defaultLayout $ do
-            aDomId <- newIdent
             setTitleI MsgDocDone
             $(widgetFile "doc")
           )

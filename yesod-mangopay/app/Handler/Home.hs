@@ -18,7 +18,6 @@ getHomeR = do
     let (previous,next)=getPaginationNav pg usersL
     let users=plData usersL
     defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgHello
         $(widgetFile "homepage")
 
@@ -28,7 +27,7 @@ getMPHookR = do
   evt<-parseMPNotification
   site <- getYesod
   ok <- runYesodMPTToken $ checkEvent evt
-  when ok $ 
+  when ok $
       -- prepend event to list
       liftIO $ modifyIORef (appEvents site) (evt :)
   -- send simple response
@@ -40,6 +39,5 @@ getMPEventsR = do
   site <- getYesod
   events<-liftIO $ readIORef  (appEvents site)
   defaultLayout $ do
-      aDomId <- newIdent
       setTitleI MsgTitleEvents
       $(widgetFile "events")

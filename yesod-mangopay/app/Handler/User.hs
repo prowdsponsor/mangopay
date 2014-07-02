@@ -18,54 +18,73 @@ getUserR uid=do
       let muser=Just nu
       (widget, enctype) <- generateFormPost $ naturalUserForm muser
       defaultLayout $ do
-            aDomId <- newIdent
             setTitleI MsgTitleNUser
-            $(widgetFile "nuser")      
+            let (formMethod, msgFormTitle) = formVariables $ Left muser
+            $(widgetFile "nuser")
     (Right lu)->do
       let muser=Just lu
       (widget, enctype) <- generateFormPost $ legalUserForm muser
       defaultLayout $ do
-            aDomId <- newIdent
+            let (formMethod, msgFormTitle) = formVariables $ Right muser
             setTitleI MsgTitleLUser
-            $(widgetFile "luser")  
+            $(widgetFile "luser")
 
 -- | get a natural user form
 getNUserR :: Handler Html
 getNUserR =do
-  (muser,widget,enctype)<- userGet naturalUserForm fetchNaturalUser 
+  (muser,widget,enctype)<- userGet naturalUserForm fetchNaturalUser
   defaultLayout $ do
-        aDomId <- newIdent
+        let (formMethod, msgFormTitle) = formVariables $ Left muser
         setTitleI MsgTitleNUser
         $(widgetFile "nuser")
 
 -- | post a natural user form
 postNUserR :: Handler Html
 postNUserR = do
-  (muser,widget,enctype)<- userPost naturalUserForm storeNaturalUser 
+  (muser,widget,enctype)<- userPost naturalUserForm createNaturalUser
   defaultLayout $ do
-        aDomId <- newIdent
+        let (formMethod, msgFormTitle) = formVariables $ Left muser
         setTitleI MsgTitleNUser
+        $(widgetFile "nuser")
+
+-- | put a natural user form, to modify an existing natural user
+putNUserR :: Handler Html
+putNUserR = do
+  (muser,widget,enctype)<- userPost naturalUserForm modifyNaturalUser
+  defaultLayout $ do
+        setTitleI MsgTitleNUser
+        let (formMethod, msgFormTitle) = formVariables $ Left muser
         $(widgetFile "nuser")
 
 -- | get a legal user form
 getLUserR :: Handler Html
 getLUserR = do
-  (muser,widget,enctype)<- userGet legalUserForm fetchLegalUser 
+  (muser,widget,enctype)<- userGet legalUserForm fetchLegalUser
   defaultLayout $ do
-        aDomId <- newIdent
+        let (formMethod, msgFormTitle) = formVariables $ Right muser
         setTitleI MsgTitleLUser
         $(widgetFile "luser")
 
 -- | post a legal user form
 postLUserR :: Handler Html
 postLUserR = do
-  (muser,widget,enctype)<- userPost legalUserForm storeLegalUser
+  (muser,widget,enctype)<- userPost legalUserForm createLegalUser
   defaultLayout $ do
-        aDomId <- newIdent
+        let (formMethod, msgFormTitle) = formVariables $ Right muser
         setTitleI MsgTitleLUser
         $(widgetFile "luser")
 
--- | common code for retrieval and form building 
+
+-- | post a legal user form
+putLUserR :: Handler Html
+putLUserR = do
+  (muser,widget,enctype)<- userPost legalUserForm modifyLegalUser
+  defaultLayout $ do
+        let (formMethod, msgFormTitle) = formVariables $ Right muser
+        setTitleI MsgTitleLUser
+        $(widgetFile "luser")
+
+-- | common code for retrieval and form building
 userGet :: HtmlForm a
                  -> (Text -> AccessToken -> MangoPayT Handler a)
                  -> Handler (Maybe a, Widget, Enctype)
@@ -93,7 +112,7 @@ userPost form store = do
                   (\e->do
                     setMessage $ toHtml $ show e
                     return (Just u)
-                  )    
+                  )
               _ -> do
                 setMessageI MsgErrorData
                 return Nothing
@@ -101,15 +120,15 @@ userPost form store = do
     return (muser,widget,enctype)
 
 
--- | form for natural user        
+-- | form for natural user
 naturalUserForm ::  HtmlForm NaturalUser
-naturalUserForm muser= renderDivs $ NaturalUser 
+naturalUserForm muser= renderDivs $ NaturalUser
     <$> aopt hiddenField "" (uId <$> muser)
     <*> pure (join $ uCreationDate <$> muser)
     <*> areq textField (localizedFS MsgUserEmail) (uEmail <$> muser)
-    <*> areq textField (localizedFS MsgUserFirst) (uFirstName <$> muser) 
+    <*> areq textField (localizedFS MsgUserFirst) (uFirstName <$> muser)
     <*> areq textField (localizedFS MsgUserLast) (uLastName <$> muser)
-    <*> aopt textField (localizedFS MsgUserAddress) (uAddress <$> muser) 
+    <*> aopt textField (localizedFS MsgUserAddress) (uAddress <$> muser)
     <*> (day2Posix <$> areq (jqueryDayField def
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
@@ -121,30 +140,36 @@ naturalUserForm muser= renderDivs $ NaturalUser
     <*> aopt textField (localizedFS MsgUserCustomData) (uTag <$> muser)
     <*> aopt textField (disabled $ localizedFS MsgUserProofIdentity) (uProofOfIdentity <$> muser) -- value comes from Documents uploaded
     <*> aopt textField (disabled $ localizedFS MsgUserProofAddress) (uProofOfAddress <$> muser) -- value comes from Documents uploaded
-  where 
+  where
 
 -- | form for legal user
 legalUserForm :: HtmlForm LegalUser
-legalUserForm muser= renderDivs $ LegalUser 
+legalUserForm muser= renderDivs $ LegalUser
     <$> aopt hiddenField "" (lId <$> muser)
     <*> pure (join $ lCreationDate <$> muser)
     <*> areq textField (localizedFS MsgUserEmail) (lEmail <$> muser)
-    <*> areq textField (localizedFS MsgUserName) (lName <$> muser) 
+    <*> areq textField (localizedFS MsgUserName) (lName <$> muser)
     <*> areq (selectFieldList ranges) (localizedFS MsgUserPersonType) (lLegalPersonType <$> muser)
     <*> aopt textField (localizedFS MsgUserHQAddress) (lHeadquartersAddress <$> muser)
     <*> areq textField (localizedFS MsgUserRepFirst) (lLegalRepresentativeFirstName <$> muser)
     <*> areq textField (localizedFS MsgUserRepLast) (lLegalRepresentativeLastName <$> muser)
-    <*> aopt textField (localizedFS MsgUserRepAddress) (lLegalRepresentativeAddress <$> muser)     
-    <*> aopt textField (localizedFS MsgUserRepEmail) (lLegalRepresentativeEmail <$> muser)  
+    <*> aopt textField (localizedFS MsgUserRepAddress) (lLegalRepresentativeAddress <$> muser)
+    <*> aopt textField (localizedFS MsgUserRepEmail) (lLegalRepresentativeEmail <$> muser)
     <*> (day2Posix <$> areq (jqueryDayField def
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
-        }) (localizedFS MsgUserRepBirthday) (posix2Day <$> lLegalRepresentativeBirthday <$> muser))   
-    <*> areq countryField (localizedFS MsgUserRepNationality) (lLegalRepresentativeNationality <$> muser)  
+        }) (localizedFS MsgUserRepBirthday) (posix2Day <$> lLegalRepresentativeBirthday <$> muser))
+    <*> areq countryField (localizedFS MsgUserRepNationality) (lLegalRepresentativeNationality <$> muser)
     <*> areq countryField (localizedFS MsgUserRepCountry) (lLegalRepresentativeCountryOfResidence <$> muser)
     <*> pure Nothing  -- value comes from Documents uploaded (I think)
-    <*> aopt textField (localizedFS MsgUserCustomData) (lTag <$> muser)  
+    <*> aopt textField (localizedFS MsgUserCustomData) (lTag <$> muser)
     <*> pure Nothing  -- value comes from Documents uploaded
     <*> pure Nothing -- value comes from Documents uploaded
 
-        
+
+formVariables :: Either (Maybe NaturalUser) (Maybe LegalUser) -> (Text, AppMessage)
+formVariables = either (\n -> process $ mid uId n) (\l -> process $ mid lId l)
+  where mid getId mu = do
+              u  <- mu
+              getId u
+        process = maybe ("", MsgUserCreate) (\i -> ("?_method=PUT", MsgUserModify $ i))

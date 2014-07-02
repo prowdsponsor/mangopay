@@ -66,7 +66,7 @@ type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 approotRequest :: App -> Request -> Text
 approotRequest master request
         | pathInfo request==["runFakeHandler", "pathInfo"] = appRoot $ settings master
-        | (not $ null $ pathInfo request) && (head (pathInfo request) == "card") = appRoot $ settings master 
+        | (not $ null $ pathInfo request) && (head (pathInfo request) == "card") = appRoot $ settings master
         | otherwise= ""
 
 -- Please see the documentation for the Yesod typeclass. There are a number
@@ -161,4 +161,4 @@ catchW a=catchMP a (\e->
           let exception=show e
           setTitleI MsgRequestFail
           $(widgetFile "request_fail"))
-        
+

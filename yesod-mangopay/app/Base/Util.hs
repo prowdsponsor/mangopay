@@ -16,29 +16,20 @@ import Data.Text.Read (decimal)
 import Web.MangoPay
 
 
-
-
 -- | localized field
 localizedFS :: forall master msg.
             RenderMessage master msg =>
             msg -> FieldSettings master
-localizedFS n=FieldSettings (SomeMessage n) Nothing Nothing Nothing []    
+localizedFS n=FieldSettings (SomeMessage n) Nothing Nothing Nothing []
 
 -- | disabled field
 disabled :: forall master.
               FieldSettings master -> FieldSettings master
 disabled fs= fs{fsAttrs= ("disabled",""):fsAttrs fs}
 
-
--- | disable field if the maybe is just (for fields you can set when creating but not when editing)
-disabledIfJust :: forall t master.
-                    Maybe t -> FieldSettings master -> FieldSettings master
-disabledIfJust (Just _)=disabled
-disabledIfJust _=id
-
--- | show text and identifier for all values of an enum    
+-- | show text and identifier for all values of an enum
 ranges :: forall a. (Bounded a, Enum a, Show a) => [(Text, a)]
-ranges=map (pack . show &&& id) [minBound..maxBound] 
+ranges=map (pack . show &&& id) [minBound..maxBound]
 
 -- | the type of an html form
 type HtmlForm a= Maybe a -> Html -> MForm Handler (FormResult a, Widget)
@@ -56,7 +47,7 @@ getPagination = do
     pg<-liftM (fromMaybe "1") $ lookupGetParam "page"
     let Right (i,_)=decimal pg
     return $ Just $ Pagination i 10
-    
+
 -- | previous and next page number
 getPaginationNav :: forall a.
                       Maybe Pagination -> PagedList a -> (Maybe Integer, Maybe Integer)
@@ -68,9 +59,9 @@ getPaginationNav (Just (Pagination i _)) l=let
               then Just (i-1)
               else Nothing
     in (previous,next)
-getPaginationNav _ _= (Nothing,Nothing)             
+getPaginationNav _ _= (Nothing,Nothing)
 
-    
+
 -- | country field
 countryField :: RenderMessage site FormMessage =>
                   Field (HandlerT site IO) CountryCode

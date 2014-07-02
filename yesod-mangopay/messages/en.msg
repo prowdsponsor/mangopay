@@ -116,3 +116,8 @@ PayOutAmount: Amount:
 PayOutCurrency: Currency:
 
 RequestFail: Request to Mangopay failed
+
+UserCreate: Create new user
+UserModify id@Text : Modify user # #{id}
+WalletCreate: Create new wallet
+WalletModify id@Text : Modify wallet # #{id}

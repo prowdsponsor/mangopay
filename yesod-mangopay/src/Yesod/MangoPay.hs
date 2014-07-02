@@ -11,7 +11,7 @@ import Data.Text (Text)
 import Data.IORef (IORef, readIORef, writeIORef)
 
 import qualified Data.Map as M
-import Control.Monad (void)
+import Control.Monad (void, when)
 import qualified Control.Exception.Lifted as L
 import Database.Persist.TH (derivePersistField)
 
@@ -56,12 +56,12 @@ data MangoPayToken=MangoPayToken {
   ,mptExpires :: UTCTime -- ^ expiration date
   }
 
--- | is the given token still valid (True) or has it expired (False)?  
+-- | is the given token still valid (True) or has it expired (False)?
 isTokenValid :: (Y.MonadResource m) =>  MangoPayToken -> m Bool
 isTokenValid mpt=do
   ct<-Y.liftIO getCurrentTime
   return $ diffUTCTime (mptExpires mpt) ct > 0
- 
+
 -- | get the currently stored token if we have one and it's valid, or Nothing otherwise
 getTokenIfValid ::   (YesodMangoPay site,Y.MonadResource m) => site -> m (Maybe MangoPayToken)
 getTokenIfValid site=do
@@ -87,7 +87,7 @@ getValidToken site=do
         Nothing -> fail "getValidToken: You need to provide the cClientSecret on the mpCredentials."
         Just secret-> do
           oat<-runMangoPayT creds manager apoint $
-                  oauthLogin (cClientID creds) secret   
+                  oauthLogin (cClientID creds) secret
           ct<-Y.liftIO getCurrentTime
           -- oaExpires is in second, remove one minute for safety
           let expires=addUTCTime (fromIntegral (oaExpires oat - 60)) ct
@@ -143,25 +143,26 @@ registerAllMPCallbacksToURL site url=
     mapM_ (registerIfAbsent at existing) [minBound..maxBound]
   where
     registerIfAbsent at existing evt=do
-        let mh=case M.lookup evt existing of
-                Nothing->Just $ Hook Nothing Nothing Nothing url Enabled Nothing evt 
-                Just h2->if hUrl h2 /= url then Just h2{hUrl = url} else Nothing
-        case mh of 
-          Just h->do                           
-            Y.liftIO $ print h
-            void $ storeHook h at
-          _-> return ()
+        case M.lookup evt existing of
+          Nothing -> do
+            let h' = Hook Nothing Nothing Nothing url Enabled Nothing evt
+            Y.liftIO $ print h' -- why are we printing this instead of logging?
+            void $ createHook h' at
+          Just h -> when (hUrl h /= url) $ do
+            let h' = h{hUrl = url}
+            Y.liftIO $ print h'
+            void $ modifyHook h' at
 
 -- | register a call back using the given route
 registerMPCallback :: (Y.MonadHandler m,MPUsableMonad m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
   Y.Route (Y.HandlerSite m)-> EventType -> Maybe Text -> m (AccessToken -> MangoPayT m Hook)
 registerMPCallback rt et mtag=do
   render<-Y.getUrlRender
-  let h=Hook Nothing Nothing mtag (render rt) Enabled Nothing et 
-  return $ storeHook h
+  let h=Hook Nothing Nothing mtag (render rt) Enabled Nothing et
+  return $ createHook h
 
 
--- | parse a event from a notification callback    
+-- | parse a event from a notification callback
 parseMPNotification :: (Y.MonadHandler m, Y.HandlerSite m ~ site) => m Event
 parseMPNotification = do
   req<-Y.getRequest
