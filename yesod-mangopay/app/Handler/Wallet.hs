@@ -4,7 +4,7 @@ module Handler.Wallet where
 import Import
 import Web.MangoPay
 import Yesod.MangoPay
-import Control.Monad (join, liftM)
+import Control.Monad (join)
 import Control.Arrow ((&&&))
 import Data.Text (pack)
 
@@ -17,24 +17,32 @@ getWalletsR uid=do
         setTitleI MsgTitleWallets
         $(widgetFile "wallets")
 
--- | get wallet creation/edition form
+-- | get wallet creation form
 getWalletR :: AnyUserID -> Handler Html
-getWalletR uid=do
-    mwid<-lookupGetParam "id"
-    mwallet<-case mwid of
-          Just wid->liftM Just $ runYesodMPTToken $ fetchWallet wid
-          _->return Nothing
-    let (formMethod, msgFormTitle) = formVariables $ mwallet >>= wId
-    (widget, enctype) <- generateFormPost $ walletForm mwallet
-    defaultLayout $ do
+getWalletR uid = readerWallet uid Nothing
+
+-- | get wallet edition form
+getWalletEditR :: AnyUserID -> WalletID -> Handler Html
+getWalletEditR uid wid = do
+  wallet <- runYesodMPTToken $ fetchWallet wid
+  readerWallet uid $ Just wallet
+
+
+-- | helper to generate the proper form given maybe an existing wallet
+readerWallet :: AnyUserID -> Maybe Wallet -> Handler Html
+readerWallet uid mwallet = do
+  (widget, enctype) <- generateFormPost $ walletForm mwallet
+  let mwid = join $ wId <$> mwallet
+  defaultLayout $ do
         setTitleI MsgTitleWallet
         $(widgetFile "wallet")
 
+
 -- | helper to create or modify a wallet
 helperWallet :: (Wallet -> AccessToken -> MangoPayT Handler Wallet) ->
-    AnyUserID -> Handler Html
-helperWallet fn uid=do
-  ((result, widget), enctype) <- runFormPost $ walletForm Nothing
+  Maybe Wallet -> AnyUserID -> Handler Html
+helperWallet fn mw uid=do
+  ((result, _), _) <- runFormPost $ walletForm mw
   mwallet<-case result of
     FormSuccess w->do
             -- set the owner to current user
@@ -52,18 +60,17 @@ helperWallet fn uid=do
     _ -> do
             setMessageI MsgErrorData
             return Nothing
-  let (formMethod, msgFormTitle) = formVariables $ mwallet >>= wId
-  defaultLayout $ do
-        setTitleI MsgTitleWallet
-        $(widgetFile "wallet")
+  readerWallet uid mwallet
 
 
 postWalletR :: AnyUserID -> Handler Html
-postWalletR = helperWallet createWallet
+postWalletR = helperWallet createWallet Nothing
 
 
-putWalletR :: AnyUserID -> Handler Html
-putWalletR = helperWallet modifyWallet
+putWalletEditR :: AnyUserID -> WalletID -> Handler Html
+putWalletEditR uid wid = do
+  wallet <- runYesodMPTToken $ fetchWallet wid
+  helperWallet modifyWallet (Just wallet) uid
 
 
 -- | form for wallet
@@ -79,7 +86,3 @@ walletForm mwallet= renderDivs $ Wallet
     -- we can't edit the amount anyway, so we show it as disabled and return a const 0 value
     <*> (fmap (const $ Amount "EUR" 0) <$> aopt intField (disabled $ localizedFS MsgWalletBalance) (fmap aAmount <$> wBalance <$> mwallet))
 
-
-formVariables ::  Maybe WalletID -> (Text, AppMessage)
-formVariables = maybe ("", MsgWalletCreate)
-                      (\i -> ("?_method=PUT", MsgWalletModify i))

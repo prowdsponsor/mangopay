@@ -2,13 +2,12 @@
     <a href=@{HomeR}>_{MsgLnkHome}
 <div>
     <a href=@{UserR uid}>_{MsgLnkUser}
-    
+
 <ul>
         $forall wal <- wallets
             <li>
                 $maybe wid<-wId wal
-                    <a href=@{WalletR uid}?id=#{wid}>#{wid}: #{wDescription wal}
-              
-    
+                    <a href=@{WalletEditR uid wid}>#{wid}: #{wDescription wal}
+
 <div>
     <a href=@{WalletR uid}>_{MsgLnkWalletCreate}
