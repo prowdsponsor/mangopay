@@ -22,10 +22,9 @@ getCardsR uid=do
   cards<-runYesodMPTToken $ getAll $ listCards uid
   ((_,widget), enctype) <- generateFormGet currencyForm
   defaultLayout $ do
-        aDomId <- newIdent
         setTitleI MsgTitleCards
         $(widgetFile "cards")
-        
+
 -- | get card registration form
 -- this form will not be sent to this server, but to the validation server!
 -- we have an iframe in that page
@@ -46,8 +45,8 @@ getCardR uid=do
     case result of
       FormSuccess curr->catchW $ do
         let cr1=mkCardRegistration uid curr
-        -- step 1: store pending registration
-        cr2<-runYesodMPTToken $ storeCardRegistration cr1
+        -- step 1: create pending registration
+        cr2<-runYesodMPTToken $ createCardRegistration cr1
         let Just url = crCardRegistrationURL cr2 -- the url of the validation server
             Just pre = crPreregistrationData cr2
             Just ak = crAccessKey cr2
@@ -55,9 +54,8 @@ getCardR uid=do
         setSession "cardReg" $ toStrict $ toLazyText $ encodeToTextBuilder $ toJSON cr2
         -- generate hidden form
         (widget, enctype) <- generateFormPost cardTokenForm
-       
+
         defaultLayout $ do
-            aDomId <- newIdent
             -- JQuery is useful!
             addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"
             setTitleI MsgTitleCard
@@ -75,8 +73,8 @@ getCard2R :: Handler TypedContent
 getCard2R =do
   qs<-liftM rawQueryString waiRequest
   respond typePlain qs
-  
--- | this gets the token via JavaScript submission  
+
+-- | this gets the token via JavaScript submission
 postCardR :: AnyUserID -> Handler Html
 postCardR uid=do
   ((result, _), _) <- runFormPost cardTokenForm
@@ -93,7 +91,7 @@ postCardR uid=do
           let ecr=eitherDecode $ fromChunks [TE.encodeUtf8 jcr]
           case ecr of
             Right cr->do
-              _<-runYesodMPTToken $ storeCardRegistration cr{crRegistrationData=Just dat}
+              _<-runYesodMPTToken $ modifyCardRegistration cr{crRegistrationData=Just dat}
               setMessageI MsgCardDone
               redirect $ CardsR uid
             Left err->do
@@ -108,7 +106,7 @@ postCardR uid=do
 -- | token for card registration
 data Token=Token Text
     deriving Show
-        
+
 -- | simple form for card registration
 -- the field is hidden and populated via JavaScript (card.julius)
 cardTokenForm ::   Html -> MForm Handler (FormResult Token, Widget)
@@ -119,4 +117,4 @@ cardTokenForm = renderDivs $ Token
 currencyForm :: Html -> MForm Handler (FormResult Currency, Widget)
 currencyForm = renderDivs $ id
   <$> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgCardCurrency) (Just "EUR")
-  
+

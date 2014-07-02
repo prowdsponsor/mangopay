@@ -1,6 +1,7 @@
 <a href=@{HomeR}>_{MsgLnkHome}
 
-<form method=post action=@{LUserR} enctype=#{enctype}>
+<h1>_{msgFormTitle}
+<form method="post" action=@{LUserR}#{formMethod} enctype=#{enctype}>
     ^{widget}
      <button>_{MsgBtnSubmit}
      
