@@ -22,7 +22,7 @@ getDocR uid= do
 -- | upload doc and file and show result
 postDocR :: AnyUserID -> Handler Html
 postDocR uid=do
-   ((result, widget), enctype) <- runFormPost uploadForm
+   ((result, _), _) <- runFormPost uploadForm
    case result of
      FormSuccess (DocUpload fi tag typ)->
         catchMP (do
