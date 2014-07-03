@@ -4,8 +4,14 @@
     <a href=@{UserR uid}>_{MsgLnkUser}
 <div>
     <a href=@{WalletsR uid}>_{MsgLnkWallets}
-       
-<h1> _{msgFormTitle}
-<form method="post" action=@{WalletR uid}#{formMethod} enctype=#{enctype}>
-    ^{widget}
-     <button>_{MsgBtnSubmit}
+
+$maybe wid <- mwid
+  <h1> _{MsgWalletModify wid}
+  <form method="post" action=@{WalletEditR uid wid}?_method=PUT enctype=#{enctype}>
+      ^{widget}
+       <button>_{MsgBtnSubmit}
+$nothing
+  <h1> _{MsgWalletCreate}
+  <form method="post" action=@{WalletR uid} enctype=#{enctype}>
+      ^{widget}
+       <button>_{MsgBtnSubmit}

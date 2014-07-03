@@ -11,7 +11,8 @@
 /user/#AnyUserID                    UserR GET
 /doc/#AnyUserID                     DocR GET POST
 /wallets/#AnyUserID                 WalletsR GET
-/wallet/#AnyUserID                  WalletR GET POST PUT
+/wallet/#AnyUserID                  WalletR GET POST
+/wallet/#AnyUserID/#WalletID        WalletEditR GET PUT
 /cards/#AnyUserID                   CardsR GET
 /card/#AnyUserID                    CardR GET POST
 /card2                              Card2R GET

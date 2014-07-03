@@ -7,13 +7,15 @@ import Web.MangoPay
 import qualified Yesod.Core as Y
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime, addUTCTime)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.IORef (IORef, readIORef, writeIORef)
 
 import qualified Data.Map as M
-import Control.Monad (void, when)
+import Control.Monad (void, forM, liftM)
 import qualified Control.Exception.Lifted as L
 import Database.Persist.TH (derivePersistField)
+import Data.Monoid ((<>))
+import Data.Maybe (catMaybes)
 
 -- | The 'YesodMangoPay' class for foundation datatypes that
 -- support running 'MangoPayT' actions.
@@ -126,32 +128,32 @@ registerAllMPCallbacks ::  (Y.MonadHandler m,MPUsableMonad m, Y.HandlerSite m ~ 
 registerAllMPCallbacks rt=do
   render<-Y.getUrlRender
   let url=render rt
-  $(Y.logInfo) url
+  $(Y.logInfo) $ "Hooks to url:" <> url
   site <- Y.getYesod
-  registerAllMPCallbacksToURL site url
+  hs <- registerAllMPCallbacksToURL site url
+  void $ forM hs ($(Y.logInfo) . ("Hook: " <>) . pack . show)
 
 
 -- | register callbacks for each event type on the same url
 -- mango pay does not let register two hooks for the same event, so we replace existing ones
 registerAllMPCallbacksToURL ::  (MPUsableMonad m,  YesodMangoPay site) =>
-  site -> Text -> m ()
-registerAllMPCallbacksToURL site url=
+  site -> Text -> m [Hook]
+registerAllMPCallbacksToURL site url =
   runMPTToken site $ \at-> do
     -- get all hooks at once
     hooks<-getAll listHooks at
     let existing=foldr (\h s->M.insert (hEventType h) h s) M.empty hooks
-    mapM_ (registerIfAbsent at existing) [minBound..maxBound]
+    liftM catMaybes $ mapM (registerIfAbsent at existing) [minBound..maxBound]
   where
-    registerIfAbsent at existing evt=do
+    registerIfAbsent at existing evt =
         case M.lookup evt existing of
           Nothing -> do
             let h' = Hook Nothing Nothing Nothing url Enabled Nothing evt
-            Y.liftIO $ print h' -- why are we printing this instead of logging?
-            void $ createHook h' at
-          Just h -> when (hUrl h /= url) $ do
+            liftM Just $ createHook h' at
+          Just h | (hUrl h /= url) -> do
             let h' = h{hUrl = url}
-            Y.liftIO $ print h'
-            void $ modifyHook h' at
+            liftM Just $ modifyHook h' at
+          _ -> return Nothing
 
 -- | register a call back using the given route
 registerMPCallback :: (Y.MonadHandler m,MPUsableMonad m, Y.HandlerSite m ~ site, YesodMangoPay site) =>
