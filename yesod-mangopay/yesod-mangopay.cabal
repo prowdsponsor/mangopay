@@ -55,7 +55,12 @@ library
 executable         yesod-mangopay
     if flag(library-only)
         Buildable: False
-
+    if flag(dev)
+        cpp-options:   -DDEVELOPMENT
+        ghc-options:   -Wall -O0
+    else
+        ghc-options:   -Wall
+    ghc-options:       -threaded
     main-is:           main.hs
     hs-source-dirs:    app
     other-modules:
@@ -73,11 +78,6 @@ executable         yesod-mangopay
                      Handler.Card,
                      Handler.Account,
                      Handler.Transaction
-    if flag(dev)
-        cpp-options:   -DDEVELOPMENT
-        ghc-options:   -Wall -O0
-    else
-        ghc-options:   -Wall -O2
     extensions: TemplateHaskell
                 QuasiQuotes
                 OverloadedStrings
@@ -131,4 +131,3 @@ executable         yesod-mangopay
     else
       build-depends:
           conduit       == 1.0.*
-    ghc-options:       -threaded -O2
