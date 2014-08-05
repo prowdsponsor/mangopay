@@ -3,11 +3,11 @@
 module Handler.User where
 
 import Import
+import Control.Monad (join, liftM)
+import Web.MangoPay
+import Yesod.Form.Jquery
 import Yesod.MangoPay
 import Yesod.MangoPay.Util
-import Web.MangoPay
-import           Yesod.Form.Jquery
-import Control.Monad (join, liftM)
 
 -- | get the form to edit any type of user
 getUserR :: AnyUserID -> Handler Html
@@ -20,14 +20,14 @@ getUserR uid=do
       defaultLayout $ do
             setTitleI MsgTitleNUser
             let (formMethod, msgFormTitle) = formVariables $ Left muser
-            $(widgetFile "nuser")
+            nuserWidget muser (formMethod, enctype, widget) msgFormTitle
     (Right lu)->do
       let muser=Just lu
       (widget, enctype) <- generateFormPost $ legalUserForm muser
       defaultLayout $ do
             let (formMethod, msgFormTitle) = formVariables $ Right muser
             setTitleI MsgTitleLUser
-            $(widgetFile "luser")
+            luserWidget muser (formMethod, enctype, widget) msgFormTitle
 
 -- | get a natural user form
 getNUserR :: Handler Html
@@ -36,7 +36,7 @@ getNUserR =do
   defaultLayout $ do
         let (formMethod, msgFormTitle) = formVariables $ Left muser
         setTitleI MsgTitleNUser
-        $(widgetFile "nuser")
+        nuserWidget muser (formMethod, enctype, widget) msgFormTitle
 
 -- | post a natural user form
 postNUserR :: Handler Html
@@ -45,7 +45,7 @@ postNUserR = do
   defaultLayout $ do
         let (formMethod, msgFormTitle) = formVariables $ Left muser
         setTitleI MsgTitleNUser
-        $(widgetFile "nuser")
+        nuserWidget muser (formMethod, enctype, widget) msgFormTitle
 
 -- | put a natural user form, to modify an existing natural user
 putNUserR :: Handler Html
@@ -54,7 +54,7 @@ putNUserR = do
   defaultLayout $ do
         setTitleI MsgTitleNUser
         let (formMethod, msgFormTitle) = formVariables $ Left muser
-        $(widgetFile "nuser")
+        nuserWidget muser (formMethod, enctype, widget) msgFormTitle
 
 -- | get a legal user form
 getLUserR :: Handler Html
@@ -63,7 +63,7 @@ getLUserR = do
   defaultLayout $ do
         let (formMethod, msgFormTitle) = formVariables $ Right muser
         setTitleI MsgTitleLUser
-        $(widgetFile "luser")
+        luserWidget muser (formMethod, enctype, widget) msgFormTitle
 
 -- | post a legal user form
 postLUserR :: Handler Html
@@ -72,7 +72,7 @@ postLUserR = do
   defaultLayout $ do
         let (formMethod, msgFormTitle) = formVariables $ Right muser
         setTitleI MsgTitleLUser
-        $(widgetFile "luser")
+        luserWidget muser (formMethod, enctype, widget) msgFormTitle
 
 
 -- | post a legal user form
@@ -82,7 +82,7 @@ putLUserR = do
   defaultLayout $ do
         let (formMethod, msgFormTitle) = formVariables $ Right muser
         setTitleI MsgTitleLUser
-        $(widgetFile "luser")
+        luserWidget muser (formMethod, enctype, widget) msgFormTitle
 
 -- | common code for retrieval and form building
 userGet :: HtmlForm a
@@ -173,3 +173,24 @@ formVariables = either (\n -> process $ mid uId n) (\l -> process $ mid lId l)
               u  <- mu
               getId u
         process = maybe ("", MsgUserCreate) (\i -> ("?_method=PUT", MsgUserModify $ i))
+
+
+----------------------------------------------------------------------
+
+
+nuserWidget
+  :: Maybe NaturalUser
+  -> (Text, Enctype, Widget)
+  -> AppMessage
+  -> Widget
+nuserWidget muser (formMethod, enctype, widget) msgFormTitle = $(widgetFile "nuser")
+{-# NOINLINE nuserWidget #-}
+
+
+luserWidget
+  :: Maybe LegalUser
+  -> (Text, Enctype, Widget)
+  -> AppMessage
+  -> Widget
+luserWidget muser (formMethod, enctype, widget) msgFormTitle = $(widgetFile "luser")
+{-# NOINLINE luserWidget #-}
