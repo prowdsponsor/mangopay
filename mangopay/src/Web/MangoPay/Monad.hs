@@ -149,7 +149,15 @@ getBasicRequest method path addRest = do
           }
       req2 = addRest req1
 #if DEBUG
-  liftIO $ print req2
+  liftIO $ do
+    print req2
+    putStrLn $ "^--> " ++
+      case H.requestBody req2 of
+        H.RequestBodyLBS lbs -> "RequestBodyLBS " ++ show lbs
+        H.RequestBodyBS  bs  -> "RequestBodyBS "  ++ show bs
+        H.RequestBodyBuilder s _ -> "RequestBodyBuilder " ++ show s ++ " <Builder>"
+        H.RequestBodyStream  s _ -> "RequestBodyStream "  ++ show s ++ " <GivesPopper ()>"
+        H.RequestBodyStreamChunked _ -> "RequestBodyStreamChunked <GivesPopper ()>"
 #endif
   return req2
 
