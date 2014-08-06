@@ -43,7 +43,6 @@ import Control.Monad.Logger
 import Data.Conduit.Binary (sinkHandle)
 import System.IO (stdout)
 import Data.Conduit.Internal (zipSinks)
-import qualified Data.ByteString.Lazy.Char8 as BSLC
 import Control.Monad.IO.Class (liftIO)
 #endif
 
@@ -93,51 +92,67 @@ getCreds = mpCreds `liftM` Mp ask
 getHost :: Monad m => MangoPayT m ByteString
 getHost = (getAccessPointURL . mpAccessPoint) `liftM` Mp ask
 
--- | build a post request to MangoPay
-getPostRequest :: (Monad m,MonadIO m,HT.QueryLike q) => ByteString -- ^ the url path
-  -> Maybe AccessToken
-  -> q -- ^ the query parameters
-  -> MangoPayT m H.Request -- ^ the properly configured request
-getPostRequest path mat query=do
-  host<-getHost
-  let b=HT.renderQuery False $ HT.toQuery query
-#if DEBUG
-  liftIO $ BSC.putStrLn path
-  liftIO $ BSC.putStrLn b
-#endif
-  return $ def {
-                     H.secure=True
-                     , H.host = host
-                     , H.port = 443
-                     , H.path = path
-                     , H.method=HT.methodPost
-                     , H.requestHeaders=[("content-type","application/x-www-form-urlencoded")] ++
-                        case mat of
-                                Just (AccessToken at)->[("Authorization",at)]
-                                _->[]
-                     , H.requestBody=H.RequestBodyBS b
-                }
 
--- | build a get request to MangoPay
-getGetRequest :: (Monad m,MonadIO m,HT.QueryLike q) => ByteString -- ^ the url path
+-- | Build a POST request to MangoPay.
+getPostRequest
+  :: (Monad m, MonadIO m, HT.QueryLike q)
+  => ByteString
+     -- ^ The URL path.
   -> Maybe AccessToken
-  -> q -- ^ the query parameters
-  -> MangoPayT m H.Request -- ^ the properly configured request
+  -> q
+     -- ^ The query parameters.
+  -> MangoPayT m H.Request
+     -- ^ The properly configured request.
+getPostRequest path mat query = do
+  let b = HT.renderQuery False $ HT.toQuery query
+  getBasicRequest HT.methodPost path $ \r ->
+    r { H.requestHeaders =
+          ("Content-Type", "application/x-www-form-urlencoded") :
+          [("Authorization", at) | Just (AccessToken at) <- [mat]]
+      , H.requestBody = H.RequestBodyBS b }
+
+
+-- | Build a GET request to MangoPay.
+getGetRequest
+  :: (Monad m, MonadIO m, HT.QueryLike q)
+  => ByteString
+     -- ^ The URL path.
+  -> Maybe AccessToken
+  -> q
+     -- ^ The query parameters.
+  -> MangoPayT m H.Request
+     -- ^ The properly configured request.
 getGetRequest path mat query=do
-  host<-getHost
-  let qs=HT.renderQuery True $ HT.toQuery query
+  let qs = HT.renderQuery True $ HT.toQuery query
+  getBasicRequest HT.methodGet path $ \r ->
+    r { H.queryString = qs
+      , H.requestHeaders = getJSONHeaders mat
+      }
+
+
+-- | (Internal) Build a basic request.
+getBasicRequest
+  :: MonadIO m
+  => HT.Method
+  -> ByteString
+  -> (H.Request -> H.Request)
+  -> MangoPayT m H.Request
+getBasicRequest method path addRest = do
+  host <- getHost
+  let req1 =
+        def
+          { H.secure = True
+          , H.host   = host
+          , H.port   = 443
+          , H.path   = path
+          , H.method = method
+          }
+      req2 = addRest req1
 #if DEBUG
-  liftIO $ BSC.putStrLn $ BS.append path qs
+  liftIO $ print req2
 #endif
-  return $ def {
-                     H.secure=True
-                     , H.host = host
-                     , H.port = 443
-                     , H.path = path
-                     , H.method=HT.methodGet
-                     , H.queryString=qs
-                     , H.requestHeaders=getJSONHeaders mat
-                }
+  return req2
+
 
 -- | build a delete request  to MangoPay
 getDeleteRequest :: (Monad m,MonadIO m,HT.QueryLike q) => ByteString -- ^ the url path
@@ -298,29 +313,21 @@ jsonExchange :: forall (m :: * -> *) v p.
                       m v
 jsonExchange meth path mat p= getJSONRequest meth path mat p >>= getJSONResponse
 
--- | get JSON request
-getJSONRequest :: forall (m :: * -> *) p.
-                 (MPUsableMonad m,ToJSON p) =>
-                 HT.Method
-                 -> ByteString
-                 -> Maybe AccessToken
-                 -> p
-                 ->  MangoPayT m H.Request -- ^ the properly configured request
-getJSONRequest meth path mat p=    do
-  host<-getHost
-#if DEBUG
-  liftIO $ BSC.putStrLn path
-  liftIO $ BSLC.putStrLn $ encode p
-#endif
-  return def {
-                     H.secure=True
-                     , H.host = host
-                     , H.port = 443
-                     , H.path = path
-                     , H.method=meth
-                     , H.requestHeaders=getJSONHeaders mat
-                     , H.requestBody=H.RequestBodyLBS $ encode p
-                }
+
+-- | Get JSON request.
+getJSONRequest
+  :: (MPUsableMonad m, ToJSON p)
+  => HT.Method
+  -> ByteString
+  -> Maybe AccessToken
+  -> p
+  ->  MangoPayT m H.Request
+getJSONRequest method path mat p = do
+  getBasicRequest method path $ \r ->
+    r { H.requestHeaders = getJSONHeaders mat
+      , H.requestBody = H.RequestBodyLBS $ encode p
+      }
+
 
 -- | post JSON content and ignore the reply
 postNoReply :: forall (m :: * -> *) p.
