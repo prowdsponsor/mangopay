@@ -175,14 +175,14 @@ getDeleteRequest path mat query=do
 getClientURL :: (Monad m)=> ByteString -- ^ the url path
         -> MangoPayT m ByteString  -- ^ the URL
 getClientURL path=do
-        cid<- liftM clientIDBS getCreds
+        cid<- liftM clientIdBS getCreds
         return $ BS.concat ["/v2/",cid,path]
 
 -- | get the url to use for our clientId
 getClientURLMultiple :: (Monad m)=> [T.Text] -- ^ the url components
         -> MangoPayT m ByteString  -- ^ the URL
 getClientURLMultiple path=do
-        cid<- liftM clientIDBS getCreds
+        cid<- liftM clientIdBS getCreds
         return $ BS.concat $ ["/v2/",cid] ++ map TE.encodeUtf8 path
 
 -- | build a URL for a get operation with a single query

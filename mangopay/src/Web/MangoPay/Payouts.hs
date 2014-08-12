@@ -18,29 +18,29 @@ import Control.Applicative
 createPayout ::  (MPUsableMonad m) => Payout -> AccessToken -> MangoPayT m Payout
 createPayout = createGeneric "/payouts/bankwire"
 
--- | fetch an payout from its ID
-fetchPayout :: (MPUsableMonad m) => PayoutID -> AccessToken -> MangoPayT m Payout
+-- | fetch an payout from its Id
+fetchPayout :: (MPUsableMonad m) => PayoutId -> AccessToken -> MangoPayT m Payout
 fetchPayout = fetchGeneric "/payouts/"
 
 -- | make a simplep payout for creation
-mkPayout :: AnyUserID -> WalletID -> Amount -> Amount -> BankAccountID -> Payout
+mkPayout :: AnyUserId -> WalletId -> Amount -> Amount -> BankAccountId -> Payout
 mkPayout aid wid fds fees bid=Payout Nothing Nothing Nothing aid wid fds fees bid Nothing Nothing Nothing Nothing Nothing
   Nothing Nothing Nothing Nothing Nothing
 
 -- | id of payout
-type PayoutID = Text
+type PayoutId = Text
 
 -- | payout
 data Payout=Payout {
-  ptId :: Maybe PayoutID
+  ptId :: Maybe PayoutId
   ,ptCreationDate :: Maybe POSIXTime
   ,ptTag :: Maybe Text -- ^ custom data for client
-  ,ptAuthorId :: AnyUserID -- ^ The user ID of the author
-  ,ptDebitedWalletId :: WalletID
+  ,ptAuthorId :: AnyUserId -- ^ The user Id of the author
+  ,ptDebitedWalletId :: WalletId
   ,ptDebitedFunds :: Amount
   ,ptFees :: Amount
-  ,ptBankAccountId :: BankAccountID
-  ,ptCreditedUserId :: Maybe AnyUserID
+  ,ptBankAccountId :: BankAccountId
+  ,ptCreditedUserId :: Maybe AnyUserId
   ,ptCreditedFunds :: Maybe Amount
   ,ptStatus :: Maybe TransferStatus
   ,ptResultCode  :: Maybe Text -- ^ The transaction result code
@@ -81,5 +81,3 @@ instance FromJSON Payout where
                          v .:? "PaymentType" <*>
                          v .:? "MeanOfPaymentType"
         parseJSON _=fail "Payout"
-
-

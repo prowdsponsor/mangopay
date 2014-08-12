@@ -15,24 +15,24 @@ import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 -- | refund a transfer
-refundTransfer ::  (MPUsableMonad m) => TransferID -> AnyUserID -> AccessToken -> MangoPayT m Refund
-refundTransfer tid authID at= do
+refundTransfer ::  (MPUsableMonad m) => TransferId -> AnyUserId -> AccessToken -> MangoPayT m Refund
+refundTransfer tid authId at= do
     url<-getClientURLMultiple ["/transfers/",tid,"/refunds"]
-    postExchange url (Just at) (RefundRequest authID Nothing Nothing)
+    postExchange url (Just at) (RefundRequest authId Nothing Nothing)
 
 -- | refund a pay-in
-refundPayin ::  (MPUsableMonad m) => AnyPayinID -> RefundRequest -> AccessToken -> MangoPayT m Refund
+refundPayin ::  (MPUsableMonad m) => AnyPayinId -> RefundRequest -> AccessToken -> MangoPayT m Refund
 refundPayin pid rr at= do
     url<-getClientURLMultiple ["/payins/",pid,"/refunds"]
     postExchange url (Just at) rr
 
--- | fetch a refund from its ID
-fetchRefund :: (MPUsableMonad m) => RefundID -> AccessToken -> MangoPayT m Refund
+-- | fetch a refund from its Id
+fetchRefund :: (MPUsableMonad m) => RefundId -> AccessToken -> MangoPayT m Refund
 fetchRefund = fetchGeneric "/refunds/"
 
 -- | refund request
 data RefundRequest=RefundRequest{
-  rrAuthorId :: AnyUserID -- ^ The user ID of the author
+  rrAuthorId :: AnyUserId -- ^ The user Id of the author
   ,rrDebitedFunds :: Maybe Amount -- ^ Strictly positive amount. In cents.
   ,rrFees :: Maybe Amount -- ^ In cents
   }deriving (Show,Eq,Ord,Typeable)
@@ -44,14 +44,14 @@ instance ToJSON RefundRequest  where
 
 
 -- | id of a refund
-type RefundID = Text
+type RefundId = Text
 
 -- | refund of a transfer
 data Refund=Refund{
-  rId :: RefundID -- ^ Id of the refund
+  rId :: RefundId -- ^ Id of the refund
   ,rCreationDate :: POSIXTime
   ,rTag :: Maybe Text -- ^ Custom data
-  ,rAuthorId :: AnyUserID -- ^ The user ID of the author
+  ,rAuthorId :: AnyUserId -- ^ The user Id of the author
   ,rDebitedFunds :: Amount -- ^ Strictly positive amount. In cents.
   ,rFees :: Amount -- ^ In cents
   ,rCreditedFunds :: Amount -- ^ In cents
@@ -61,11 +61,11 @@ data Refund=Refund{
   ,rExecutionDate :: POSIXTime
   ,rType :: TransactionType
   ,rNature :: TransactionNature
-  ,rCreditedUserId :: Maybe AnyUserID -- ^ Id of the user owner of the credited wallet
-  ,rInitialTransactionId  :: TransactionID -- ^ Id of the transaction being refunded
+  ,rCreditedUserId :: Maybe AnyUserId -- ^ Id of the user owner of the credited wallet
+  ,rInitialTransactionId  :: TransactionId -- ^ Id of the transaction being refunded
   ,rInitialTransactionType  :: TransactionType -- ^  The type of the transaction before being refunded (PayIn, Refund)
-  ,rDebitedWalletId :: WalletID -- ^ The Id of the debited Wallet
-  ,rCreditedWalletID  :: Maybe WalletID -- ^ The Id of the credited Wallet
+  ,rDebitedWalletId :: WalletId -- ^ The Id of the debited Wallet
+  ,rCreditedWalletId  :: Maybe WalletId -- ^ The Id of the credited Wallet
   } deriving (Show,Eq,Ord,Typeable)
 
 -- | from json as per MangoPay format

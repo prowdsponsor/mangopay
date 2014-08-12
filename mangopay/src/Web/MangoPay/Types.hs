@@ -44,7 +44,7 @@ getAccessPointURL (Custom bs)=bs
 
 -- | the app credentials
 data Credentials = Credentials {
-  cClientID :: Text -- ^ client id
+  cClientId :: Text -- ^ client id
   ,cName :: Text -- ^ the name
   ,cEmail :: Text -- ^ the email
   ,cClientSecret :: Maybe Text -- ^ client secret, maybe be Nothing if we haven't generated it
@@ -53,7 +53,7 @@ data Credentials = Credentials {
 
 -- | to json as per MangoPay format
 instance ToJSON Credentials  where
-    toJSON c=object ["ClientId" .= cClientID c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c]
+    toJSON c=object ["ClientId" .= cClientId c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c]
 
 -- | from json as per MangoPay format
 instance FromJSON Credentials where
@@ -65,8 +65,8 @@ instance FromJSON Credentials where
     parseJSON _= fail "Credentials"
 
 -- | get client id in ByteString form
-clientIDBS :: Credentials -> ByteString
-clientIDBS=TE.encodeUtf8 . cClientID
+clientIdBS :: Credentials -> ByteString
+clientIdBS=TE.encodeUtf8 . cClientId
 
 
 -- | the access token is simply a Text
@@ -130,7 +130,7 @@ instance FromJSON MpException where
 
 -- | an error returned to us by MangoPay
 data MpError = MpError {
-  igeID :: Text
+  igeId :: Text
   ,igeType :: Text
   ,igeMessage :: Text
   ,igeDate :: Maybe POSIXTime
@@ -140,7 +140,7 @@ data MpError = MpError {
 
 -- | to json as per MangoPay format
 instance ToJSON MpError  where
-    toJSON mpe=object ["Id" .= igeID mpe, "Type" .= igeType mpe, "Message" .= igeMessage mpe, "Date" .= igeDate mpe]
+    toJSON mpe=object ["Id" .= igeId mpe, "Type" .= igeType mpe, "Message" .= igeMessage mpe, "Date" .= igeDate mpe]
 
 
 -- | from json as per MangoPay format
@@ -186,8 +186,8 @@ data PagedList a= PagedList {
   }
   deriving (Show,Read,Eq,Ord,Typeable)
 
--- | ID of a card
-type CardID=Text
+-- | Id of a card
+type CardId=Text
 
 -- | alias for Currency
 type Currency=Text

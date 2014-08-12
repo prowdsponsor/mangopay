@@ -249,7 +249,7 @@ startHTTPServer p revts=
 -- | perform the full registration of a card
 -- this function is UNSAFE, because if you use this, YOU manage the user's credit card details
 -- so you need to be PCI compliant!
-unsafeFullRegistration :: (MPUsableMonad m) => AnyUserID -> Currency -> CardInfo -> AccessToken -> MangoPayT m CardRegistration
+unsafeFullRegistration :: (MPUsableMonad m) => AnyUserId -> Currency -> CardInfo -> AccessToken -> MangoPayT m CardRegistration
 unsafeFullRegistration uid currency cardInfo at=do
   -- create registration
   let cr1=mkCardRegistration uid currency
@@ -286,5 +286,3 @@ unsafeRegisterCard ci cr |
     assertBool $ "data=" `T.isPrefixOf` t
     return cr{crRegistrationData=Just t}
 unsafeRegisterCard _ _=assertFailure "CardRegistration not ready"
-
-

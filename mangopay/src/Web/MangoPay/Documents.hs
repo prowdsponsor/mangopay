@@ -21,32 +21,32 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
 -- | create a document
-createDocument ::  (MPUsableMonad m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
+createDocument ::  (MPUsableMonad m) => AnyUserId -> Document -> AccessToken -> MangoPayT m Document
 createDocument uid d = createGeneric path d
         where path = BS.concat ["/users/",TE.encodeUtf8 uid,"/KYC/documents/"]
 
 
-modifyDocument ::  (MPUsableMonad m) => AnyUserID -> Document -> AccessToken -> MangoPayT m Document
+modifyDocument ::  (MPUsableMonad m) => AnyUserId -> Document -> AccessToken -> MangoPayT m Document
 modifyDocument uid d = modifyGeneric path d dId
         where path = T.concat ["/users/", uid, "/KYC/documents/"]
 
 
--- | fetch a document from its ID
-fetchDocument :: (MPUsableMonad m) => AnyUserID -> DocumentID -> AccessToken -> MangoPayT m Document
+-- | fetch a document from its Id
+fetchDocument :: (MPUsableMonad m) => AnyUserId -> DocumentId -> AccessToken -> MangoPayT m Document
 fetchDocument uid = fetchGeneric path
         where path = T.concat ["/users/",uid,"/KYC/documents/"]
 
 -- | create a page
 --  note that per the MangoPay API the document HAS to be in CREATED status
 -- should we check it here? Since MangoPay returns a 500 Internal Server Error if the document is in another status...
-createPage :: (MPUsableMonad m) => AnyUserID -> DocumentID -> BS.ByteString -> AccessToken -> MangoPayT m ()
+createPage :: (MPUsableMonad m) => AnyUserId -> DocumentId -> BS.ByteString -> AccessToken -> MangoPayT m ()
 createPage uid did contents at=do
   let val=object ["File" .= TE.decodeUtf8 (B64.encode contents)]
   url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did,"/pages"]
   postNoReply url (Just at) val
 
--- | ID of a document
-type DocumentID = Text
+-- | Id of a document
+type DocumentId = Text
 
 -- | type of the document
 data DocumentType= IDENTITY_PROOF -- ^ For legal and natural users
@@ -83,7 +83,7 @@ instance FromJSON DocumentStatus where
 
 -- | a document
 data Document = Document {
-  dId                    :: Maybe DocumentID
+  dId                    :: Maybe DocumentId
   ,dCreationDate         :: Maybe POSIXTime
   ,dTag                  :: Maybe Text -- ^  custom data for client
   ,dType                 :: DocumentType

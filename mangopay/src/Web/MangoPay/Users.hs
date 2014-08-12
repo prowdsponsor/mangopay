@@ -26,8 +26,8 @@ modifyNaturalUser u = modifyGeneric "/users/natural/" u' uId
         where u' = u{uProofOfIdentity = Nothing, uProofOfAddress = Nothing}
 
 
--- | fetch a natural user from her ID
-fetchNaturalUser :: (MPUsableMonad m) => NaturalUserID -> AccessToken -> MangoPayT m NaturalUser
+-- | fetch a natural user from her Id
+fetchNaturalUser :: (MPUsableMonad m) => NaturalUserId -> AccessToken -> MangoPayT m NaturalUser
 fetchNaturalUser = fetchGeneric "/users/natural/"
 
 
@@ -41,13 +41,13 @@ modifyLegalUser ::  (MPUsableMonad m) => LegalUser -> AccessToken -> MangoPayT m
 modifyLegalUser u = modifyGeneric "/users/legal/" u lId
 
 
--- | fetch a natural user from her ID
-fetchLegalUser :: (MPUsableMonad m) => LegalUserID -> AccessToken -> MangoPayT m LegalUser
+-- | fetch a natural user from her Id
+fetchLegalUser :: (MPUsableMonad m) => LegalUserId -> AccessToken -> MangoPayT m LegalUser
 fetchLegalUser = fetchGeneric "/users/legal/"
 
 
 -- | get a user, natural or legal
-getUser :: (MPUsableMonad m) => AnyUserID -> AccessToken -> MangoPayT m (Either NaturalUser LegalUser)
+getUser :: (MPUsableMonad m) => AnyUserId -> AccessToken -> MangoPayT m (Either NaturalUser LegalUser)
 getUser = fetchGeneric "/users/"
 
 
@@ -56,12 +56,12 @@ listUsers :: (MPUsableMonad m) => Maybe Pagination -> AccessToken -> MangoPayT m
 listUsers = genericList ["/users/"]
 
 
--- | Convenience function to extract the user ID of an EXISTING user (one with an id).
-getExistingUserID
+-- | Convenience function to extract the user Id of an EXISTING user (one with an id).
+getExistingUserId
   :: Either NaturalUser LegalUser
-  -> AnyUserID
-getExistingUserID u | Just uid <- either uId lId u = uid
-getExistingUserID   _   = error "Web.MangoPay.Users.getExistingUserID: Nothing"
+  -> AnyUserId
+getExistingUserId u | Just uid <- either uId lId u = uid
+getExistingUserId   _   = error "Web.MangoPay.Users.getExistingUserId: Nothing"
 
 
 instance FromJSON (Either NaturalUser LegalUser) where
@@ -73,24 +73,24 @@ instance FromJSON (Either NaturalUser LegalUser) where
         parseJSON _=fail "EitherUsers"
 
 -- not supported
---deleteNaturalUser :: (MonadBaseControl IO m, MonadResource m) => UserID -> AccessToken -> MangoPayT m ()
+--deleteNaturalUser :: (MonadBaseControl IO m, MonadResource m) => UserId -> AccessToken -> MangoPayT m ()
 --deleteNaturalUser uid at=do
 --        url<-getClientURL (TE.encodeUtf8 $ Data.Text.concat ["/users/natural/",uid])
 --        req<-getDeleteRequest url (Just at) ([]::HT.Query)
 --        _::Object<- getJSONResponse req
 --        return ()
 
--- | ID for any kind of user
-type AnyUserID = Text
+-- | Id for any kind of user
+type AnyUserId = Text
 
--- | User ID
-type NaturalUserID = Text
+-- | User Id
+type NaturalUserId = Text
 
 
 -- | a natural user
 -- <http://docs.mangopay.com/api-references/users/natural-users/>
 data NaturalUser=NaturalUser {
-        uId                  :: Maybe NaturalUserID -- ^  The Id of the object
+        uId                  :: Maybe NaturalUserId -- ^  The Id of the object
         ,uCreationDate       :: Maybe POSIXTime -- ^  The creation date of the user object
         ,uEmail              :: Text -- ^ User’s e-mail
         ,uFirstName          :: Text -- ^ User’s firstname
@@ -132,8 +132,8 @@ instance FromJSON NaturalUser where
                          v .:? "ProofOfAddress"
     parseJSON _= fail "NaturalUser"
 
--- | User ID
-type LegalUserID = Text
+-- | User Id
+type LegalUserId = Text
 
 -- | the type of legal user
 data LegalUserType = Business | Organization
@@ -218,7 +218,7 @@ instance FromJSON PersonType where
 
 -- | a short user reference
 data UserRef=UserRef {
-        urId             :: AnyUserID
+        urId             :: AnyUserId
         , urCreationDate :: POSIXTime
         , urPersonType   :: PersonType
         , urEmail        :: Text
@@ -241,4 +241,3 @@ instance FromJSON UserRef where
           v .: "Email" <*>
           v .:? "Tag"
     parseJSON _=fail "UserRef"
-

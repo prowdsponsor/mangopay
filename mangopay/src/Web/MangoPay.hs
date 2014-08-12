@@ -31,13 +31,13 @@ module Web.MangoPay (
         ,IncomeRange(..)
         ,incomeBounds
         ,incomeRange
-        ,NaturalUserID
+        ,NaturalUserId
         ,LegalUser(..)
         ,LegalUserType(..)
-        ,LegalUserID
+        ,LegalUserId
         ,UserRef(..)
         ,PersonType(..)
-        ,AnyUserID
+        ,AnyUserId
         ,createNaturalUser
         ,modifyNaturalUser
         ,fetchNaturalUser
@@ -46,22 +46,22 @@ module Web.MangoPay (
         ,fetchLegalUser
         ,getUser
         ,listUsers
-        ,getExistingUserID
+        ,getExistingUserId
 
         -- Wallets
         ,Wallet(..)
         ,Amount(..)
-        ,WalletID
+        ,WalletId
         ,Currency
         ,createWallet
         ,modifyWallet
         ,fetchWallet
         ,listWallets
         ,Transfer(..)
-        ,TransferID
+        ,TransferId
         ,TransferStatus(..)
         ,Transaction(..)
-        ,TransactionID
+        ,TransactionId
         ,TransactionType(..)
         ,TransactionNature(..)
         ,createTransfer
@@ -78,7 +78,7 @@ module Web.MangoPay (
         ,checkEvent
         ,HookStatus(..)
         ,HookValidity(..)
-        ,HookID
+        ,HookId
         ,Hook(..)
         ,createHook
         ,modifyHook
@@ -89,7 +89,7 @@ module Web.MangoPay (
 
         -- Documents and pages
         ,Document(..)
-        ,DocumentID
+        ,DocumentId
         ,DocumentType(..)
         ,DocumentStatus(..)
         ,createDocument
@@ -101,7 +101,7 @@ module Web.MangoPay (
 
         -- Accounts
         ,BankAccount(..)
-        ,BankAccountID
+        ,BankAccountId
         ,BankAccountDetails(..)
         ,PaymentType(..)
         ,createAccount
@@ -110,19 +110,19 @@ module Web.MangoPay (
 
         -- Payins
         ,PaymentExecution(..)
-        ,BankWireID
+        ,BankWireId
         ,BankWire(..)
         ,createBankWirePayIn
         ,fetchBankWirePayIn
         ,mkBankWire
-        ,CardPayinID
+        ,CardPayinId
         ,CardPayin(..)
         ,createCardPayin
         ,fetchCardPayin
         ,mkCardPayin
 
         -- Payouts
-        ,PayoutID
+        ,PayoutId
         ,Payout(..)
         ,mkPayout
         ,createPayout
@@ -130,8 +130,8 @@ module Web.MangoPay (
 
         -- Cards
         ,CardRegistration(..)
-        ,CardRegistrationID
-        ,CardID
+        ,CardRegistrationId
+        ,CardId
         ,CardInfo(..)
         ,Card(..)
         ,CardValidity(..)
@@ -142,7 +142,7 @@ module Web.MangoPay (
         ,listCards
 
         -- Refunds
-        ,RefundID
+        ,RefundId
         ,Refund(..)
         ,RefundRequest(..)
         ,refundTransfer
