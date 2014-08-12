@@ -24,37 +24,37 @@ modifyWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Walle
 modifyWallet w = modifyGGeneric (Just $ HM.delete "Currency") "/wallets/" w wId
 
 
--- | fetch a wallet from its ID
-fetchWallet :: (MPUsableMonad m) => WalletID -> AccessToken -> MangoPayT m Wallet
+-- | fetch a wallet from its Id
+fetchWallet :: (MPUsableMonad m) => WalletId -> AccessToken -> MangoPayT m Wallet
 fetchWallet = fetchGeneric "/wallets/"
 
 -- | list all wallets for a given user
-listWallets :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
+listWallets :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
 listWallets uid = genericList ["/users/",uid,"/wallets"]
 
 -- | create a new fund transfer
 createTransfer :: (MPUsableMonad m) => Transfer -> AccessToken -> MangoPayT m Transfer
 createTransfer = createGeneric "/transfers"
 
--- | fetch a transfer from its ID
-fetchTransfer :: (MPUsableMonad m) => TransferID -> AccessToken -> MangoPayT m Transfer
+-- | fetch a transfer from its Id
+fetchTransfer :: (MPUsableMonad m) => TransferId -> AccessToken -> MangoPayT m Transfer
 fetchTransfer = fetchGeneric "/transfers/"
 
 -- | list transfers for a given wallet
-listTransactions ::  (MPUsableMonad m) =>  WalletID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactions ::  (MPUsableMonad m) =>  WalletId  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
 listTransactions wid = genericList ["/wallets/",wid,"/transactions"]
 
 -- | list transfer for a given user
-listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserID  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserId  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
 listTransactionsForUser uid = genericList ["/users/",uid,"/transactions"]
 
 
--- | ID of a wallet
-type WalletID=Text
+-- | Id of a wallet
+type WalletId=Text
 
 -- | a wallet
 data Wallet = Wallet {
-        wId:: Maybe WalletID -- ^ The Id of the wallet
+        wId:: Maybe WalletId -- ^ The Id of the wallet
         ,wCreationDate :: Maybe POSIXTime -- ^ The creation date of the object
         ,wTag :: Maybe Text -- ^  Custom data
         ,wOwners :: [Text] -- ^ The owner of the wallet
@@ -81,8 +81,8 @@ instance FromJSON Wallet where
         parseJSON _=fail "Wallet"
 
 
--- | ID of a transfer
-type TransferID=Text
+-- | Id of a transfer
+type TransferId=Text
 
 -- | status of a transfer
 data TransferStatus= Created | Succeeded | Failed
@@ -103,15 +103,15 @@ instance FromJSON TransferStatus where
 
 -- | transfer between wallets
 data Transfer = Transfer{
-        tId :: Maybe TransferID -- ^ Id of the transfer
+        tId :: Maybe TransferId -- ^ Id of the transfer
         ,tCreationDate    :: Maybe POSIXTime -- ^  The creation date of the object
         ,tTag     :: Maybe Text -- ^   Custom data
-        ,tAuthorId :: AnyUserID -- ^ The Id of the author
-        ,tCreditedUserId  :: Maybe AnyUserID -- ^ The Id of the user owner of the credited wallet
+        ,tAuthorId :: AnyUserId -- ^ The Id of the author
+        ,tCreditedUserId  :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
         ,tDebitedFunds :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,tFees  :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,tDebitedWalletID :: WalletID -- ^  The debited wallet (where the funds are held before the transfer)
-        ,tCreditedWalletID:: WalletID -- ^ The credited wallet (where the funds will be held after the transfer)
+        ,tDebitedWalletId :: WalletId -- ^  The debited wallet (where the funds are held before the transfer)
+        ,tCreditedWalletId:: WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
         ,tCreditedFunds :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,tStatus  :: Maybe TransferStatus -- ^   The status of the transfer:
         ,tResultCode      :: Maybe Text -- ^   The transaction result code
@@ -123,7 +123,7 @@ data Transfer = Transfer{
 -- | to json as per MangoPay format
 instance ToJSON Transfer  where
     toJSON t=object ["AuthorId" .= tAuthorId t,"CreditedUserId" .= tCreditedUserId t,"DebitedFunds" .= tDebitedFunds t,
-        "Fees" .= tFees t,"DebitedWalletID" .= tDebitedWalletID t,"CreditedWalletID" .= tCreditedWalletID t,
+        "Fees" .= tFees t,"DebitedWalletId" .= tDebitedWalletId t,"CreditedWalletId" .= tCreditedWalletId t,
         "Tag" .= tTag t]
 
 -- | from json as per MangoPay format
@@ -136,8 +136,8 @@ instance FromJSON Transfer where
                          v .: "CreditedUserId" <*>
                          v .: "DebitedFunds" <*>
                          v .: "Fees" <*>
-                         v .: "DebitedWalletId" <*> -- yes, it's ID one way, Id the other
-                         v .: "CreditedWalletId" <*> -- yes, it's ID one way, Id the other
+                         v .: "DebitedWalletId" <*> -- yes, it's Id one way, Id the other
+                         v .: "CreditedWalletId" <*> -- yes, it's Id one way, Id the other
                          v .:? "CreditedFunds" <*>
                          v .:? "Status" <*>
                          v .:? "ResultCode" <*>
@@ -177,19 +177,19 @@ instance FromJSON TransactionNature where
         parseJSON _ =fail "TransactionNature"
 
 
-type TransactionID = Text
+type TransactionId = Text
 
 -- | any transaction
 data Transaction = Transaction{
-        txId :: Maybe TransactionID -- ^ Id of the transfer
+        txId :: Maybe TransactionId -- ^ Id of the transfer
         ,txCreationDate    :: Maybe POSIXTime -- ^  The creation date of the object
         ,txTag     :: Maybe Text -- ^   Custom data
-        ,txAuthorId :: AnyUserID -- ^ The Id of the author
-        ,txCreditedUserId  :: Maybe AnyUserID -- ^ The Id of the user owner of the credited wallet
+        ,txAuthorId :: AnyUserId -- ^ The Id of the author
+        ,txCreditedUserId  :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
         ,txDebitedFunds :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txFees  :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,txDebitedWalletID :: Maybe WalletID -- ^  The debited wallet (where the funds are held before the transfer)
-        ,txCreditedWalletID:: Maybe WalletID -- ^ The credited wallet (where the funds will be held after the transfer)
+        ,txDebitedWalletId :: Maybe WalletId -- ^  The debited wallet (where the funds are held before the transfer)
+        ,txCreditedWalletId:: Maybe WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
         ,txCreditedFunds :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txStatus  :: Maybe TransferStatus -- ^   The status of the transfer:
         ,txResultCode      :: Maybe Text -- ^   The transaction result code
@@ -203,7 +203,7 @@ data Transaction = Transaction{
 -- | to json as per MangoPay format
 instance ToJSON Transaction  where
     toJSON t=object ["AuthorId" .= txAuthorId t,"CreditedUserId" .= txCreditedUserId t,"DebitedFunds" .= txDebitedFunds t,
-        "Fees" .= txFees t,"DebitedWalletID" .= txDebitedWalletID t,"CreditedWalletID" .= txCreditedWalletID t,
+        "Fees" .= txFees t,"DebitedWalletID" .= txDebitedWalletId t,"CreditedWalletID" .= txCreditedWalletId t,
         "Tag" .= txTag t,"Type" .= txType t,"Nature" .= txNature t]
 
 -- | from json as per MangoPay format
@@ -216,8 +216,8 @@ instance FromJSON Transaction where
                          v .: "CreditedUserId" <*>
                          v .: "DebitedFunds" <*>
                          v .: "Fees" <*>
-                         v .:? "DebitedWalletId" <*> -- yes, it's ID one way, Id the other
-                         v .:? "CreditedWalletId" <*> -- yes, it's ID one way, Id the other
+                         v .:? "DebitedWalletId" <*> -- yes, it's Id one way, Id the other
+                         v .:? "CreditedWalletId" <*> -- yes, it's Id one way, Id the other
                          v .:? "CreditedFunds" <*>
                          v .:? "Status" <*>
                          v .:? "ResultCode" <*>

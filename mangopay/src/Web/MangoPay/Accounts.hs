@@ -24,13 +24,13 @@ createAccount ba = createGeneric path ba
         where path = BS.concat ["/users/",encodeUtf8 uid,"/bankaccounts/",encodeUtf8 $ typeName $ baDetails ba]
               uid = fromMaybe (error "no user provided for account") $ baUserId ba
 
--- | fetch an account from its ID
-fetchAccount :: (MPUsableMonad m) => AnyUserID -> BankAccountID -> AccessToken -> MangoPayT m BankAccount
+-- | fetch an account from its Id
+fetchAccount :: (MPUsableMonad m) => AnyUserId -> BankAccountId -> AccessToken -> MangoPayT m BankAccount
 fetchAccount uid = fetchGeneric path
         where path = Data.Text.concat ["/users/",uid,"/bankaccounts/"]
 
 -- | list all accounts for a given user
-listAccounts :: (MPUsableMonad m) => AnyUserID -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
+listAccounts :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
 listAccounts uid = genericList ["/users/",uid,"/bankaccounts/"]
 
 -- | account details, depending on the type
@@ -96,14 +96,14 @@ toJSONPairs (US nb aba)=["AccountNumber" .= nb,"ABA" .= aba]
 toJSONPairs (CA nb bn inb bc)=["AccountNumber" .= nb,"BankName" .= bn,"InstitutionNumber" .= inb, "BranchCode" .= bc]
 toJSONPairs (Other nb bic c)=["AccountNumber" .= nb,"BIC" .= bic,"Country" .= c]
 
--- | ID of a bank account
-type BankAccountID = Text
+-- | Id of a bank account
+type BankAccountId = Text
 
 -- | bank account details
 data BankAccount = BankAccount {
-  baId :: Maybe BankAccountID
+  baId :: Maybe BankAccountId
   ,baCreationDate :: Maybe POSIXTime
-  ,baUserId :: Maybe AnyUserID
+  ,baUserId :: Maybe AnyUserId
   ,baTag :: Maybe Text
   ,baDetails :: BankAccountDetails
   ,baOwnerName :: Text

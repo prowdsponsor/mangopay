@@ -29,11 +29,11 @@ test_CreateCredentials=do
        let mcred=decode js
        assertBool (isJust mcred)
        ct<-getPOSIXTime
-       -- max 20 characters in ClientID
+       -- max 20 characters in ClientId
        let suff=T.take 20 $ T.pack $ show $ round ct
        let creds=(fromJust mcred)
        let newCreds=creds{cClientSecret=Nothing,
-                cClientID=T.append (cClientID creds) suff,
+                cClientId=T.append (cClientId creds) suff,
                 cName=T.append (cName creds) suff}
        mgr<-liftM tsManager $ readIORef testState
        creds2<-runResourceT $ runStdoutLoggingT $ runMangoPayT newCreds mgr Sandbox createCredentialsSecret
@@ -41,7 +41,7 @@ test_CreateCredentials=do
        let s=fromJust $ cClientSecret creds2
        -- login once with our new credentials
        oat<-runResourceT $ runStdoutLoggingT $ runMangoPayT creds2 mgr Sandbox $
-                oauthLogin (cClientID creds2) s
+                oauthLogin (cClientId creds2) s
        -- store access token and credentials
        modifyIORef testState (\ts->ts{tsAccessToken=toAccessToken oat,tsCredentials=creds2})
        -- create hooks for all event types

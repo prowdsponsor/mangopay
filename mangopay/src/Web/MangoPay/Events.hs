@@ -54,8 +54,8 @@ createHook = createGeneric "/hooks"
 modifyHook ::  (MPUsableMonad m) => Hook -> AccessToken -> MangoPayT m Hook
 modifyHook h = modifyGGeneric (Just $ HM.delete "EventType") "/hooks/" h hId
 
--- | fetch a wallet from its ID
-fetchHook :: (MPUsableMonad m) => HookID -> AccessToken -> MangoPayT m Hook
+-- | fetch a wallet from its Id
+fetchHook :: (MPUsableMonad m) => HookId -> AccessToken -> MangoPayT m Hook
 fetchHook = fetchGeneric "/hooks/"
 
 -- | list all wallets for a given user
@@ -196,11 +196,11 @@ instance FromJSON HookValidity where
     parseJSON _= fail "HookValidity"
 
 -- | id for hook
-type HookID=Text
+type HookId=Text
 
 -- | a notification hook
 data Hook=Hook {
-        hId :: Maybe HookID -- ^ The Id of the hook details
+        hId :: Maybe HookId -- ^ The Id of the hook details
         ,hCreationDate :: Maybe POSIXTime
         ,hTag :: Maybe Text -- ^ Custom data
         ,hUrl :: Text -- ^This is the URL where you receive notification for each EventType

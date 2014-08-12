@@ -89,7 +89,7 @@ getValidToken site=do
         Nothing -> fail "getValidToken: You need to provide the cClientSecret on the mpCredentials."
         Just secret-> do
           oat<-runMangoPayT creds manager apoint $
-                  oauthLogin (cClientID creds) secret
+                  oauthLogin (cClientId creds) secret
           ct<-Y.liftIO getCurrentTime
           -- oaExpires is in second, remove one minute for safety
           let expires=addUTCTime (fromIntegral (oaExpires oat - 60)) ct
@@ -184,4 +184,3 @@ catchMP=L.catch
 -- Instances for MangoPay types that may be useful in a Persistent/Yesod context
 
 $(derivePersistField "KindOfAuthentication")
-

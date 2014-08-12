@@ -30,7 +30,7 @@ test_NaturalUser = do
         assertEqual (Left ue) eu
         usL<-testMP $ listUsers (Just $ Pagination 1 100)
         assertEqual 1 (length $ filter (((fromJust $ uId u)==) . urId) $ plData usL)
-        assertEqual (fromJust $ uId u) (getExistingUserID $ Left u)
+        assertEqual (fromJust $ uId u) (getExistingUserId $ Left u)
 
 testLegalUser :: LegalUser
 testLegalUser = LegalUser Nothing Nothing "jpmoresmau@gmail.com" "JP Moresmau" Business Nothing
@@ -54,7 +54,7 @@ test_LegalUser = do
         assertEqual (Right le) el
         usL<-testMP $ listUsers  (Just $ Pagination 1 100)
         assertEqual 1 (length $ filter (((fromJust $ lId l)==) . urId) $ plData usL)
-        assertEqual (fromJust $ lId l) (getExistingUserID $ Right l)
+        assertEqual (fromJust $ lId l) (getExistingUserId $ Right l)
 
 test_PaginationUsers :: Assertion
 test_PaginationUsers = do
@@ -69,4 +69,3 @@ test_PaginationUsers = do
   assertEqual 1 (plPageCount usL2)
   us<-testMP $ getAll listUsers
   assertEqual 2 (length us)
-
