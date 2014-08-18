@@ -8,18 +8,18 @@
 /events                             MPEventsR GET
 /nuser                              NUserR GET POST PUT
 /luser                              LUserR GET POST PUT
-/user/#AnyUserID                    UserR GET
-/doc/#AnyUserID                     DocR GET POST
-/wallets/#AnyUserID                 WalletsR GET
-/wallet/#AnyUserID                  WalletR GET POST
-/wallet/#AnyUserID/#WalletID        WalletEditR GET PUT
-/cards/#AnyUserID                   CardsR GET
-/card/#AnyUserID                    CardR GET POST
+/user/#AnyUserId                    UserR GET
+/doc/#AnyUserId                     DocR GET POST
+/wallets/#AnyUserId                 WalletsR GET
+/wallet/#AnyUserId                  WalletR GET POST
+/wallet/#AnyUserId/#WalletId        WalletEditR GET PUT
+/cards/#AnyUserId                   CardsR GET
+/card/#AnyUserId                    CardR GET POST
 /card2                              Card2R GET
-/accounts/#AnyUserID                AccountsR GET
-/account/#AnyUserID                 AccountR GET POST
-/transactions/#AnyUserID            TransactionsR GET
-/payin/#AnyUserID                   PayinR GET POST
-/transfer1/#AnyUserID               Transfer1R GET
-/transfer2/#AnyUserID/#AnyUserID    Transfer2R GET POST
-/payout/#AnyUserID                  PayoutR GET POST
+/accounts/#AnyUserId                AccountsR GET
+/account/#AnyUserId                 AccountR GET POST
+/transactions/#AnyUserId            TransactionsR GET
+/payin/#AnyUserId                   PayinR GET POST
+/transfer1/#AnyUserId               Transfer1R GET
+/transfer2/#AnyUserId/#AnyUserId    Transfer2R GET POST
+/payout/#AnyUserId                  PayoutR GET POST

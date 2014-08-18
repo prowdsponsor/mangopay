@@ -10,7 +10,7 @@ import Control.Arrow ((&&&))
 import Data.Text (pack)
 
 -- | transaction list
-getTransactionsR :: AnyUserID -> Handler Html
+getTransactionsR :: AnyUserId -> Handler Html
 getTransactionsR uid= do
     pg<-getPagination
     txsL<-runYesodMPTToken $ listTransactionsForUser uid pg
@@ -23,7 +23,7 @@ getTransactionsR uid= do
 
 
 -- | get payin form
-getPayinR :: AnyUserID -> Handler Html
+getPayinR :: AnyUserId -> Handler Html
 getPayinR uid=do
     cards<-runYesodMPTToken $ getAll $ listCards uid
     wallets<-runYesodMPTToken $ getAll $ listWallets uid
@@ -33,7 +33,7 @@ getPayinR uid=do
         $(widgetFile "payin")
 
 -- | payin
-postPayinR :: AnyUserID -> Handler Html
+postPayinR :: AnyUserId -> Handler Html
 postPayinR uid=do
   cards<-runYesodMPTToken $ getAll $ listCards uid
   wallets<-runYesodMPTToken $ getAll $ listWallets uid
@@ -60,7 +60,7 @@ postPayinR uid=do
                   $(widgetFile "payin")
 
 -- | get first transfer page: choose the target user
-getTransfer1R :: AnyUserID -> Handler Html
+getTransfer1R :: AnyUserId -> Handler Html
 getTransfer1R uid=do
   users<-runYesodMPTToken $ getAll listUsers
   defaultLayout $ do
@@ -68,7 +68,7 @@ getTransfer1R uid=do
         $(widgetFile "transfer1")
 
 -- | get second transfer page: choose between wallets
-getTransfer2R :: AnyUserID -> AnyUserID -> Handler Html
+getTransfer2R :: AnyUserId -> AnyUserId -> Handler Html
 getTransfer2R uid touid=do
     fromWallets<-runYesodMPTToken $ getAll $ listWallets uid
     toWallets<-runYesodMPTToken $ getAll $ listWallets touid
@@ -78,7 +78,7 @@ getTransfer2R uid touid=do
         $(widgetFile "transfer2")
 
 -- | perfrm transfer
-postTransfer2R :: AnyUserID -> AnyUserID -> Handler Html
+postTransfer2R :: AnyUserId -> AnyUserId -> Handler Html
 postTransfer2R uid touid=do
   fromWallets<-runYesodMPTToken $ getAll $ listWallets uid
   toWallets<-runYesodMPTToken $ getAll $ listWallets touid
@@ -106,7 +106,7 @@ postTransfer2R uid touid=do
                   $(widgetFile "transfer2")
 
 -- | get payout form
-getPayoutR :: AnyUserID -> Handler Html
+getPayoutR :: AnyUserId -> Handler Html
 getPayoutR uid=do
     wallets<-runYesodMPTToken $ getAll $ listWallets uid
     accounts<-runYesodMPTToken $ getAll $ listAccounts uid
@@ -117,7 +117,7 @@ getPayoutR uid=do
         $(widgetFile "payout")
 
 -- | payout
-postPayoutR :: AnyUserID -> Handler Html
+postPayoutR :: AnyUserId -> Handler Html
 postPayoutR uid=do
   wallets<-runYesodMPTToken $ getAll $ listWallets uid
   accounts<-runYesodMPTToken $ getAll $ listAccounts uid
@@ -146,7 +146,7 @@ postPayoutR uid=do
 
 
 -- | data necessary for payin
-data PayIn = PayIn CardID WalletID Integer Currency
+data PayIn = PayIn CardId WalletId Integer Currency
 
 -- | payin form
 payinInForm :: [Card] -> [Wallet] -> Html -> MForm Handler (FormResult PayIn, Widget)
@@ -157,7 +157,7 @@ payinInForm cards wallets= renderDivs $ PayIn
   <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgPayInCurrency) Nothing
 
 -- | data necessary for transfer
-data MPTransfer= MPTransfer WalletID WalletID Integer Currency
+data MPTransfer= MPTransfer WalletId WalletId Integer Currency
 
 -- | transfer form
 transferForm :: [Wallet] -> [Wallet] -> Html -> MForm Handler (FormResult MPTransfer, Widget)
@@ -168,7 +168,7 @@ transferForm fromWallets toWallets=renderDivs $ MPTransfer
   <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgTransferCurrency) Nothing
 
 -- | data necessary for payout
-data PayOut = PayOut WalletID BankAccountID Integer Currency
+data PayOut = PayOut WalletId BankAccountId Integer Currency
 
 -- | payin form
 payoutForm :: [Wallet] -> [BankAccount] -> Html -> MForm Handler (FormResult PayOut, Widget)

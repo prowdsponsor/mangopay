@@ -7,7 +7,7 @@ import Yesod.MangoPay
 
 
 -- | get account list
-getAccountsR :: AnyUserID -> Handler Html
+getAccountsR :: AnyUserId -> Handler Html
 getAccountsR uid=do
   -- no paging, should be reasonable
   accounts<-runYesodMPTToken $ getAll $ listAccounts uid
@@ -16,7 +16,7 @@ getAccountsR uid=do
         $(widgetFile "accounts")
 
 -- | get account registration form
-getAccountR :: AnyUserID -> Handler Html
+getAccountR :: AnyUserId -> Handler Html
 getAccountR uid=do
     (widget, enctype) <- generateFormPost accountForm
     defaultLayout $ do
@@ -24,7 +24,7 @@ getAccountR uid=do
         $(widgetFile "account")
 
 -- | register account
-postAccountR :: AnyUserID -> Handler Html
+postAccountR :: AnyUserId -> Handler Html
 postAccountR uid=do
   ((result, widget), enctype) <- runFormPost accountForm
   case result of
@@ -56,7 +56,7 @@ data BankAccountPartial=BankAccountPartial {
   }
 
 -- | get the proper BankAccount structure
-toBankAccount :: AnyUserID -> BankAccountPartial -> BankAccount
+toBankAccount :: AnyUserId -> BankAccountPartial -> BankAccount
 toBankAccount uid bap=BankAccount Nothing Nothing (Just uid) (bapTag bap) (IBAN (bapIBAN bap) (bapBIC bap))
   (bapOwnerName bap) (bapOwnerAddress bap)
 

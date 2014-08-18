@@ -10,7 +10,7 @@ import Yesod.MangoPay
 import Yesod.MangoPay.Util
 
 -- | get the form to edit any type of user
-getUserR :: AnyUserID -> Handler Html
+getUserR :: AnyUserId -> Handler Html
 getUserR uid=do
   eu <- runYesodMPTToken $ getUser uid
   case eu of
