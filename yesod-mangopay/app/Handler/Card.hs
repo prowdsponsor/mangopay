@@ -16,7 +16,7 @@ import Data.Text (pack)
 import Control.Arrow ((&&&))
 
 -- | get card list
-getCardsR :: AnyUserID -> Handler Html
+getCardsR :: AnyUserId -> Handler Html
 getCardsR uid=do
   -- no paging, should be reasonable
   cards<-runYesodMPTToken $ getAll $ listCards uid
@@ -39,7 +39,7 @@ getCardsR uid=do
 -- and submit it back to us using the same session!
 -- if we didn't have a iframe and redirect the main page via the validation server, we lose the session, so we would need to encode a token in the url
 -- we can also use the pure Ajax solution via the mangopay JS toolkit, but the iframe system should work in more browsers
-getCardR :: AnyUserID -> Handler Html
+getCardR :: AnyUserId -> Handler Html
 getCardR uid=do
     ((result, _), _) <- runFormGet currencyForm
     case result of
@@ -75,7 +75,7 @@ getCard2R =do
   respond typePlain qs
 
 -- | this gets the token via JavaScript submission
-postCardR :: AnyUserID -> Handler Html
+postCardR :: AnyUserId -> Handler Html
 postCardR uid=do
   ((result, _), _) <- runFormPost cardTokenForm
   mjcr<-lookupSession "cardReg"

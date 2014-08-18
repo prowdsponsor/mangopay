@@ -12,7 +12,7 @@ import Data.Conduit.Binary (sinkLbs)
 import Data.ByteString.Lazy (toStrict)
 
 -- | get the upload form
-getDocR :: AnyUserID -> Handler Html
+getDocR :: AnyUserId -> Handler Html
 getDocR uid= do
   (widget, enctype) <- generateFormPost uploadForm
   defaultLayout $ do
@@ -20,7 +20,7 @@ getDocR uid= do
         $(widgetFile "docupload")
 
 -- | upload doc and file and show result
-postDocR :: AnyUserID -> Handler Html
+postDocR :: AnyUserId -> Handler Html
 postDocR uid=do
    ((result, _), _) <- runFormPost uploadForm
    case result of

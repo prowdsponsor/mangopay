@@ -9,7 +9,7 @@ import Control.Arrow ((&&&))
 import Data.Text (pack)
 
 -- | get wallet list
-getWalletsR :: AnyUserID -> Handler Html
+getWalletsR :: AnyUserId -> Handler Html
 getWalletsR uid=do
   -- no paging, should be reasonable
   wallets<-runYesodMPTToken $ getAll $ listWallets uid
@@ -18,18 +18,18 @@ getWalletsR uid=do
         $(widgetFile "wallets")
 
 -- | get wallet creation form
-getWalletR :: AnyUserID -> Handler Html
+getWalletR :: AnyUserId -> Handler Html
 getWalletR uid = readerWallet uid Nothing
 
 -- | get wallet edition form
-getWalletEditR :: AnyUserID -> WalletID -> Handler Html
+getWalletEditR :: AnyUserId -> WalletId -> Handler Html
 getWalletEditR uid wid = do
   wallet <- runYesodMPTToken $ fetchWallet wid
   readerWallet uid $ Just wallet
 
 
 -- | helper to generate the proper form given maybe an existing wallet
-readerWallet :: AnyUserID -> Maybe Wallet -> Handler Html
+readerWallet :: AnyUserId -> Maybe Wallet -> Handler Html
 readerWallet uid mwallet = do
   (widget, enctype) <- generateFormPost $ walletForm mwallet
   let mwid = join $ wId <$> mwallet
@@ -40,7 +40,7 @@ readerWallet uid mwallet = do
 
 -- | helper to create or modify a wallet
 helperWallet :: (Wallet -> AccessToken -> MangoPayT Handler Wallet) ->
-  Maybe Wallet -> AnyUserID -> Handler Html
+  Maybe Wallet -> AnyUserId -> Handler Html
 helperWallet fn mw uid=do
   ((result, _), _) <- runFormPost $ walletForm mw
   mwallet<-case result of
@@ -63,11 +63,11 @@ helperWallet fn mw uid=do
   readerWallet uid mwallet
 
 
-postWalletR :: AnyUserID -> Handler Html
+postWalletR :: AnyUserId -> Handler Html
 postWalletR = helperWallet createWallet Nothing
 
 
-putWalletEditR :: AnyUserID -> WalletID -> Handler Html
+putWalletEditR :: AnyUserId -> WalletId -> Handler Html
 putWalletEditR uid wid = do
   wallet <- runYesodMPTToken $ fetchWallet wid
   helperWallet modifyWallet (Just wallet) uid
