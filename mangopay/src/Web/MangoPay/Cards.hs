@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables,OverloadedStrings, FlexibleContexts, FlexibleInstances,ConstraintKinds #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds, RecordWildCards #-}
 -- | handle cards
 module Web.MangoPay.Cards where
 
@@ -145,3 +145,21 @@ instance FromJSON Card where
                          v .: "Country" <*>
                          v .: "UserId"
         parseJSON _=fail "Card"
+
+-- | to json as per MangoPay format
+instance ToJSON Card where
+  toJSON Card {..} = object
+    [ "Id"             .= cId
+    , "CreationDate"   .= cCreationDate
+    , "Tag"            .= cTag
+    , "ExpirationDate" .= cExpirationDate
+    , "Alias"          .= cAlias
+    , "CardProvider"   .= cCardProvider
+    , "CardType"       .= cCardType
+    , "Product"        .= cProduct
+    , "BankCode"       .= cBankCode
+    , "Active"         .= cActive
+    , "Currency"       .= cCurrency
+    , "Validity"       .= cValidity
+    , "Country"        .= cCountry
+    , "UserId"         .= cUserId ]
