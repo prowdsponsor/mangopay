@@ -307,6 +307,10 @@ instance FromJSON CardExpiration where
     Right (ce,"")<- readCardExpiration s=pure ce
   parseJSON _=fail "CardExpiration"
 
+-- | show Card Expiration to JSON string (MMYY)
+instance ToJSON CardExpiration where
+  toJSON = toJSON . writeCardExpiration
+
 instance IsString CardExpiration where
   fromString s
     | Right (ce,"")<-readCardExpiration $ fromString s=ce
