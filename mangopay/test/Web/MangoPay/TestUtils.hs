@@ -451,6 +451,8 @@ unsafeFullRegistration uid currency cardInfo at = do
 -- This function is UNSAFE, because if you use this, YOU handle
 -- the user's credit card details so you need to be PCI
 -- compliant!
+--
+-- XXX This is not working anymore.
 unsafeRegisterCard :: CardInfo -> CardRegistration -> IO CardRegistration
 
 unsafeRegisterCard ci cr@(CardRegistration
