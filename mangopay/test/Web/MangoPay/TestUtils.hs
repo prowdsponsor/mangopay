@@ -2,44 +2,43 @@
              OverloadedStrings, PatternGuards, RankNTypes #-}
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Web.MangoPay.TestUtils
-  ( testCardInfo1
+  ( -- * Initialization
+    withMangoPayTestUtils
+
+    -- * Test helpers
+  , testCardInfo1
   , testMP
-  , testState -- TODO: This shouldn't be exported!
-  , TestState(..) -- TODO: This shouldn't be exported!
-  , getTestHttpManager
   -- , testEvent
   , testEventTypes
   , testEventTypes'
   -- , testSearchEvent
-  , listenFor -- TODO: This shouldn't be exported!
   -- , testEvents
   -- , waitForEvent
   -- , match1
-  -- , popReceivedEvent
-  , popReceivedEvents
-  -- , pushReceivedEvent
+
+    -- ** Credit card registration
   , unsafeFullRegistration
   , unsafeRegisterCard
 
-  , newReceivedEvents -- TODO: This shouldn't be exported!
-  , HookEndPoint(..) -- TODO: This shouldn't be exported!
-  , getHookEndPoint -- TODO: This shouldn't be exported!
-  , startHTTPServer
-
+    -- ** Tear down
+  , ensureNoEvents
   ) where
 
 import Blaze.ByteString.Builder (copyByteString)
 import Control.Applicative
-import Control.Concurrent (forkIO, ThreadId, threadDelay)
+import Control.Concurrent (forkIO, killThread, ThreadId, threadDelay)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
+import Control.Exception (bracket)
 import Control.Monad (when, void, liftM)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (LoggingT, runStdoutLoggingT)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 import Data.Conduit (($$+-))
 import Data.Default (def)
+import Data.Maybe (isJust)
 import Data.Monoid ((<>))
 import Data.Text (Text)
+import Data.Time.Clock.POSIX (getPOSIXTime, POSIXTime)
 import Data.Typeable (Typeable)
 import Network.HTTP.Types (status200)
 import Network.Wai.Handler.Warp
@@ -61,6 +60,9 @@ import qualified Network.HTTP.Types as HT
 import qualified Network.Wai as W
 
 
+----------------------------------------------------------------------
+
+
 -- | A test card.
 testCardInfo1 :: CardInfo
 testCardInfo1 = CardInfo "4970100000000154" "1220" "123"
@@ -77,72 +79,6 @@ testMP f = do
       at   = tsAccessToken ior
       cred = tsCredentials ior
   runResourceT $ runStdoutLoggingT $ runMangoPayT cred mgr Sandbox $ f at
-
-
--- | The test state as a top level global variable
--- (<http://www.haskell.org/haskellwiki/Top_level_mutable_state>)
--- since HTF does not let us thread a parameter through tests.
-testState :: I.IORef TestState
-testState = unsafePerformIO (I.newIORef $ TestState zero zero zero zero zero)
-  where zero = error "testState has not been initialized yet"
-{-# NOINLINE testState #-}
-
-
--- | The test state we keep over all tests.
-data TestState =
-  TestState
-    { tsAccessToken    :: AccessToken    -- ^ The access token if we're logged in.
-    , tsCredentials    :: Credentials    -- ^ The credentials.
-    , tsManager        :: H.Manager      -- ^ The HTTP manager.
-    , tsHookEndPoint   :: HookEndPoint   -- ^ The end point for notifications.
-    , tsReceivedEvents :: ReceivedEvents -- ^ The received events.
-    }
-
-
--- | Read end point information from @hook.test.conf@ in current
--- folder.
-getHookEndPoint :: IO HookEndPoint
-getHookEndPoint = do
-  js <- BSL.readFile "hook.test.conf"
-  let Just mhook = A.decode js
-  return mhook
-
-
--- | Get the HTTP manager used by the tests.
-getTestHttpManager :: IO H.Manager
-getTestHttpManager = tsManager <$> I.readIORef testState
-
-
--- | Simple configuration to tell the tests what endpoint to use
--- for notifications.
-data HookEndPoint =
-  HookEndPoint
-    { hepUrl  :: Text
-    , hepPort :: Int
-    } deriving (Show, Read, Eq, Ord, Typeable)
-
-instance A.ToJSON HookEndPoint where
-  toJSON h =
-    A.object
-      [ "Url" A..= hepUrl h
-      , "Port" A..= hepPort h ]
-
-instance A.FromJSON HookEndPoint where
-  parseJSON (A.Object v) =
-    HookEndPoint
-      <$> v A..: "Url"
-      <*> v A..: "Port"
-  parseJSON _ = fail "HookEndPoint"
-
-
--- | The events received via the notification hook.
--- Uses an @MVar@ for storing events.
-newtype ReceivedEvents = ReceivedEvents (MVar [Either EventResult Event])
-
-
--- | Create a new 'ReceivedEvents'.
-newReceivedEvents :: IO ReceivedEvents
-newReceivedEvents = ReceivedEvents <$> newMVar []
 
 
 -- | Test an event, checking the resource id and the event type.
@@ -178,16 +114,6 @@ testSearchEvent tid evtT = do
   assertBool (any ((tid ==) . Just . eResourceId) es)
 
 
--- | Create a hook for a given event type.
-listenFor :: EventType -> Assertion
-listenFor evtT = do
-  hook <- liftM tsHookEndPoint $ I.readIORef testState
-  h <- testMP $ createHook (Hook Nothing Nothing Nothing (hepUrl hook <> "/mphook") Enabled Nothing evtT)
-  h2 <- testMP $ let Just id_ = hId h in fetchHook id_
-  assertEqual (hId h) (hId h2)
-  assertEqual (Just Valid) (hValidity h)
-
-
 -- | Run a test with the notification server running.
 testEvents :: IO a -- ^ The test, returning a value
   -> [a -> Event -> Bool] -- ^ The test on the events, taking into account the returned value
@@ -197,6 +123,9 @@ testEvents ops tests = do
   a <- ops
   er <- waitForEvent res (map ($ a) tests) 5
   assertEqual EventsOK er
+
+
+--------------------------------------------------------------------------------
 
 
 -- | Result of waiting for an event.
@@ -266,20 +195,142 @@ popReceivedEvents (ReceivedEvents mv) = do
     return evts
 
 
--- | (Internal) Add a new event.
-pushReceivedEvent :: ReceivedEvents -> Either EventResult Event -> IO ()
-pushReceivedEvent (ReceivedEvents mv) evt = do
-    evts' <- takeMVar mv
-    -- we're getting events in duplicate ???
-    let ns = if evt `Prelude.elem` evts' then evts' else evt:evts'
-    putMVar mv ns
+-- | Wait for the given number of seconds and check if any
+-- MangoPay event has arrived.  Fails if so.  Use this function
+-- at the end of your test run to ensure that you're aware of
+-- every MangoPay event.
+ensureNoEvents :: Int -> Assertion
+ensureNoEvents seconds = do
+  -- Wait in case events still arrive.
+  threadDelay $ seconds * 1000000
+  res  <- tsReceivedEvents <$> I.readIORef testState
+  evts <- popReceivedEvents res
+  assertEqual [] evts
+
+
+----------------------------------------------------------------------
+
+
+-- | The test state as a top level global variable
+-- (<http://www.haskell.org/haskellwiki/Top_level_mutable_state>)
+-- since HTF does not let us thread a parameter through tests.
+testState :: I.IORef TestState
+testState = unsafePerformIO (I.newIORef $ TestState zero zero zero zero zero)
+  where zero = error "testState has not been initialized yet"
+{-# NOINLINE testState #-}
+
+
+-- | The test state we keep over all tests.
+data TestState =
+  TestState
+    { tsAccessToken    :: AccessToken    -- ^ The access token if we're logged in.
+    , tsCredentials    :: Credentials    -- ^ The credentials.
+    , tsManager        :: H.Manager      -- ^ The HTTP manager.
+    , tsHookEndPoint   :: HookEndPoint   -- ^ The end point for notifications.
+    , tsReceivedEvents :: ReceivedEvents -- ^ The received events.
+    }
+
+
+-- | Get the HTTP manager used by the tests.
+getTestHttpManager :: IO H.Manager
+getTestHttpManager = tsManager <$> I.readIORef testState
+
+
+-- | (Internal) The events received via the notification hook.
+-- Uses an @MVar@ for storing events.
+newtype ReceivedEvents = ReceivedEvents (MVar [Either EventResult Event])
+
+
+-- | (Internal) Create a new 'ReceivedEvents'.
+newReceivedEvents :: IO ReceivedEvents
+newReceivedEvents = ReceivedEvents <$> newMVar []
+
+
+----------------------------------------------------------------------
+
+
+-- | Creates and initializes the MangoPay infrastructure needed
+-- to use the test helpers from this module.  Tears down the
+-- server at the end.
+--
+-- You may want to use 'ensureNoEvents' at the end of your action
+-- before tearing down the server.
+--
+-- This module uses global, shared state.  You have to wrap your
+-- entire test suite with this function, and you can't use
+-- 'withMangoPayTests' more than once.
+--
+-- Reads two files from the current directory:
+--
+--  * @client.test.conf@ (can be generated by mangopay-passphrase).
+--
+--  * @hook.test.conf@, json file containing object with "Url"
+--  and "Port" fields.  The first is the URL used to access this
+--  server's root, while the second is the port this server
+--  should listen to.
+withMangoPayTestUtils
+  :: IO a
+     -- ^ Action to run while being able to use functions from
+     -- this module.
+  -> IO a
+withMangoPayTestUtils act =
+  H.withManager $ \mgr -> liftIO $ do
+    hook <- getHookEndPoint
+    res  <- newReceivedEvents
+    -- Initial state.
+    I.modifyIORef testState $ \ts ->
+      ts { tsManager        = mgr
+         , tsHookEndPoint   = hook
+         , tsReceivedEvents = res }
+    bracket
+      (startHTTPServer hook res)
+      killThread
+      (const $ initializeTestState >> act)
+
+
+----------------------------------------------------------------------
+
+
+-- | (Internal) Read end point information from @hook.test.conf@
+-- in current folder.
+getHookEndPoint :: IO HookEndPoint
+getHookEndPoint = do
+  js <- BSL.readFile "hook.test.conf"
+  let Just mhook = A.decode js
+  return mhook
+
+
+-- | (Internal) Simple configuration to tell the tests what
+-- endpoint to use for notifications.
+data HookEndPoint =
+  HookEndPoint
+    { hepUrl  :: Text
+    , hepPort :: Int
+    } deriving (Show, Read, Eq, Ord, Typeable)
+
+instance A.ToJSON HookEndPoint where
+  toJSON h =
+    A.object
+      [ "Url" A..= hepUrl h
+      , "Port" A..= hepPort h ]
+
+instance A.FromJSON HookEndPoint where
+  parseJSON (A.Object v) =
+    HookEndPoint
+      <$> v A..: "Url"
+      <*> v A..: "Port"
+  parseJSON _ = fail "HookEndPoint"
+
+
+
+----------------------------------------------------------------------
 
 
 -- | Start a HTTP server listening on the given port.  If the
 -- path info is "mphook", then we'll push the received event to
 -- the given 'ReceivedEvents'.
-startHTTPServer :: Port -> ReceivedEvents -> IO ThreadId
-startHTTPServer p revts = forkIO $ run p app
+startHTTPServer :: HookEndPoint -> ReceivedEvents -> IO ThreadId
+startHTTPServer hook revts = forkIO $ run (hepPort hook) app
   where
     app req respond = do
       when (W.pathInfo req == ["mphook"]) $ do
@@ -290,6 +341,92 @@ startHTTPServer p revts = forkIO $ run p app
             putStrLn $ "Received event:" ++ show evt
           Nothing -> pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
       respond $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
+
+
+-- | (Internal) Add a new event.
+pushReceivedEvent :: ReceivedEvents -> Either EventResult Event -> IO ()
+pushReceivedEvent (ReceivedEvents mv) evt = do
+    evts' <- takeMVar mv
+    -- we're getting events in duplicate ???
+    let ns = if evt `Prelude.elem` evts' then evts' else evt:evts'
+    putMVar mv ns
+
+
+----------------------------------------------------------------------
+
+
+-- | Initialize credentials, access token and hooks.
+--
+-- Takes the name/email from @client.test.conf@ in the current directory
+-- (this file can be generated by mangopay-passphrase),
+-- generates a new id/name, keeps the same email and generates a new secret
+-- saves the secret to use in other tests.
+initializeTestState :: IO ()
+initializeTestState = do
+  mgr <- getTestHttpManager
+  creds <- createCredentials mgr
+  at <- createAccessToken mgr creds
+  I.modifyIORef testState $ \ts ->
+    ts { tsCredentials = creds
+       , tsAccessToken = toAccessToken at }
+  listenForAll
+
+
+-- | (Internal) Add the current time as a suffix to the client id
+-- and name of the credentials.
+addCredsSuffix :: Credentials -> POSIXTime -> Credentials
+addCredsSuffix creds ct =
+  creds
+    { cClientSecret = Nothing
+    , cClientId     = T.append (cClientId creds) suff
+    , cName         = T.append (cName creds) suff }
+  where suff =
+          T.pack $
+          reverse $ take (20 - clidlen) $ reverse $
+          show (round ct :: Integer)
+        clidlen = T.length $ cClientId creds
+
+
+-- | (Internal) Create new 'Credentials' using the ones at
+-- @client.test.conf@ and 'addCredsSuffix'.
+createCredentials :: H.Manager -> IO Credentials
+createCredentials mgr = do
+  Just origCreds <- A.decode <$> BSL.readFile "client.test.conf"
+  suffixedCreds  <- addCredsSuffix origCreds <$> getPOSIXTime
+  createdCreds   <-
+    runResourceT $
+    runStdoutLoggingT $
+    runMangoPayT suffixedCreds mgr Sandbox createCredentialsSecret
+  assertBool (isJust $ cClientSecret createdCreds)
+  return createdCreds
+
+
+-- | (Internal) Create access token from the 'Credentials'.
+createAccessToken :: H.Manager -> Credentials -> IO OAuthToken
+createAccessToken mgr creds =
+  let Just secret = cClientSecret creds
+  in runResourceT $
+     runStdoutLoggingT $
+     runMangoPayT creds mgr Sandbox $
+     oauthLogin (cClientId creds) secret
+
+
+-- | (Internal) Listen for all event types.
+listenForAll :: IO ()
+listenForAll = mapM_ listenFor [minBound .. maxBound]
+
+
+-- | (Internal) Create a hook for a given event type.
+listenFor :: EventType -> IO ()
+listenFor evtT = do
+  hook <- liftM tsHookEndPoint $ I.readIORef testState
+  h    <- testMP $ createHook (Hook Nothing Nothing Nothing (hepUrl hook <> "/mphook") Enabled Nothing evtT)
+  h2   <- testMP $ let Just id_ = hId h in fetchHook id_
+  assertEqual (hId h) (hId h2)
+  assertEqual (Just Valid) (hValidity h)
+
+
+----------------------------------------------------------------------
 
 
 -- | Perform the full registration of a card.
@@ -320,8 +457,7 @@ unsafeRegisterCard ci cr@(CardRegistration
                             { crCardRegistrationURL = Just url
                             , crPreregistrationData = Just pre
                             , crAccessKey           = Just ak }) = do
-  ior <- I.readIORef testState
-  let mgr = tsManager ior
+  mgr <- getTestHttpManager
   req <- H.parseUrl $ T.unpack url
   let b =
         HT.renderQuery False $ HT.toQuery
