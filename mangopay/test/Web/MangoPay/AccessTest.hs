@@ -14,8 +14,7 @@ import qualified Data.Text as T
 import Data.Maybe (fromJust, isJust)
 import Data.ByteString.Lazy as BS
 import Data.Time.Clock.POSIX (getPOSIXTime)
-import Data.IORef (modifyIORef,readIORef)
-import Control.Monad (liftM)
+import Data.IORef (modifyIORef)
 import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad.Logger
 
@@ -30,12 +29,12 @@ test_CreateCredentials=do
        assertBool (isJust mcred)
        ct<-getPOSIXTime
        -- max 20 characters in ClientId
-       let suff=T.take 20 $ T.pack $ show $ round ct
+       let suff=T.take 20 $ T.pack $ show (round ct :: Integer)
        let creds=(fromJust mcred)
        let newCreds=creds{cClientSecret=Nothing,
                 cClientId=T.append (cClientId creds) suff,
                 cName=T.append (cName creds) suff}
-       mgr<-liftM tsManager $ readIORef testState
+       mgr <- getTestHttpManager
        creds2<-runResourceT $ runStdoutLoggingT $ runMangoPayT newCreds mgr Sandbox createCredentialsSecret
        assertBool (isJust $ cClientSecret  creds2)
        let s=fromJust $ cClientSecret creds2
@@ -45,4 +44,4 @@ test_CreateCredentials=do
        -- store access token and credentials
        modifyIORef testState (\ts->ts{tsAccessToken=toAccessToken oat,tsCredentials=creds2})
        -- create hooks for all event types
-       mapM_ createHook [minBound .. maxBound]
+       mapM_ listenFor [minBound .. maxBound]
