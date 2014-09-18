@@ -55,6 +55,12 @@ library
      , template-haskell
      , country-codes        == 0.1.*
 
+       -- Needed for TestUtils
+     , blaze-builder
+     , HUnit                >= 1.2.5
+     , wai                  >= 3.0        && < 3.1
+     , warp                 >= 3.0        && < 3.1
+
   if flag(conduit11)
     build-depends:
          conduit              == 1.1.*
@@ -76,7 +82,8 @@ library
                     Web.MangoPay.Cards,
                     Web.MangoPay.Refunds,
                     Web.MangoPay.Payouts,
-                    Web.MangoPay.Accounts
+                    Web.MangoPay.Accounts,
+                    Web.MangoPay.TestUtils
 
   if flag(debug)
     cpp-options:  -DDEBUG
@@ -100,23 +107,20 @@ test-suite mangopay-tests
   ghc-options:     -Wall -rtsopts -threaded
   build-depends:
      base, aeson, attoparsec, base16-bytestring,
-     base64-bytestring, bytestring, case-insensitive, conduit,
-     data-default, http-conduit, http-types, lifted-base,
-     monad-control, monad-logger, resourcet, template-haskell,
-     text, time, transformers, transformers-base,
-     unordered-containers, utf8-string, vector, country-codes
-     , blaze-builder
+     base64-bytestring, blaze-builder, bytestring,
+     case-insensitive, conduit, data-default, http-conduit,
+     http-types, HUnit, lifted-base, monad-control, monad-logger,
+     resourcet, template-haskell, text, time, transformers,
+     transformers-base, unordered-containers, utf8-string,
+     vector, wai, warp, country-codes
+
      , HTF            >  0.9
-     , HUnit          >= 1.2.5
-     , wai            >= 3.0        && < 3.1
-     , warp           >= 3.0        && < 3.1
   if flag(conduit11)
     build-depends: conduit-extra
   else
     build-depends: attoparsec-conduit
   other-modules:
                   Web.MangoPay.UsersTest,
-                  Web.MangoPay.TestUtils,
                   Web.MangoPay.WalletsTest,
                   Web.MangoPay.DocumentsTest,
                   Web.MangoPay.PayinsTest,

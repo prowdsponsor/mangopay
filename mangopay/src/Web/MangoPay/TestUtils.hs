@@ -1,6 +1,5 @@
 {-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
              OverloadedStrings, PatternGuards, RankNTypes #-}
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Web.MangoPay.TestUtils
   ( -- * Initialization
     withMangoPayTestUtils
@@ -43,8 +42,7 @@ import Data.Typeable (Typeable)
 import Network.HTTP.Types (status200)
 import Network.Wai.Handler.Warp
 import System.IO.Unsafe (unsafePerformIO)
-import Test.Framework
-import Test.HUnit (Assertion)
+import Test.HUnit
 
 import Web.MangoPay
 
@@ -101,7 +99,7 @@ testEventTypes' evtTs ops = do
   a <- ops
   mapM_ (testSearchEvent a) evtTs
   er <- waitForEvent res (map (testEvent a) evtTs) 5
-  assertEqual EventsOK er
+  assertEqual "testEventTypes'" EventsOK er
   return a
 
 
@@ -110,8 +108,8 @@ testEventTypes' evtTs ops = do
 testSearchEvent :: Maybe Text -> EventType -> Assertion
 testSearchEvent tid evtT = do
   es <- testMP $ searchAllEvents (def { espEventType = Just evtT })
-  assertBool (not $ null es)
-  assertBool (any ((tid ==) . Just . eResourceId) es)
+  assertBool "testSearchEvent/any" (not $ null es)
+  assertBool "testSearchEvent/matches"(any ((tid ==) . Just . eResourceId) es)
 
 
 -- | Run a test with the notification server running.
@@ -122,7 +120,7 @@ testEvents ops tests = do
   res <- liftM tsReceivedEvents $ I.readIORef testState
   a <- ops
   er <- waitForEvent res (map ($ a) tests) 5
-  assertEqual EventsOK er
+  assertEqual "testEvents" EventsOK er
 
 
 --------------------------------------------------------------------------------
@@ -205,7 +203,7 @@ ensureNoEvents seconds = do
   threadDelay $ seconds * 1000000
   res  <- tsReceivedEvents <$> I.readIORef testState
   evts <- popReceivedEvents res
-  assertEqual [] evts
+  assertEqual "ensureNoEvents" [] evts
 
 
 ----------------------------------------------------------------------
@@ -397,7 +395,7 @@ createCredentials mgr = do
     runResourceT $
     runStdoutLoggingT $
     runMangoPayT suffixedCreds mgr Sandbox createCredentialsSecret
-  assertBool (isJust $ cClientSecret createdCreds)
+  assertBool "createCredentials/has secret" (isJust $ cClientSecret createdCreds)
   return createdCreds
 
 
@@ -422,8 +420,8 @@ listenFor evtT = do
   hook <- liftM tsHookEndPoint $ I.readIORef testState
   h    <- testMP $ createHook (Hook Nothing Nothing Nothing (hepUrl hook <> "/mphook") Enabled Nothing evtT)
   h2   <- testMP $ let Just id_ = hId h in fetchHook id_
-  assertEqual (hId h) (hId h2)
-  assertEqual (Just Valid) (hValidity h)
+  assertEqual "listenFor/id" (hId h) (hId h2)
+  assertEqual "listenFor/valid" (Just Valid) (hValidity h)
 
 
 ----------------------------------------------------------------------
@@ -477,6 +475,10 @@ unsafeRegisterCard ci cr@(CardRegistration
     res <- H.http req' mgr
     H.responseBody res $$+- EL.consume
   let t = TE.decodeUtf8 $ BS.concat reg
-  assertBool $ "data = " `T.isPrefixOf` t
+  assertBool
+    ("unsafeRegisterCard/\"data = \" prefix of " ++ show t)
+    ("data = " `T.isPrefixOf` t)
   return cr { crRegistrationData = Just t }
-unsafeRegisterCard _ _ = assertFailure "CardRegistration not ready"
+unsafeRegisterCard _ _ = do
+  assertFailure "CardRegistration not ready"
+  error "never here"
