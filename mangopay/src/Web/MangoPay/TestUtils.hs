@@ -332,7 +332,7 @@ startHTTPServer hook revts = forkIO $ run (hepPort hook) app
   where
     app req respond = runStdoutLoggingT (checkAndPushEvent req) >> respond noop
     checkAndPushEvent req
-      | W.pathInfo req == ["mphook"] = do
+      | dropWhile T.null (W.pathInfo req) == ["mphook"] = do
           liftIO $ pushReceivedEvent revts toPush
           $(logDebugS) src (T.pack toLog)
       | otherwise =
