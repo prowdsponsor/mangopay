@@ -93,7 +93,7 @@ testEventTypes' :: [EventType] -> IO (Maybe Text) -> IO (Maybe Text)
 testEventTypes' evtTs ops = do
   res <- liftM tsReceivedEvents $ I.readIORef testState
   a <- ops
-  er <- waitForEvent res ((,) a <$> evtTs) 5
+  er <- waitForEvent res ((,) a <$> evtTs) 20
   assertEqual "testEventTypes'" EventsOK er
   return a
 
