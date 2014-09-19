@@ -83,11 +83,11 @@ library
                     Web.MangoPay.Refunds,
                     Web.MangoPay.Payouts,
                     Web.MangoPay.Accounts,
-                    Web.MangoPay.TestUtils
 
   if flag(debug)
     cpp-options:  -DDEBUG
   exposed-modules:  Web.MangoPay
+                    Web.MangoPay.TestUtils
 
 executable mangopay-passphrase
   build-depends:
