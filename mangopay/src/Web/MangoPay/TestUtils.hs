@@ -1,5 +1,5 @@
 {-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
-             OverloadedStrings, PatternGuards, RankNTypes #-}
+             OverloadedStrings, PatternGuards, RankNTypes, TemplateHaskell #-}
 module Web.MangoPay.TestUtils
   ( -- * Initialization
     withMangoPayTestUtils
@@ -28,9 +28,9 @@ import Control.Applicative
 import Control.Concurrent (forkIO, killThread, ThreadId, threadDelay)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
 import Control.Exception (bracket)
-import Control.Monad (when, void, liftM)
+import Control.Monad (void, liftM)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Logger (LoggingT, runStdoutLoggingT)
+import Control.Monad.Logger (LoggingT, runStdoutLoggingT, logDebugS, logWarnS)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 import Data.Conduit (($$+-))
 import Data.Default (def)
@@ -330,15 +330,28 @@ instance A.FromJSON HookEndPoint where
 startHTTPServer :: HookEndPoint -> ReceivedEvents -> IO ThreadId
 startHTTPServer hook revts = forkIO $ run (hepPort hook) app
   where
-    app req respond = do
-      when (W.pathInfo req == ["mphook"]) $ do
-        let mevt = eventFromQueryString $ W.queryString req
-        liftIO $ case mevt of
-          Just evt -> do
-            pushReceivedEvent revts $ Right evt
-            putStrLn $ "Received event:" ++ show evt
-          Nothing -> pushReceivedEvent revts $ Left $ UnhandledNotification $ show $ W.queryString req
-      respond $ W.responseBuilder status200 [("Content-Type", "text/plain")] $ copyByteString "noop"
+    app req respond = runStdoutLoggingT (checkAndPushEvent req) >> respond noop
+    checkAndPushEvent req
+      | W.pathInfo req == ["mphook"] = do
+          liftIO $ pushReceivedEvent revts toPush
+          $(logDebugS) src (T.pack toLog)
+      | otherwise =
+          $(logWarnS) src $ T.pack $ concat
+            [ "Received HTTP request for path "
+            , show (W.pathInfo req)
+            , ", ignoring." ]
+      where
+        (toPush, toLog) =
+          case eventFromQueryString qs of
+            Just evt -> (Right evt, "Received event:" ++ show evt)
+            Nothing  -> ( Left $ UnhandledNotification $ show qs
+                        , "Could not parse event " ++ show qs )
+          where qs = W.queryString req
+    noop =
+      W.responseBuilder status200 [("Content-Type", "text/plain")] $
+      copyByteString "noop"
+    src = "mangopay-testutils"
+
 
 
 -- | (Internal) Add a new event.
