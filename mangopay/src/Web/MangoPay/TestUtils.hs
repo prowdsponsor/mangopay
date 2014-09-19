@@ -7,13 +7,8 @@ module Web.MangoPay.TestUtils
     -- * Test helpers
   , testCardInfo1
   , testMP
-  -- , testEvent
   , testEventTypes
   , testEventTypes'
-  -- , testSearchEvent
-  -- , testEvents
-  -- , waitForEvent
-  -- , match1
 
     -- ** Credit card registration
   , unsafeFullRegistration
@@ -97,30 +92,9 @@ testEventTypes' :: [EventType] -> IO (Maybe Text) -> IO (Maybe Text)
 testEventTypes' evtTs ops = do
   res <- liftM tsReceivedEvents $ I.readIORef testState
   a <- ops
-  mapM_ (testSearchEvent a) evtTs
   er <- waitForEvent res ((,) a <$> evtTs) 5
   assertEqual "testEventTypes'" EventsOK er
   return a
-
-
--- | Assert that we find an event for the given resource id and
--- event type.
-testSearchEvent :: Maybe Text -> EventType -> Assertion
-testSearchEvent tid evtT = do
-  es <- testMP $ searchAllEvents (def { espEventType = Just evtT })
-  assertBool "testSearchEvent/any" (not $ null es)
-  assertBool "testSearchEvent/matches"(any ((tid ==) . Just . eResourceId) es)
-
-
--- | Run a test with the notification server running.
-testEvents :: IO a -- ^ The test, returning a value
-  -> [a -> Event -> Bool] -- ^ The test on the events, taking into account the returned value
-  -> Assertion
-testEvents ops tests = do
-  res <- liftM tsReceivedEvents $ I.readIORef testState
-  a <- ops
-  er <- waitForEvent res (map ($ a) tests) 5
-  assertEqual "testEvents" EventsOK er
 
 
 --------------------------------------------------------------------------------
