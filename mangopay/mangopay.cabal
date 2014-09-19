@@ -56,6 +56,7 @@ library
      , country-codes        == 0.1.*
 
        -- Needed for TestUtils
+     , async                >= 2.0
      , blaze-builder
      , HUnit                >= 1.2.5
      , wai                  >= 3.0        && < 3.1
@@ -107,7 +108,7 @@ test-suite mangopay-tests
   main-is:         mangopay-tests.hs
   ghc-options:     -Wall -rtsopts -threaded
   build-depends:
-     base, aeson, attoparsec, base16-bytestring,
+     base, aeson, async, attoparsec, base16-bytestring,
      base64-bytestring, blaze-builder, bytestring,
      case-insensitive, conduit, data-default, http-conduit,
      http-types, HUnit, lifted-base, monad-control, monad-logger,

@@ -41,6 +41,7 @@ import Test.HUnit
 
 import Web.MangoPay
 
+import qualified Control.Concurrent.Async as AS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Network.HTTP.Conduit as H
 import qualified Data.Aeson as A
@@ -411,7 +412,7 @@ createAccessToken mgr creds =
 
 -- | (Internal) Listen for all event types.
 listenForAll :: IO ()
-listenForAll = mapM_ listenFor [minBound .. maxBound]
+listenForAll = void $ AS.mapConcurrently listenFor [minBound .. maxBound]
 
 
 -- | (Internal) Create a hook for a given event type.
