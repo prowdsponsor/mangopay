@@ -96,7 +96,7 @@ test_TransferRefund = do
           assertEqual (Just Succeeded) (cpStatus cp2)
           return $ cpId cp2
 
-        (Just tr)<-testEventTypes' [TRANSFER_NORMAL_CREATED,TRANSFER_NORMAL_SUCCEEDED] $ do
+        (Just tr)<-testEventTypes' [{- TRANSFER_NORMAL_CREATED, Not being sent as of 2014-09-19 -} TRANSFER_NORMAL_SUCCEEDED] $ do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
                 t1'<-testMP $ createTransfer t1

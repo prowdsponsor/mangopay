@@ -46,7 +46,7 @@ test_FailedTransfer = do
         let uw2=fromJust $ wId w2'
         assertBool (uw1 /= uw2)
         -- transfer will fail since I have no money
-        testEventTypes [TRANSFER_NORMAL_CREATED,TRANSFER_NORMAL_FAILED] $ do
+        testEventTypes [{- TRANSFER_NORMAL_CREATED, Not being sent as of 2014-09-19 -} TRANSFER_NORMAL_FAILED] $ do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
                 t1'<-testMP $ createTransfer t1
@@ -86,7 +86,7 @@ test_SuccessfulTransfer = do
           assertEqual (Just Succeeded) (cpStatus cp2)
           return $ cpId cp2
 
-        testEventTypes [TRANSFER_NORMAL_CREATED,TRANSFER_NORMAL_SUCCEEDED] $ do
+        testEventTypes [{- TRANSFER_NORMAL_CREATED, Not being sent as of 2014-09-19 -} TRANSFER_NORMAL_SUCCEEDED] $ do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
                 t1'<-testMP $ createTransfer t1
