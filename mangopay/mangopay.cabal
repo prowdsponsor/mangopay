@@ -71,23 +71,24 @@ library
        , attoparsec-conduit   == 1.0.*
   ghc-options:      -Wall
   other-modules:
-                    Web.MangoPay.Access,
-                    Web.MangoPay.Events,
-                    Web.MangoPay.Monad,
-                    Web.MangoPay.Types,
-                    Web.MangoPay.Users,
-                    Web.MangoPay.Wallets,
-                    Web.MangoPay.Documents,
-                    Web.MangoPay.Payins,
-                    Web.MangoPay.Cards,
-                    Web.MangoPay.Refunds,
-                    Web.MangoPay.Payouts,
-                    Web.MangoPay.Accounts,
+      Web.MangoPay.Access
+    , Web.MangoPay.Events
+    , Web.MangoPay.Monad
+    , Web.MangoPay.Types
+    , Web.MangoPay.Users
+    , Web.MangoPay.Wallets
+    , Web.MangoPay.Documents
+    , Web.MangoPay.Payins
+    , Web.MangoPay.Cards
+    , Web.MangoPay.Refunds
+    , Web.MangoPay.Payouts
+    , Web.MangoPay.Accounts
 
   if flag(debug)
     cpp-options:  -DDEBUG
-  exposed-modules:  Web.MangoPay
-                    Web.MangoPay.TestUtils
+  exposed-modules:
+      Web.MangoPay
+    , Web.MangoPay.TestUtils
 
 executable mangopay-passphrase
   build-depends:
