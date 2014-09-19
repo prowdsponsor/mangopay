@@ -476,8 +476,8 @@ unsafeRegisterCard ci cr@(CardRegistration
     H.responseBody res $$+- EL.consume
   let t = TE.decodeUtf8 $ BS.concat reg
   assertBool
-    ("unsafeRegisterCard/\"data = \" prefix of " ++ show t)
-    ("data = " `T.isPrefixOf` t)
+    ("unsafeRegisterCard/\"data=\" prefix of " ++ show t)
+    ("data=" `T.isPrefixOf` t)
   return cr { crRegistrationData = Just t }
 unsafeRegisterCard _ _ = do
   assertFailure "CardRegistration not ready"
