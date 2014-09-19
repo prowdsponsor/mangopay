@@ -98,7 +98,7 @@ testEventTypes' evtTs ops = do
   res <- liftM tsReceivedEvents $ I.readIORef testState
   a <- ops
   mapM_ (testSearchEvent a) evtTs
-  er <- waitForEvent res (map (testEvent a) evtTs) 5
+  er <- waitForEvent res ((,) a <$> evtTs) 5
   assertEqual "testEventTypes'" EventsOK er
   return a
 
@@ -128,7 +128,7 @@ testEvents ops tests = do
 
 -- | Result of waiting for an event.
 data EventResult =
-    Timeout -- ^ Didn't receive all expected events within the timeout.
+    Timeout [(Maybe Text, EventType)] -- ^ Didn't receive all expected events within the timeout.
   | EventsOK -- ^ OK: everything expected received, nothing unexpected.
   | ExtraEvent Event -- ^ Unexpected extra event found.
   | UncheckedEvent Event -- ^ Event not found in MangoPay (cf. 'checkEvent').
@@ -140,10 +140,10 @@ data EventResult =
 -- expected events, for a maximum number of seconds.
 waitForEvent
   :: ReceivedEvents
-  -> [Event -> Bool] -- ^ Function on the expected event.
-  -> Integer         -- ^ Timeout in seconds.
+  -> [(Maybe Text, EventType)] -- ^ (Resource id, event type) expected.
+  -> Integer                   -- ^ Timeout in seconds.
   -> IO EventResult
-waitForEvent _ _ del | del <= 0 = return Timeout
+waitForEvent _ fs del | del <= 0 = return (Timeout fs)
 waitForEvent rc fs del = do
   mevt <- popReceivedEvent rc
   case (mevt, fs) of
@@ -163,9 +163,9 @@ waitForEvent rc fs del = do
   where
     findMatch evt = go id
       where
-        go unmatched (g:gs)
-          | g evt     = Just (unmatched gs)
-          | otherwise = go (unmatched . (g:)) gs
+        go unmatched (g@(r,t):gs)
+          | testEvent r t evt = Just (unmatched gs)
+          | otherwise         = go (unmatched . (g:)) gs
         go _ [] = Nothing
 
 
