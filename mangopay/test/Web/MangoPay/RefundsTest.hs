@@ -31,8 +31,7 @@ test_SimpleCardRefund = do
     w3<-testMP $ fetchWallet wid
     assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
     return $ cpId cp2
-  -- PAYIN_REFUND_CREATED not received ???
-  testEventTypes [PAYIN_REFUND_SUCCEEDED] $ do
+  testEventTypes [PAYIN_REFUND_CREATED, PAYIN_REFUND_SUCCEEDED] $ do
     let rr=RefundRequest uid Nothing Nothing
     r<-testMP $ refundPayin cp rr
     assertEqual PAYIN (rInitialTransactionType r)
@@ -62,8 +61,7 @@ test_AdvancedCardRefund = do
     w3<-testMP $ fetchWallet wid
     assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
     return $ cpId cp2
-  -- PAYIN_REFUND_CREATED not received ???
-  testEventTypes [PAYIN_REFUND_SUCCEEDED] $ do
+  testEventTypes [PAYIN_REFUND_CREATED, PAYIN_REFUND_SUCCEEDED] $ do
     let rr=RefundRequest uid (Just $ Amount "EUR" 100) (Just $ Amount "EUR" 1)
     r<-testMP $ refundPayin cp rr
     assertEqual PAYIN (rInitialTransactionType r)
