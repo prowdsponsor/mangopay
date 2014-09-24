@@ -23,7 +23,7 @@ import Web.MangoPay.TestUtils
 -- | Test entry point.
 main :: IO ()
 main =
-  withMangoPayTestUtils $
+  withMangoPayTestUtils $ \_ _ _ ->
   htfMain $ htf_importedTests ++ [htf_thisModulesTests]
 
 
