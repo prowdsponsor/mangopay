@@ -32,23 +32,23 @@ type PayoutId = Text
 
 -- | payout
 data Payout=Payout {
-  ptId :: Maybe PayoutId
-  ,ptCreationDate :: Maybe POSIXTime
-  ,ptTag :: Maybe Text -- ^ custom data for client
-  ,ptAuthorId :: AnyUserId -- ^ The user Id of the author
-  ,ptDebitedWalletId :: WalletId
-  ,ptDebitedFunds :: Amount
-  ,ptFees :: Amount
-  ,ptBankAccountId :: BankAccountId
-  ,ptCreditedUserId :: Maybe AnyUserId
-  ,ptCreditedFunds :: Maybe Amount
-  ,ptStatus :: Maybe TransferStatus
-  ,ptResultCode  :: Maybe Text -- ^ The transaction result code
-  ,ptResultMessage :: Maybe Text -- ^ The transaction result code
-  ,ptExecutionDate :: Maybe  POSIXTime
-  ,ptType :: Maybe TransactionType
-  ,ptNature :: Maybe TransactionNature
-  ,ptPaymentType :: Maybe PaymentType
+  ptId                 :: Maybe PayoutId
+  ,ptCreationDate      :: Maybe POSIXTime
+  ,ptTag               :: Maybe Text -- ^ custom data for client
+  ,ptAuthorId          :: AnyUserId -- ^ The user Id of the author
+  ,ptDebitedWalletId   :: WalletId
+  ,ptDebitedFunds      :: Amount
+  ,ptFees              :: Amount
+  ,ptBankAccountId     :: BankAccountId
+  ,ptCreditedUserId    :: Maybe AnyUserId
+  ,ptCreditedFunds     :: Maybe Amount
+  ,ptStatus            :: Maybe TransferStatus
+  ,ptResultCode        :: Maybe Text -- ^ The transaction result code
+  ,ptResultMessage     :: Maybe Text -- ^ The transaction result code
+  ,ptExecutionDate     :: Maybe  POSIXTime
+  ,ptType              :: Maybe TransactionType
+  ,ptNature            :: Maybe TransactionNature
+  ,ptPaymentType       :: Maybe PaymentType
   ,ptMeanOfPaymentType :: Maybe PaymentType -- ^  « BANK_WIRE »,
   } deriving (Show,Eq,Ord,Typeable)
 
@@ -62,8 +62,8 @@ instance ToJSON Payout where
 -- | from json as per MangoPay format
 instance FromJSON Payout where
         parseJSON (Object v) =Payout <$>
-                         v .: "Id" <*>
-                         v .: "CreationDate" <*>
+                         v .:? "Id" <*>
+                         v .:? "CreationDate" <*>
                          v .:? "Tag" <*>
                          v .: "AuthorId" <*>
                          v .: "DebitedWalletId" <*>

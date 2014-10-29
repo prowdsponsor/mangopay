@@ -1,4 +1,6 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
+             FlexibleInstances, OverloadedStrings, PatternGuards,
+             ScopedTypeVariables #-}
 -- | handle wallets
 module Web.MangoPay.Wallets where
 
@@ -54,13 +56,13 @@ type WalletId=Text
 
 -- | a wallet
 data Wallet = Wallet {
-        wId:: Maybe WalletId -- ^ The Id of the wallet
+        wId            :: Maybe WalletId -- ^ The Id of the wallet
         ,wCreationDate :: Maybe POSIXTime -- ^ The creation date of the object
-        ,wTag :: Maybe Text -- ^  Custom data
-        ,wOwners :: [Text] -- ^ The owner of the wallet
-        ,wDescription :: Text -- ^ A description of the wallet
-        ,wCurrency :: Currency -- ^ Currency of the wallet
-        ,wBalance :: Maybe Amount -- ^ The amount held on the wallet
+        ,wTag          :: Maybe Text -- ^  Custom data
+        ,wOwners       :: [Text] -- ^ The owner of the wallet
+        ,wDescription  :: Text -- ^ A description of the wallet
+        ,wCurrency     :: Currency -- ^ Currency of the wallet
+        ,wBalance      :: Maybe Amount -- ^ The amount held on the wallet
         }
         deriving (Show,Eq,Ord,Typeable)
 
@@ -71,8 +73,8 @@ instance ToJSON Wallet where
 -- | from json as per MangoPay format
 instance FromJSON Wallet where
         parseJSON (Object v) =Wallet <$>
-                         v .: "Id" <*>
-                         v .: "CreationDate" <*>
+                         v .:? "Id" <*>
+                         v .:? "CreationDate" <*>
                          v .:? "Tag" <*>
                          v .: "Owners" <*>
                          v .: "Description" <*>
@@ -103,20 +105,20 @@ instance FromJSON TransferStatus where
 
 -- | transfer between wallets
 data Transfer = Transfer{
-        tId :: Maybe TransferId -- ^ Id of the transfer
-        ,tCreationDate    :: Maybe POSIXTime -- ^  The creation date of the object
-        ,tTag     :: Maybe Text -- ^   Custom data
-        ,tAuthorId :: AnyUserId -- ^ The Id of the author
-        ,tCreditedUserId  :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
-        ,tDebitedFunds :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,tFees  :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,tDebitedWalletId :: WalletId -- ^  The debited wallet (where the funds are held before the transfer)
+        tId                :: Maybe TransferId -- ^ Id of the transfer
+        ,tCreationDate     :: Maybe POSIXTime -- ^  The creation date of the object
+        ,tTag              :: Maybe Text -- ^   Custom data
+        ,tAuthorId         :: AnyUserId -- ^ The Id of the author
+        ,tCreditedUserId   :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
+        ,tDebitedFunds     :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,tFees             :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,tDebitedWalletId  :: WalletId -- ^  The debited wallet (where the funds are held before the transfer)
         ,tCreditedWalletId:: WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
-        ,tCreditedFunds :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,tStatus  :: Maybe TransferStatus -- ^   The status of the transfer:
-        ,tResultCode      :: Maybe Text -- ^   The transaction result code
-        ,tResultMessage   :: Maybe Text -- ^   The transaction result message
-        ,tExecutionDate   :: Maybe POSIXTime -- ^  The execution date of the transfer
+        ,tCreditedFunds    :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,tStatus           :: Maybe TransferStatus -- ^   The status of the transfer:
+        ,tResultCode       :: Maybe Text -- ^   The transaction result code
+        ,tResultMessage    :: Maybe Text -- ^   The transaction result message
+        ,tExecutionDate    :: Maybe POSIXTime -- ^  The execution date of the transfer
         }
         deriving (Show,Eq,Ord,Typeable)
 
@@ -129,11 +131,11 @@ instance ToJSON Transfer  where
 -- | from json as per MangoPay format
 instance FromJSON Transfer where
         parseJSON (Object v) =Transfer <$>
-                         v .: "Id" <*>
-                         v .: "CreationDate" <*>
+                         v .:? "Id" <*>
+                         v .:? "CreationDate" <*>
                          v .:? "Tag" <*>
                          v .: "AuthorId" <*>
-                         v .: "CreditedUserId" <*>
+                         v .:? "CreditedUserId" <*>
                          v .: "DebitedFunds" <*>
                          v .: "Fees" <*>
                          v .: "DebitedWalletId" <*> -- yes, it's Id one way, Id the other
@@ -181,22 +183,22 @@ type TransactionId = Text
 
 -- | any transaction
 data Transaction = Transaction{
-        txId :: Maybe TransactionId -- ^ Id of the transfer
-        ,txCreationDate    :: Maybe POSIXTime -- ^  The creation date of the object
-        ,txTag     :: Maybe Text -- ^   Custom data
-        ,txAuthorId :: AnyUserId -- ^ The Id of the author
-        ,txCreditedUserId  :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
-        ,txDebitedFunds :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,txFees  :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,txDebitedWalletId :: Maybe WalletId -- ^  The debited wallet (where the funds are held before the transfer)
+        txId                :: Maybe TransactionId -- ^ Id of the transfer
+        ,txCreationDate     :: Maybe POSIXTime -- ^  The creation date of the object
+        ,txTag              :: Maybe Text -- ^   Custom data
+        ,txAuthorId         :: AnyUserId -- ^ The Id of the author
+        ,txCreditedUserId   :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
+        ,txDebitedFunds     :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,txFees             :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,txDebitedWalletId  :: Maybe WalletId -- ^  The debited wallet (where the funds are held before the transfer)
         ,txCreditedWalletId:: Maybe WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
-        ,txCreditedFunds :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
-        ,txStatus  :: Maybe TransferStatus -- ^   The status of the transfer:
-        ,txResultCode      :: Maybe Text -- ^   The transaction result code
-        ,txResultMessage   :: Maybe Text -- ^   The transaction result message
-        ,txExecutionDate   :: Maybe POSIXTime -- ^  The execution date of the transfer
-        ,txType  :: TransactionType -- ^  The type of the transaction
-        ,txNature  :: TransactionNature -- ^  The nature of the transaction:
+        ,txCreditedFunds    :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
+        ,txStatus           :: Maybe TransferStatus -- ^   The status of the transfer:
+        ,txResultCode       :: Maybe Text -- ^   The transaction result code
+        ,txResultMessage    :: Maybe Text -- ^   The transaction result message
+        ,txExecutionDate    :: Maybe POSIXTime -- ^  The execution date of the transfer
+        ,txType             :: TransactionType -- ^  The type of the transaction
+        ,txNature           :: TransactionNature -- ^  The nature of the transaction:
         }
         deriving (Show,Eq,Ord,Typeable)
 
@@ -209,8 +211,8 @@ instance ToJSON Transaction  where
 -- | from json as per MangoPay format
 instance FromJSON Transaction where
         parseJSON (Object v) =Transaction <$>
-                         v .: "Id" <*>
-                         v .: "CreationDate" <*>
+                         v .:? "Id" <*>
+                         v .:? "CreationDate" <*>
                          v .:? "Tag" <*>
                          v .: "AuthorId" <*>
                          v .: "CreditedUserId" <*>
