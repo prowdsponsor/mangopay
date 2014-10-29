@@ -113,16 +113,16 @@ executable         yesod-mangopay
                  , shakespeare-js
                  , shakespeare-text
                  , template-haskell
-                 , wai                           >= 3.0        && < 3.1
+                 , wai                           >= 2.1        && < 3.1
                  , wai-extra
                  , wai-logger                    >= 2.1        && < 2.3
-                 , warp                          >= 3.0        && < 3.1
+                 , warp                          >= 2.1        && < 3.1
                  , yaml                          >= 0.8        && < 0.9
                  , yesod-auth                    >= 1.2.6
                  , yesod-form                    >= 1.3.0      && < 1.4
                  , yesod-persistent
                  , yesod-static                  >= 1.2        && < 1.3
-                 , lifted-base                   >=0.2.2 && <0.3
+                 , lifted-base                   >=0.2.2       && <0.3
                  , country-codes                 == 0.1.*
     if flag(conduit11)
       build-depends:
