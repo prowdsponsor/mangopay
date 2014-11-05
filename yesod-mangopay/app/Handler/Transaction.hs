@@ -151,10 +151,11 @@ data PayIn = PayIn CardId WalletId Integer Currency
 -- | payin form
 payinInForm :: [Card] -> [Wallet] -> Html -> MForm Handler (FormResult PayIn, Widget)
 payinInForm cards wallets= renderDivs $ PayIn
-  <$> areq (selectFieldList (map (cAlias &&& cId) cards)) (localizedFS MsgPayInCard) Nothing
+  <$> areq (selectFieldList (map (cardTitle &&& cId) cards)) (localizedFS MsgPayInCard) Nothing
   <*> areq (selectFieldList (map (wDescription &&& (fromJust . wId)) wallets)) (localizedFS MsgPayInWallet) Nothing
   <*> areq intField (localizedFS MsgPayInAmount) Nothing
   <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgPayInCurrency) Nothing
+  where cardTitle c = cAlias c <> " (" <> cCurrency c <> ")"
 
 -- | data necessary for transfer
 data MPTransfer= MPTransfer WalletId WalletId Integer Currency
@@ -177,4 +178,3 @@ payoutForm wallets accounts= renderDivs $ PayOut
   <*> areq (selectFieldList (map ((pack . show . baDetails) &&& (fromJust . baId)) accounts)) (localizedFS MsgPayOutAccount) Nothing
   <*> areq intField (localizedFS MsgPayOutAmount) Nothing
   <*> areq (selectFieldList (map (id &&& id) supportedCurrencies)) (localizedFS MsgPayOutCurrency) Nothing
-
