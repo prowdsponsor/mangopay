@@ -50,7 +50,7 @@ postAccountR uid=do
 data BankAccountPartial=BankAccountPartial {
    bapTag :: Maybe Text
   ,bapIBAN :: Text
-  ,bapBIC :: Text
+  ,bapBIC :: Maybe Text
   ,bapOwnerName :: Text
   ,bapOwnerAddress :: Maybe Text
   }
@@ -65,6 +65,6 @@ accountForm :: Html -> MForm Handler (FormResult BankAccountPartial, Widget)
 accountForm = renderDivs $ BankAccountPartial
   <$> aopt textField (localizedFS MsgAccountCustomData) Nothing
   <*> areq textField (localizedFS MsgAccountIBAN) Nothing
-  <*> areq textField (localizedFS MsgAccountBIC) Nothing
+  <*> aopt textField (localizedFS MsgAccountBIC) Nothing
   <*> areq textField (localizedFS MsgAccountOwnerName) Nothing
   <*> aopt textField (localizedFS MsgAccountOwnerAddress) Nothing

@@ -36,7 +36,7 @@ listAccounts uid = genericList ["/users/",uid,"/bankaccounts/"]
 -- | account details, depending on the type
 data BankAccountDetails=IBAN {
   atIBAN :: Text
-  ,atBIC :: Text
+  ,atBIC :: Maybe Text
   } | GB {
   atAccountNumber :: Text
   ,atSortCode :: Text
@@ -50,7 +50,7 @@ data BankAccountDetails=IBAN {
   ,atBranchCode :: Text
   } | Other {
   atAccountNumber :: Text
-  ,atBIC :: Text
+  ,atBIC :: Maybe Text
   ,atCountry :: CountryCode
   } deriving (Show,Read,Eq,Ord,Typeable)
 
@@ -60,8 +60,8 @@ instance FromJSON BankAccountDetails where
     typ<-v .: "Type"
     case typ of
       "IBAN"->IBAN <$>
-                v .: "IBAN" <*>
-                v .: "BIC"
+                v .:  "IBAN" <*>
+                v .:? "BIC"
       "GB"->GB <$>
                 v .: "AccountNumber" <*>
                 v .: "SortCode"
@@ -74,9 +74,9 @@ instance FromJSON BankAccountDetails where
                 v .: "InstitutionNumber" <*>
                 v .: "BranchCode"
       "OTHER"->Other <$>
-                v .: "AccountNumber" <*>
-                v .: "BIC" <*>
-                v .: "Country"
+                v .:  "AccountNumber" <*>
+                v .:? "BIC" <*>
+                v .:  "Country"
       _->fail $ "BankAccountDetails: unknown type:" ++ typ
   parseJSON _=fail "BankAccountDetails"
 
