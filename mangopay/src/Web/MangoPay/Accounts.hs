@@ -112,7 +112,7 @@ data BankAccount = BankAccount {
 
 -- | to json as per MangoPay format
 instance ToJSON BankAccount where
-        toJSON ba=object $ ["OwnerName" .= baOwnerName ba,"Type" .= typeName (baDetails ba)
+        toJSON ba=objectSN $ ["OwnerName" .= baOwnerName ba,"Type" .= typeName (baDetails ba)
            ,"OwnerAddress" .= baOwnerAddress ba, "UserId" .= baUserId ba, "Tag" .= baTag ba]
             ++ toJSONPairs (baDetails ba)
 

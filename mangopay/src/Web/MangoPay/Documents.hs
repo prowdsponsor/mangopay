@@ -95,7 +95,7 @@ data Document = Document {
 
 -- | to json as per MangoPay format
 instance ToJSON Document where
-        toJSON d=object ["Tag" .= dTag d,
+        toJSON d=objectSN ["Tag" .= dTag d,
           "Type" .= dType d,"Status" .= dStatus d]
 
 -- | from json as per MangoPay format

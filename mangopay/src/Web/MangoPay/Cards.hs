@@ -62,7 +62,7 @@ data CardRegistration = CardRegistration {
 
 -- | to json as per MangoPay format
 instance ToJSON CardRegistration where
-        toJSON cr=object ["Id".= crId cr -- we store the Id, because in the registration workflow we may need to hang on to the registration object for a while, so let's use JSON serialization to keep it!
+        toJSON cr=objectSN ["Id".= crId cr -- we store the Id, because in the registration workflow we may need to hang on to the registration object for a while, so let's use JSON serialization to keep it!
           , "Tag" .= crTag cr,"UserId" .= crUserId cr
           ,"Currency" .= crCurrency cr,"RegistrationData" .= crRegistrationData cr
           ,"CardRegistrationURL" .= crCardRegistrationURL cr]
@@ -148,7 +148,7 @@ instance FromJSON Card where
 
 -- | to json as per MangoPay format
 instance ToJSON Card where
-  toJSON Card {..} = object
+  toJSON Card {..} = objectSN
     [ "Id"             .= cId
     , "CreationDate"   .= cCreationDate
     , "Tag"            .= cTag

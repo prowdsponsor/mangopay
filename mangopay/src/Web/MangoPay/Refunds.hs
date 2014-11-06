@@ -39,7 +39,7 @@ data RefundRequest=RefundRequest{
 
 -- | to json as per MangoPay format
 instance ToJSON RefundRequest  where
-    toJSON rr=object ["AuthorId" .= rrAuthorId rr,"DebitedFunds" .= rrDebitedFunds rr,
+    toJSON rr=objectSN ["AuthorId" .= rrAuthorId rr,"DebitedFunds" .= rrDebitedFunds rr,
       "Fees" .= rrFees rr]
 
 

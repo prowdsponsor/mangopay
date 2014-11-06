@@ -12,6 +12,7 @@ import Data.Typeable (Typeable)
 import Data.ByteString  as BS (ByteString)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Aeson
+import Data.Aeson.Types (Pair)
 import Data.Default
 
 import qualified Data.Text.Encoding as TE
@@ -53,7 +54,7 @@ data Credentials = Credentials {
 
 -- | to json as per MangoPay format
 instance ToJSON Credentials  where
-    toJSON c=object ["ClientId" .= cClientId c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c]
+    toJSON c=objectSN ["ClientId" .= cClientId c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c]
 
 -- | from json as per MangoPay format
 instance FromJSON Credentials where
@@ -84,7 +85,7 @@ data OAuthToken = OAuthToken {
 
 -- | to json as per MangoPay format
 instance ToJSON OAuthToken  where
-    toJSON oa=object ["access_token" .= oaAccessToken oa, "token_type" .= oaTokenType oa, "expires_in" .= oaExpires oa]
+    toJSON oa=objectSN ["access_token" .= oaAccessToken oa, "token_type" .= oaTokenType oa, "expires_in" .= oaExpires oa]
 
 -- | from json as per MangoPay format
 instance FromJSON OAuthToken where
@@ -111,10 +112,10 @@ instance Exception MpException
 
 -- | to json
 instance ToJSON MpException  where
-    toJSON (MpJSONException j)  = object ["Type" .= ("MpJSONException"::Text), "Error" .= j]
-    toJSON (MpAppException mpe)  = object ["Type" .= ("MpAppException"::Text), "Error" .= toJSON mpe]
-    toJSON (MpHttpException e v) = object ["Type" .= ("MpHttpException"::Text), "Error" .= (show e), "Value" .= v]
-    toJSON (MpHttpExceptionS e v) = object ["Type" .= ("MpHttpException"::Text), "Error" .= e, "Value" .= v]
+    toJSON (MpJSONException j)  = objectSN ["Type" .= ("MpJSONException"::Text), "Error" .= j]
+    toJSON (MpAppException mpe)  = objectSN ["Type" .= ("MpAppException"::Text), "Error" .= toJSON mpe]
+    toJSON (MpHttpException e v) = objectSN ["Type" .= ("MpHttpException"::Text), "Error" .= (show e), "Value" .= v]
+    toJSON (MpHttpExceptionS e v) = objectSN ["Type" .= ("MpHttpException"::Text), "Error" .= e, "Value" .= v]
 
 
 instance FromJSON MpException where
@@ -140,7 +141,7 @@ data MpError = MpError {
 
 -- | to json as per MangoPay format
 instance ToJSON MpError  where
-    toJSON mpe=object ["Id" .= igeId mpe, "Type" .= igeType mpe, "Message" .= igeMessage mpe, "Date" .= igeDate mpe]
+    toJSON mpe=objectSN ["Id" .= igeId mpe, "Type" .= igeType mpe, "Message" .= igeMessage mpe, "Date" .= igeDate mpe]
 
 
 -- | from json as per MangoPay format
@@ -209,7 +210,7 @@ data Amount=Amount {
 
 -- | to json as per MangoPay format
 instance ToJSON Amount where
-        toJSON b=object ["Currency"  .= aCurrency b,"Amount" .= aAmount b]
+        toJSON b=objectSN ["Currency"  .= aCurrency b,"Amount" .= aAmount b]
 
 -- | from json as per MangoPay format
 instance FromJSON Amount where
@@ -421,3 +422,14 @@ findAssoc xs n=listToMaybe $ Prelude.map snd $ Prelude.filter ((n==) . fst) xs
 -- | read an object or return Nothing
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
+
+
+-- | Remove pairs whose value is null.
+-- <https://github.com/bos/aeson/issues/77>
+stripNulls :: [Pair] -> [Pair]
+stripNulls xs = Prelude.filter (\(_,v) -> v /= Null) xs
+
+
+-- | Same as 'object', but using 'stripNulls' as well.
+objectSN :: [Pair] -> Value
+objectSN = object . stripNulls

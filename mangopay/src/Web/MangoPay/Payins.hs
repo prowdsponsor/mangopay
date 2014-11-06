@@ -85,7 +85,7 @@ data BankWire=BankWire {
 
 -- | to json as per MangoPay format
 instance ToJSON BankWire where
-        toJSON bw=object ["Tag" .= bwTag bw,"AuthorId" .= bwAuthorId  bw
+        toJSON bw=objectSN ["Tag" .= bwTag bw,"AuthorId" .= bwAuthorId  bw
           ,"CreditedUserId" .= bwCreditedUserId bw,"CreditedWalletId" .= bwCreditedWalletId bw
           ,"DeclaredDebitedFunds" .= bwDeclaredDebitedFunds bw,"DeclaredFees" .= bwDeclaredFees bw]
 
@@ -154,7 +154,7 @@ data CardPayin=CardPayin {
 
 -- | to json as per MangoPay format
 instance ToJSON CardPayin where
-        toJSON cp=object ["Tag" .= cpTag cp,"AuthorId" .= cpAuthorId  cp
+        toJSON cp=objectSN ["Tag" .= cpTag cp,"AuthorId" .= cpAuthorId  cp
           ,"CreditedUserId" .= cpCreditedUserId cp,"CreditedWalletId" .= cpCreditedWalletId cp
           ,"DebitedFunds" .= cpDebitedFunds cp,"Fees" .= cpFees cp,"CardId" .= cpCardId cp
           ,"SecureModeReturnURL" .= cpSecureModeReturnURL cp

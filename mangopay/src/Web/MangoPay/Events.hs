@@ -134,7 +134,7 @@ data Event=Event {
 
 -- | to json as per MangoPay format
 instance ToJSON Event where
-        toJSON e=object ["ResourceId"  .= eResourceId e,"EventType" .= eEventType e,"Date" .= eDate e]
+        toJSON e=objectSN ["ResourceId"  .= eResourceId e,"EventType" .= eEventType e,"Date" .= eDate e]
 
 -- | from json as per MangoPay format
 instance FromJSON Event where
@@ -212,7 +212,7 @@ data Hook=Hook {
 
 -- | to json as per MangoPay format
 instance ToJSON Hook where
-        toJSON h=object ["Tag"  .= hTag h,"EventType" .= hEventType h,"Url" .= hUrl h,"Status" .= hStatus h]
+        toJSON h=objectSN ["Tag"  .= hTag h,"EventType" .= hEventType h,"Url" .= hUrl h,"Status" .= hStatus h]
 
 -- | from json as per MangoPay format
 instance FromJSON Hook where

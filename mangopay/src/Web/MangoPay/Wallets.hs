@@ -68,7 +68,7 @@ data Wallet = Wallet {
 
 -- | to json as per MangoPay format
 instance ToJSON Wallet where
-        toJSON w=object ["Tag"  .= wTag w,"Owners" .= wOwners w,"Description" .= wDescription w,"Currency" .= wCurrency w]
+        toJSON w=objectSN ["Tag"  .= wTag w,"Owners" .= wOwners w,"Description" .= wDescription w,"Currency" .= wCurrency w]
 
 -- | from json as per MangoPay format
 instance FromJSON Wallet where
@@ -124,7 +124,7 @@ data Transfer = Transfer{
 
 -- | to json as per MangoPay format
 instance ToJSON Transfer  where
-    toJSON t=object ["AuthorId" .= tAuthorId t,"CreditedUserId" .= tCreditedUserId t,"DebitedFunds" .= tDebitedFunds t,
+    toJSON t=objectSN ["AuthorId" .= tAuthorId t,"CreditedUserId" .= tCreditedUserId t,"DebitedFunds" .= tDebitedFunds t,
         "Fees" .= tFees t,"DebitedWalletId" .= tDebitedWalletId t,"CreditedWalletId" .= tCreditedWalletId t,
         "Tag" .= tTag t]
 
@@ -204,7 +204,7 @@ data Transaction = Transaction{
 
 -- | to json as per MangoPay format
 instance ToJSON Transaction  where
-    toJSON t=object ["AuthorId" .= txAuthorId t,"CreditedUserId" .= txCreditedUserId t,"DebitedFunds" .= txDebitedFunds t,
+    toJSON t=objectSN ["AuthorId" .= txAuthorId t,"CreditedUserId" .= txCreditedUserId t,"DebitedFunds" .= txDebitedFunds t,
         "Fees" .= txFees t,"DebitedWalletID" .= txDebitedWalletId t,"CreditedWalletID" .= txCreditedWalletId t,
         "Tag" .= txTag t,"Type" .= txType t,"Nature" .= txNature t]
 

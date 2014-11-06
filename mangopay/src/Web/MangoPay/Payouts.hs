@@ -55,7 +55,7 @@ data Payout=Payout {
 
 -- | to json as per MangoPay format
 instance ToJSON Payout where
-        toJSON pt=object ["Tag" .= ptTag pt,"AuthorId" .= ptAuthorId  pt
+        toJSON pt=objectSN ["Tag" .= ptTag pt,"AuthorId" .= ptAuthorId  pt
           ,"DebitedWalletId" .= ptDebitedWalletId pt
           ,"DebitedFunds" .= ptDebitedFunds pt,"Fees" .= ptFees pt,"BankAccountId" .= ptBankAccountId pt]
 
