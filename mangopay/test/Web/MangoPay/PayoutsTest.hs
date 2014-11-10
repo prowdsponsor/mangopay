@@ -27,13 +27,14 @@ test_PayoutOK=do
   -- Fixed in Okapi <http://docs.mangopay.com/release-okapi-hook-fixes-and-new-sort-options/>
   -- IMPORTANT: we don't get the PAYOUT_NORMAL_SUCCESSFUL since the payout needs to be validated
   testEventTypes [PAYOUT_NORMAL_CREATED] $ do
-    let pt1=mkPayout uid wid (Amount "EUR" 100) (Amount "EUR" 0) aid
+    let pt1=(mkPayout uid wid (Amount "EUR" 100) (Amount "EUR" 0) aid){ptBankWireRef=Just "ref"}
     pt2<-testMP $ createPayout pt1
     assertBool $ isJust $ ptId pt2
     assertEqual (Just Created) (ptStatus pt2)
     assertEqual (Just (Amount "EUR" 100)) (ptCreditedFunds pt2)
     pt3 <- testMP $ fetchPayout $ fromJust $  ptId pt2
     assertEqual (Just BANK_WIRE) (ptPaymentType pt3)
+    assertEqual (Just "ref") (ptBankWireRef pt3)
     return $ ptId pt2
 
 -- | test failing payout
