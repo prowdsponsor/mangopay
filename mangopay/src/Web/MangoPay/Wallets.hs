@@ -191,7 +191,7 @@ data Transaction = Transaction{
         ,txDebitedFunds     :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txFees             :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txDebitedWalletId  :: Maybe WalletId -- ^  The debited wallet (where the funds are held before the transfer)
-        ,txCreditedWalletId:: Maybe WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
+        ,txCreditedWalletId :: Maybe WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
         ,txCreditedFunds    :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txStatus           :: Maybe TransferStatus -- ^   The status of the transfer:
         ,txResultCode       :: Maybe Text -- ^   The transaction result code
@@ -218,8 +218,8 @@ instance FromJSON Transaction where
                          v .: "CreditedUserId" <*>
                          v .: "DebitedFunds" <*>
                          v .: "Fees" <*>
-                         v .:? "DebitedWalletId" <*> -- yes, it's Id one way, Id the other
-                         v .:? "CreditedWalletId" <*> -- yes, it's Id one way, Id the other
+                         v .:? "DebitedWalletId" <*> -- yes, it's Id one way, ID the other
+                         v .:? "CreditedWalletId" <*> -- yes, it's Id one way, ID the other
                          v .:? "CreditedFunds" <*>
                          v .:? "Status" <*>
                          v .:? "ResultCode" <*>

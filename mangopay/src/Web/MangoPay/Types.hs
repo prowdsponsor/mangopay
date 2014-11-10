@@ -156,7 +156,7 @@ instance FromJSON MpError where
 -- | from json as per MangoPay format
 instance FromJSON POSIXTime where
     parseJSON n@(Number _)=(fromIntegral . (round::Double -> Integer)) <$> parseJSON n
-    parseJSON _ = fail "POSIXTime"
+    parseJSON o = fail $ "POSIXTime: " ++ show o
 
 -- | to json as per MangoPay format
 instance ToJSON POSIXTime  where

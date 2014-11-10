@@ -59,7 +59,7 @@ data Refund=Refund{
   ,rStatus                 :: TransferStatus
   ,rResultCode             :: Text -- ^ The transaction result code
   ,rResultMessage          :: Maybe Text -- ^ The transaction result Message
-  ,rExecutionDate          :: POSIXTime
+  ,rExecutionDate          :: Maybe POSIXTime
   ,rType                   :: TransactionType
   ,rNature                 :: TransactionNature
   ,rCreditedUserId         :: Maybe AnyUserId -- ^ Id of the user owner of the credited wallet
@@ -84,7 +84,7 @@ instance FromJSON Refund where
                          v .: "Status" <*>
                          v .: "ResultCode" <*>
                          v .:? "ResultMessage" <*>
-                         v .: "ExecutionDate" <*>
+                         v .:? "ExecutionDate" <*>
                          v .: "Type" <*>
                          v .: "Nature" <*>
                          v .:? "CreditedUserId" <*>
