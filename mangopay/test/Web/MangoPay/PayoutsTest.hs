@@ -25,7 +25,8 @@ test_PayoutOK=do
   let Just (Amount _ nb) =wBalance $ head $ plData ws
   assertBool $ nb >= 100
   -- Fixed in Okapi <http://docs.mangopay.com/release-okapi-hook-fixes-and-new-sort-options/>
-  testEventTypes [PAYOUT_NORMAL_CREATED,PAYOUT_NORMAL_SUCCEEDED] $ do
+  -- IMPORTANT: we don't get the PAYOUT_NORMAL_SUCCESSFUL since the payout needs to be validated
+  testEventTypes [PAYOUT_NORMAL_CREATED] $ do
     let pt1=mkPayout uid wid (Amount "EUR" 100) (Amount "EUR" 0) aid
     pt2<-testMP $ createPayout pt1
     assertBool $ isJust $ ptId pt2
