@@ -12,7 +12,7 @@ import Data.Typeable (Typeable)
 import Data.ByteString  as BS (ByteString)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Aeson
-import Data.Aeson.Types (Pair)
+import Data.Aeson.Types (Pair,Parser)
 import Data.Default
 
 import qualified Data.Text.Encoding as TE
@@ -433,3 +433,15 @@ stripNulls xs = Prelude.filter (\(_,v) -> v /= Null) xs
 -- | Same as 'object', but using 'stripNulls' as well.
 objectSN :: [Pair] -> Value
 objectSN = object . stripNulls
+
+
+-- | Read instance from a JSON string.
+--   We use to just call "read" which would cause a Prelude.read: no parse error
+--   instead of a proper exception.
+jsonRead :: (Read a) => String -> Value -> Parser a
+jsonRead name (String s) = do
+  let ss = unpack s
+  case maybeRead ss of
+    Just r -> pure r
+    _      -> fail $ name ++ ": " ++ ss
+jsonRead name _ = fail name

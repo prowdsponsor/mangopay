@@ -38,6 +38,7 @@ test_SimpleCardRefund = do
     r2<-testMP $ fetchRefund (rId r)
     assertEqual cp $ rInitialTransactionId r2
     assertEqual (Amount "EUR" 333) $ rCreditedFunds r2
+    assertEqual INITIALIZED_BY_CLIENT $ rrType $ rReason r2
     return $ Just $ rId r
 
 -- | test a successful card pay in + partial refund
@@ -68,6 +69,7 @@ test_AdvancedCardRefund = do
     r2<-testMP $ fetchRefund (rId r)
     assertEqual cp $ rInitialTransactionId r2
     assertEqual (Amount "EUR" 99) $ rCreditedFunds r2
+    assertEqual INITIALIZED_BY_CLIENT $ rrType $ rReason r2
     return $ Just $ rId r
 
 -- | test transfer + full refund
@@ -117,4 +119,5 @@ test_TransferRefund = do
           r2<-testMP $ fetchRefund (rId r)
           assertEqual tr $ rInitialTransactionId r2
           assertEqual (Amount "EUR" 100) $ rCreditedFunds r2
+          assertEqual OTHER $ rrType $ rReason r2
           return $ Just $ rId r

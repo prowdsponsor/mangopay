@@ -145,6 +145,8 @@ module Web.MangoPay (
         ,RefundId
         ,Refund(..)
         ,RefundRequest(..)
+        ,RefundReason(..)
+        ,RefundReasonType(..)
         ,refundTransfer
         ,refundPayin
         ,fetchRefund
