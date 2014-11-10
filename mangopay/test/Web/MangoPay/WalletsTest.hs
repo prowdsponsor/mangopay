@@ -8,6 +8,7 @@ import Web.MangoPay.TestUtils
 
 import Test.Framework
 import Test.HUnit (Assertion)
+import Data.Default
 import Data.Maybe (isJust, fromJust)
 
 -- | test wallet API
@@ -55,11 +56,17 @@ test_FailedTransfer = do
                 assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
-                ts1 <- testMP $ listTransactions uw1 Nothing
+                ts1 <- testMP $ listTransactions uw1 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
-                ts2 <- testMP $ listTransactions uw2 Nothing
+                ts1f <- testMP $ listTransactions uw1 (def{tfStatus=Just Failed}) Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1f)
+                ts1ft <- testMP $ listTransactions uw1 (def{tfStatus=Just Failed,tfType=Just TRANSFER}) Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1ft)
+                ts1st <- testMP $ listTransactions uw1 (def{tfStatus=Just Succeeded,tfType=Just TRANSFER}) Nothing
+                assertEqual 0 (length $ filter ((tId t1'==) . txId) $ plData ts1st)
+                ts2 <- testMP $ listTransactions uw2 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
-                uts1 <- testMP $ listTransactionsForUser uid1 Nothing
+                uts1 <- testMP $ listTransactionsForUser uid1 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)
                 return $ tId t1'
 
@@ -96,10 +103,10 @@ test_SuccessfulTransfer = do
                 assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
-                ts1 <- testMP $ listTransactions uw1 Nothing
+                ts1 <- testMP $ listTransactions uw1 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
-                ts2 <- testMP $ listTransactions uw2 Nothing
+                ts2 <- testMP $ listTransactions uw2 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
-                uts1 <- testMP $ listTransactionsForUser uid1 Nothing
+                uts1 <- testMP $ listTransactionsForUser uid1 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)
                 return $ tId t1'

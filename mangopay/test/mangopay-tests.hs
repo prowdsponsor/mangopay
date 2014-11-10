@@ -13,9 +13,9 @@ import {-@ HTF_TESTS @-} Web.MangoPay.WalletsTest
 import {-@ HTF_TESTS @-} Web.MangoPay.DocumentsTest
 import {-@ HTF_TESTS @-} Web.MangoPay.PayinsTest
 import {-@ HTF_TESTS @-} Web.MangoPay.CardsTest
-import {-@ HTF_TESTS @-} Web.MangoPay.RefundsTest
 import {-@ HTF_TESTS @-} Web.MangoPay.AccountsTest
 import {-@ HTF_TESTS @-} Web.MangoPay.PayoutsTest
+import {-@ HTF_TESTS @-} Web.MangoPay.RefundsTest
 
 import Web.MangoPay.TestUtils
 

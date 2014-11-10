@@ -9,12 +9,14 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
+import Data.ByteString (ByteString)
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Data.HashMap.Lazy as HM (delete)
+import Data.Default (Default(..))
 
 -- | create a wallet
 createWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
@@ -43,12 +45,14 @@ fetchTransfer :: (MPUsableMonad m) => TransferId -> AccessToken -> MangoPayT m T
 fetchTransfer = fetchGeneric "/transfers/"
 
 -- | list transfers for a given wallet
-listTransactions ::  (MPUsableMonad m) =>  WalletId  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactions wid = genericList ["/wallets/",wid,"/transactions"]
+listTransactions ::  (MPUsableMonad m) =>  WalletId -> TransactionFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactions wid mtf = genericListExtra (transactionFilterAttributes mtf)
+  ["/wallets/",wid,"/transactions"]
 
 -- | list transfer for a given user
-listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserId  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactionsForUser uid = genericList ["/users/",uid,"/transactions"]
+listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserId  -> TransactionFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactionsForUser uid mtf = genericListExtra (transactionFilterAttributes mtf)
+  ["/users/",uid,"/transactions"]
 
 
 -- | Id of a wallet
@@ -228,3 +232,26 @@ instance FromJSON Transaction where
                          v .: "Type"  <*>
                          v .: "Nature"
         parseJSON _=fail "Transfer"
+
+
+-- | A filter for transaction lists.
+data TransactionFilter = TransactionFilter
+  {
+    tfBefore :: Maybe POSIXTime
+  , tfAfter  :: Maybe POSIXTime
+  , tfNature :: Maybe TransactionNature
+  , tfStatus :: Maybe TransferStatus
+  , tfType   :: Maybe TransactionType
+  } deriving (Show,Eq,Ord,Typeable)
+
+instance Default TransactionFilter where
+  def = TransactionFilter Nothing Nothing Nothing Nothing Nothing
+
+-- | get filter attributes for transaction query
+transactionFilterAttributes :: TransactionFilter -> [(ByteString,Maybe ByteString)]
+transactionFilterAttributes f=[ "BeforeDate" ?+ tfBefore f
+                                     , "AfterDate" ?+ tfAfter f
+                                     , "Nature" ?+ (show <$> (tfNature f))
+                                     , "Status" ?+ (show <$> (tfStatus f))
+                                     , "Type" ?+ (show <$> (tfType f))]
+

@@ -423,7 +423,12 @@ fetchGeneric path xid at = do
 -- | helper function to fetch paginated lists of an entity
 genericList :: (MPUsableMonad m, FromJSON a) =>
   [T.Text] -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList a)
-genericList path mp at = do
+genericList = genericListExtra []
+
+-- | helper function to fetch paginated lists of an entity, with extra parameters
+genericListExtra :: (MPUsableMonad m, FromJSON a) =>
+  [(ByteString,Maybe ByteString)] -> [T.Text] -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList a)
+genericListExtra extra path mp at = do
         url <- getClientURLMultiple path
-        req <- getGetRequest url (Just at) (paginationAttributes mp)
+        req <- getGetRequest url (Just at) (extra ++ (paginationAttributes mp))
         getJSONList req

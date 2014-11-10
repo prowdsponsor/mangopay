@@ -6,6 +6,7 @@ module Web.MangoPay.PayinsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Data.Default
 import Data.Maybe (isJust, fromJust)
 import Test.Framework
 import Test.HUnit (Assertion)
@@ -49,8 +50,10 @@ test_CardOK = do
     assertEqual (Just Succeeded) (cpStatus cp2)
     w3<-testMP $ fetchWallet wid
     assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
-    ts1 <- testMP $ listTransactions wid Nothing
+    ts1 <- testMP $ listTransactions wid (def{tfStatus=Just Succeeded,tfType=Just PAYIN}) Nothing
     assertEqual 1 (length $ filter ((cpId cp2==) . txId) $ plData ts1)
+    ts2 <- testMP $ listTransactions wid (def{tfStatus=Just Succeeded,tfType=Just PAYOUT}) Nothing
+    assertEqual 0 (length $ filter ((cpId cp2==) . txId) $ plData ts2)
     return $ cpId cp2
 
 -- | test a failed card pay in

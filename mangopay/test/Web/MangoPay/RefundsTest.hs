@@ -6,6 +6,8 @@ module Web.MangoPay.RefundsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Control.Applicative
+import Data.Default
 import Data.Maybe (isJust, fromJust)
 import Test.Framework
 import Test.HUnit (Assertion)
@@ -105,11 +107,15 @@ test_TransferRefund = do
                 assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
-                ts1 <- testMP $ listTransactions uw1 Nothing
+                ts1 <- testMP $ listTransactions uw1 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
-                ts2 <- testMP $ listTransactions uw2 Nothing
+                ts1t <- testMP $ listTransactions uw1 def{tfType=Just TRANSFER} Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1t)
+                ts1p <- testMP $ listTransactions uw1 def{tfType=Just PAYOUT} Nothing
+                assertEqual 0 (length $ filter ((tId t1'==) . txId) $ plData ts1p)
+                ts2 <- testMP $ listTransactions uw2 def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
-                uts1 <- testMP $ listTransactionsForUser uid1 (Just $ Pagination 1 50)
+                uts1 <- testMP $ listTransactionsForUser uid1 def (Just $ Pagination 1 50)
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)
                 return $ tId t1'
 
@@ -121,3 +127,25 @@ test_TransferRefund = do
           assertEqual (Amount "EUR" 100) $ rCreditedFunds r2
           assertEqual OTHER $ rrType $ rReason r2
           return $ Just $ rId r
+
+-- | test a successful card pay in + full refund
+--test_PayoutRefund :: Assertion
+--test_PayoutRefund = do
+--  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+--  assertEqual 1 (length $ plData usL)
+--  let uid=urId $ head $ plData usL
+--  trs <- (filter ((Just Succeeded ==) . txStatus) .
+--          filter ((PAYOUT ==) . txType) .
+--          plData)
+--          <$> (testMP $ listTransactionsForUser uid Nothing)
+--  assertBool $ (length trs) > 0
+--  let (Just cp) = txId $ head trs
+--  testEventTypes [PAYOUT_REFUND_CREATED, PAYOUT_REFUND_SUCCEEDED] $ do
+--    let rr=RefundRequest uid Nothing Nothing
+--    r<-testMP $ refundPayout cp rr
+--    assertEqual PAYIN (rInitialTransactionType r)
+--    r2<-testMP $ fetchRefund (rId r)
+--    assertEqual cp $ rInitialTransactionId r2
+--    assertEqual (Amount "EUR" 333) $ rCreditedFunds r2
+--    assertEqual INITIALIZED_BY_CLIENT $ rrType $ rReason r2
+--    return $ Just $ rId r

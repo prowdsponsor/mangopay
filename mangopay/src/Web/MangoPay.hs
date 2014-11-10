@@ -64,6 +64,7 @@ module Web.MangoPay (
         ,TransactionId
         ,TransactionType(..)
         ,TransactionNature(..)
+        ,TransactionFilter(..)
         ,createTransfer
         ,fetchTransfer
         ,listTransactions
