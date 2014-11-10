@@ -8,6 +8,8 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
+import Data.ByteString (ByteString)
+import Data.Default
 import Data.Text hiding (any)
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -48,14 +50,16 @@ createPage uid did contents at=do
 
 -- | List all documents uploaded for a user.
 --   Since http://docs.mangopay.com/release-hamster/
-listDocuments :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
-listDocuments uid = genericList ["/users/",uid,"/KYC/documents"]
+listDocuments :: (MPUsableMonad m) => AnyUserId -> DocumentFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listDocuments uid df= genericListExtra (documentFilterAttributes df)
+  ["/users/",uid,"/KYC/documents"]
 
 
 -- | List all documents uploaded.
 --   Since http://docs.mangopay.com/release-hamster/
-listAllDocuments :: (MPUsableMonad m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
-listAllDocuments = genericList ["/KYC/documents"]
+listAllDocuments :: (MPUsableMonad m) => DocumentFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listAllDocuments df = genericListExtra (documentFilterAttributes df)
+  ["/KYC/documents"]
 
 -- | Id of a document
 type DocumentId = Text
@@ -160,3 +164,23 @@ getRequiredDocumentTypes
   -> [DocumentType]
 getRequiredDocumentTypes (Left _) = [IDENTITY_PROOF, ADDRESS_PROOF]
 getRequiredDocumentTypes (Right _) = [ARTICLES_OF_ASSOCIATION, REGISTRATION_PROOF, SHAREHOLDER_DECLARATION]
+
+
+-- | A filter for document lists.
+data DocumentFilter = DocumentFilter
+  {
+    dfBefore :: Maybe POSIXTime
+  , dfAfter  :: Maybe POSIXTime
+  , dfStatus :: Maybe DocumentStatus
+  , dfType   :: Maybe DocumentType
+  } deriving (Show,Eq,Ord,Typeable)
+
+instance Default DocumentFilter where
+  def = DocumentFilter Nothing Nothing Nothing Nothing
+
+-- | get filter attributes for transaction query
+documentFilterAttributes :: DocumentFilter -> [(ByteString,Maybe ByteString)]
+documentFilterAttributes f=[ "BeforeDate" ?+ dfBefore f
+                                     , "AfterDate" ?+ dfAfter f
+                                     , "Status" ?+ (show <$> (dfStatus f))
+                                     , "Type" ?+ (show <$> (dfType f))]

@@ -93,6 +93,7 @@ module Web.MangoPay (
         ,DocumentId
         ,DocumentType(..)
         ,DocumentStatus(..)
+        ,DocumentFilter(..)
         ,createDocument
         ,modifyDocument
         ,fetchDocument

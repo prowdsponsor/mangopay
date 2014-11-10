@@ -6,6 +6,7 @@ module Web.MangoPay.DocumentsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Data.Default
 import Test.Framework
 import Test.HUnit (Assertion)
 import Data.Maybe (isJust, fromJust)
@@ -33,10 +34,18 @@ test_Document = do
     assertEqual (dId d2) (dId d3)
     d4<-testMP $ fetchDocument uid (fromJust $ dId d2)
     assertEqual (Just VALIDATION_ASKED) (dStatus d4)
-    docsUser <- testMP $ getAll $ listDocuments uid
+    docsUser <- testMP $ getAll $ listDocuments uid def
     assertBool $ d3 `elem` docsUser
-    docsAll <- testMP $ getAll $ listAllDocuments
+    docsUserI <- testMP $ getAll $ listDocuments uid def{dfType=Just IDENTITY_PROOF}
+    assertBool $ d3 `elem` docsUserI
+    docsUserA <- testMP $ getAll $ listDocuments uid def{dfType=Just ADDRESS_PROOF}
+    assertBool $ not $ d3 `elem` docsUserA
+    docsAll <- testMP $ getAll $ listAllDocuments def
     assertBool $ d3 `elem` docsAll
+    docsAllI <- testMP $ getAll $ listAllDocuments def{dfType=Just IDENTITY_PROOF}
+    assertBool $ d3 `elem` docsAllI
+    docsAllA <- testMP $ getAll $ listAllDocuments def{dfType=Just ADDRESS_PROOF}
+    assertBool $ not $ d3 `elem` docsAllA
     return $ dId d2
 
 
