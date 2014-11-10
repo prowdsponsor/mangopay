@@ -47,7 +47,7 @@ test_LegalUser = do
         le<-testMP $ modifyLegalUser (lf{lHeadquartersAddress=Just "St Guilhem"})
         assertEqual (Just "St Guilhem") (lHeadquartersAddress le)
         assertEqual "Moresmau" (lLegalRepresentativeLastName le)
-        assertEqual (Just "my house") (lLegalRepresentativeAddress le) -- this is lost, see https://mangopay.desk.com/customer/portal/questions/5980417-legalrepresentativeaddress-in-legaluser-api
+        assertEqual (Just "my house") (lLegalRepresentativeAddress le) -- works since Zebre <http://docs.mangopay.com/release-zebre/>
         assertEqual Nothing (lProofOfRegistration le)
         assertEqual Nothing (lShareholderDeclaration le)
         el<-testMP $ getUser (fromJust $ lId l)
