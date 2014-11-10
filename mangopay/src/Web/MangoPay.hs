@@ -98,6 +98,8 @@ module Web.MangoPay (
         ,createPage
         ,getKindOfAuthentication
         ,getRequiredDocumentTypes
+        ,listDocuments
+        ,listAllDocuments
 
         -- Accounts
         ,BankAccount(..)

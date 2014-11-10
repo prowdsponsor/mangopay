@@ -45,6 +45,18 @@ createPage uid did contents at=do
   url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did,"/pages"]
   postNoReply url (Just at) val
 
+
+-- | List all documents uploaded for a user.
+--   Since http://docs.mangopay.com/release-hamster/
+listDocuments :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listDocuments uid = genericList ["/users/",uid,"/KYC/documents"]
+
+
+-- | List all documents uploaded.
+--   Since http://docs.mangopay.com/release-hamster/
+listAllDocuments :: (MPUsableMonad m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listAllDocuments = genericList ["/KYC/documents"]
+
 -- | Id of a document
 type DocumentId = Text
 

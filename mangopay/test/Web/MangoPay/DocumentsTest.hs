@@ -33,6 +33,10 @@ test_Document = do
     assertEqual (dId d2) (dId d3)
     d4<-testMP $ fetchDocument uid (fromJust $ dId d2)
     assertEqual (Just VALIDATION_ASKED) (dStatus d4)
+    docsUser <- testMP $ getAll $ listDocuments uid
+    assertBool $ d3 `elem` docsUser
+    docsAll <- testMP $ getAll $ listAllDocuments
+    assertBool $ d3 `elem` docsAll
     return $ dId d2
 
 
