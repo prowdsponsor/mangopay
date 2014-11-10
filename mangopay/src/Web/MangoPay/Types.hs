@@ -330,8 +330,7 @@ instance ToJSON KindOfAuthentication where
         toJSON =toJSON . show
 
 instance FromJSON KindOfAuthentication where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "KindOfAuthentication"
+        parseJSON = jsonRead "KindOfAuthentication"
 
 
 -- | a structure holding the information of an API call

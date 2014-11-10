@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
+             FlexibleInstances, OverloadedStrings, ScopedTypeVariables #-}
 -- | handle events
 -- <http://docs.mangopay.com/api-references/events/>
 module Web.MangoPay.Events where
@@ -97,14 +98,13 @@ instance ToJSON EventType where
 
 -- | from json as per MangoPay format
 instance FromJSON EventType where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "EventType"
+        parseJSON = jsonRead "EventType"
 
 -- | search parameters for events
 data EventSearchParams=EventSearchParams{
-        espEventType :: Maybe EventType
+        espEventType   :: Maybe EventType
         ,espBeforeDate :: Maybe POSIXTime
-        ,espAfterDate :: Maybe POSIXTime
+        ,espAfterDate  :: Maybe POSIXTime
         ,espPagination :: Maybe Pagination
         }
         deriving (Show,Eq,Ord,Typeable)
@@ -128,7 +128,7 @@ instance HT.QueryLike EventSearchParams where
 data Event=Event {
         eResourceId :: Text
         ,eEventType :: EventType
-        ,eDate :: POSIXTime
+        ,eDate      :: POSIXTime
         }
         deriving (Show,Eq,Ord,Typeable)
 
@@ -200,13 +200,13 @@ type HookId=Text
 
 -- | a notification hook
 data Hook=Hook {
-        hId :: Maybe HookId -- ^ The Id of the hook details
+        hId            :: Maybe HookId -- ^ The Id of the hook details
         ,hCreationDate :: Maybe POSIXTime
-        ,hTag :: Maybe Text -- ^ Custom data
-        ,hUrl :: Text -- ^This is the URL where you receive notification for each EventType
-        ,hStatus :: HookStatus
-        ,hValidity :: Maybe HookValidity
-        ,hEventType :: EventType
+        ,hTag          :: Maybe Text -- ^ Custom data
+        ,hUrl          :: Text -- ^This is the URL where you receive notification for each EventType
+        ,hStatus       :: HookStatus
+        ,hValidity     :: Maybe HookValidity
+        ,hEventType    :: EventType
         }
         deriving (Show,Eq,Ord,Typeable)
 
