@@ -6,6 +6,7 @@ module Web.MangoPay.PayinsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Data.Default
 import Data.Maybe (isJust, fromJust)
 import Test.Framework
 import Test.HUnit (Assertion)
@@ -13,7 +14,7 @@ import Test.HUnit (Assertion)
 -- | test bankwire
 test_BankWire :: Assertion
 test_BankWire=do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing
@@ -32,7 +33,7 @@ test_BankWire=do
 -- | test a successful card pay in
 test_CardOK :: Assertion
 test_CardOK = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   cr<-testMP $ unsafeFullRegistration uid "EUR" testCardInfo1
@@ -49,15 +50,17 @@ test_CardOK = do
     assertEqual (Just Succeeded) (cpStatus cp2)
     w3<-testMP $ fetchWallet wid
     assertEqual (Just $ Amount "EUR" 332) (wBalance w3)
-    ts1 <- testMP $ listTransactions wid Nothing
+    ts1 <- testMP $ listTransactions wid (def{tfStatus=Just Succeeded,tfType=Just PAYIN}) def Nothing
     assertEqual 1 (length $ filter ((cpId cp2==) . txId) $ plData ts1)
+    ts2 <- testMP $ listTransactions wid (def{tfStatus=Just Succeeded,tfType=Just PAYOUT}) def Nothing
+    assertEqual 0 (length $ filter ((cpId cp2==) . txId) $ plData ts2)
     return $ cpId cp2
 
 -- | test a failed card pay in
 -- according to <http://docs.mangopay.com/api-references/test-payment/>
 test_CardKO :: Assertion
 test_CardKO = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   cr<-testMP $ unsafeFullRegistration uid "EUR" testCardInfo1
@@ -67,7 +70,7 @@ test_CardKO = do
   w2<-testMP $ createWallet w
   assertBool (isJust $ wId w2)
   let wid=fromJust $ wId w2
-  testEventTypes [PAYIN_NORMAL_CREATED,PAYIN_NORMAL_FAILED] $ do
+  testEventTypes [PAYIN_NORMAL_CREATED {- ,PAYIN_NORMAL_FAILED not thrown - MangoPay support notified -}] $ do
     let cp=mkCardPayin uid uid wid (Amount "EUR" 33394) (Amount "EUR" 0) "http://dummy" cid
     cp2<-testMP $ createCardPayin cp
     assertBool (isJust $ cpId cp2)

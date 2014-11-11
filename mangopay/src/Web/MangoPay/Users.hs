@@ -52,8 +52,8 @@ getUser = fetchGeneric "/users/"
 
 
 -- | list all user references
-listUsers :: (MPUsableMonad m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
-listUsers = genericList ["/users/"]
+listUsers :: (MPUsableMonad m) => GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
+listUsers gs = genericListExtra (sortAttributes gs) ["/users/"]
 
 
 -- | Convenience function to extract the user Id of an EXISTING user (one with an id).
@@ -109,7 +109,7 @@ data NaturalUser=NaturalUser {
 
 -- | to json as per MangoPay format
 instance ToJSON NaturalUser  where
-    toJSON u=object ["Tag" .= uTag u,"Email" .= uEmail u,"FirstName".= uFirstName u,"LastName" .= uLastName u,"Address" .= uAddress u, "Birthday" .=  uBirthday u
+    toJSON u=objectSN ["Tag" .= uTag u,"Email" .= uEmail u,"FirstName".= uFirstName u,"LastName" .= uLastName u,"Address" .= uAddress u, "Birthday" .=  uBirthday u
       ,"Nationality" .= uNationality u,"CountryOfResidence" .= uCountryOfResidence u,"Occupation" .= uOccupation u, "IncomeRange" .= uIncomeRange u,"ProofOfIdentity" .= uProofOfIdentity u
       ,"ProofOfAddress" .= uProofOfAddress u,"PersonType" .= Natural]
 
@@ -175,7 +175,7 @@ data LegalUser=LegalUser {
 
 -- | to json as per MangoPay format
 instance ToJSON LegalUser  where
-    toJSON u=object ["Tag" .= lTag u,"Email" .= lEmail u,"Name".= lName u,"LegalPersonType" .= lLegalPersonType u,"HeadquartersAddress" .= lHeadquartersAddress u, "LegalRepresentativeFirstName" .=  lLegalRepresentativeFirstName u
+    toJSON u=objectSN ["Tag" .= lTag u,"Email" .= lEmail u,"Name".= lName u,"LegalPersonType" .= lLegalPersonType u,"HeadquartersAddress" .= lHeadquartersAddress u, "LegalRepresentativeFirstName" .=  lLegalRepresentativeFirstName u
       ,"LegalRepresentativeLastName" .= lLegalRepresentativeLastName u,"LegalRepresentativeAddress" .= lLegalRepresentativeAddress u,"LegalRepresentativeEmail" .= lLegalRepresentativeEmail u, "LegalRepresentativeBirthday" .= lLegalRepresentativeBirthday u,"LegalRepresentativeNationality" .= lLegalRepresentativeNationality u
       ,"LegalRepresentativeCountryOfResidence" .= lLegalRepresentativeCountryOfResidence u,"Statute" .= lStatute u,"ProofOfRegistration" .=lProofOfRegistration u,"ShareholderDeclaration" .=lShareholderDeclaration u,"PersonType" .= Legal]
 
@@ -228,7 +228,7 @@ data UserRef=UserRef {
 
 -- | to json as per MangoPay format
 instance ToJSON UserRef  where
-    toJSON ur=object [ "PersonType" .= urPersonType ur, "Email" .= urEmail ur,"Id" .= urId ur,
+    toJSON ur=objectSN [ "PersonType" .= urPersonType ur, "Email" .= urEmail ur,"Id" .= urId ur,
         "Tag" .= urTag ur,"CreationDate" .= urCreationDate ur]
 
 

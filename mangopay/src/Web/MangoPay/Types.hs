@@ -6,12 +6,13 @@ module Web.MangoPay.Types where
 import Control.Applicative
 import Control.Exception.Lifted (Exception, throwIO)
 import Control.Monad.Base (MonadBase)
-import Data.Text as T hiding (singleton)
+import Data.Text as T hiding (singleton, map, toLower)
 import Data.Text.Read as T
 import Data.Typeable (Typeable)
 import Data.ByteString  as BS (ByteString)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Aeson
+import Data.Aeson.Types (Pair,Parser)
 import Data.Default
 
 import qualified Data.Text.Encoding as TE
@@ -30,6 +31,7 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (qLocation)
 import Text.Printf (printf)
 import qualified Data.ByteString.Lazy as BS (toStrict)
+import Data.Char (toLower)
 
 
 -- | the MangoPay access point
@@ -53,7 +55,7 @@ data Credentials = Credentials {
 
 -- | to json as per MangoPay format
 instance ToJSON Credentials  where
-    toJSON c=object ["ClientId" .= cClientId c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c]
+    toJSON c=objectSN ["ClientId" .= cClientId c, "Name" .= cName c , "Email" .= cEmail c,"Passphrase" .= cClientSecret c]
 
 -- | from json as per MangoPay format
 instance FromJSON Credentials where
@@ -84,7 +86,7 @@ data OAuthToken = OAuthToken {
 
 -- | to json as per MangoPay format
 instance ToJSON OAuthToken  where
-    toJSON oa=object ["access_token" .= oaAccessToken oa, "token_type" .= oaTokenType oa, "expires_in" .= oaExpires oa]
+    toJSON oa=objectSN ["access_token" .= oaAccessToken oa, "token_type" .= oaTokenType oa, "expires_in" .= oaExpires oa]
 
 -- | from json as per MangoPay format
 instance FromJSON OAuthToken where
@@ -111,10 +113,10 @@ instance Exception MpException
 
 -- | to json
 instance ToJSON MpException  where
-    toJSON (MpJSONException j)  = object ["Type" .= ("MpJSONException"::Text), "Error" .= j]
-    toJSON (MpAppException mpe)  = object ["Type" .= ("MpAppException"::Text), "Error" .= toJSON mpe]
-    toJSON (MpHttpException e v) = object ["Type" .= ("MpHttpException"::Text), "Error" .= (show e), "Value" .= v]
-    toJSON (MpHttpExceptionS e v) = object ["Type" .= ("MpHttpException"::Text), "Error" .= e, "Value" .= v]
+    toJSON (MpJSONException j)  = objectSN ["Type" .= ("MpJSONException"::Text), "Error" .= j]
+    toJSON (MpAppException mpe)  = objectSN ["Type" .= ("MpAppException"::Text), "Error" .= toJSON mpe]
+    toJSON (MpHttpException e v) = objectSN ["Type" .= ("MpHttpException"::Text), "Error" .= (show e), "Value" .= v]
+    toJSON (MpHttpExceptionS e v) = objectSN ["Type" .= ("MpHttpException"::Text), "Error" .= e, "Value" .= v]
 
 
 instance FromJSON MpException where
@@ -140,7 +142,7 @@ data MpError = MpError {
 
 -- | to json as per MangoPay format
 instance ToJSON MpError  where
-    toJSON mpe=object ["Id" .= igeId mpe, "Type" .= igeType mpe, "Message" .= igeMessage mpe, "Date" .= igeDate mpe]
+    toJSON mpe=objectSN ["Id" .= igeId mpe, "Type" .= igeType mpe, "Message" .= igeMessage mpe, "Date" .= igeDate mpe]
 
 
 -- | from json as per MangoPay format
@@ -155,7 +157,7 @@ instance FromJSON MpError where
 -- | from json as per MangoPay format
 instance FromJSON POSIXTime where
     parseJSON n@(Number _)=(fromIntegral . (round::Double -> Integer)) <$> parseJSON n
-    parseJSON _ = fail "POSIXTime"
+    parseJSON o = fail $ "POSIXTime: " ++ show o
 
 -- | to json as per MangoPay format
 instance ToJSON POSIXTime  where
@@ -209,7 +211,7 @@ data Amount=Amount {
 
 -- | to json as per MangoPay format
 instance ToJSON Amount where
-        toJSON b=object ["Currency"  .= aCurrency b,"Amount" .= aAmount b]
+        toJSON b=objectSN ["Currency"  .= aCurrency b,"Amount" .= aAmount b]
 
 -- | from json as per MangoPay format
 instance FromJSON Amount where
@@ -329,8 +331,7 @@ instance ToJSON KindOfAuthentication where
         toJSON =toJSON . show
 
 instance FromJSON KindOfAuthentication where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "KindOfAuthentication"
+        parseJSON = jsonRead "KindOfAuthentication"
 
 
 -- | a structure holding the information of an API call
@@ -421,3 +422,44 @@ findAssoc xs n=listToMaybe $ Prelude.map snd $ Prelude.filter ((n==) . fst) xs
 -- | read an object or return Nothing
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
+
+
+-- | Remove pairs whose value is null.
+-- <https://github.com/bos/aeson/issues/77>
+stripNulls :: [Pair] -> [Pair]
+stripNulls xs = Prelude.filter (\(_,v) -> v /= Null) xs
+
+
+-- | Same as 'object', but using 'stripNulls' as well.
+objectSN :: [Pair] -> Value
+objectSN = object . stripNulls
+
+
+-- | Read instance from a JSON string.
+--   We use to just call "read" which would cause a Prelude.read: no parse error
+--   instead of a proper exception.
+jsonRead :: (Read a) => String -> Value -> Parser a
+jsonRead name (String s) = do
+  let ss = unpack s
+  case maybeRead ss of
+    Just r -> pure r
+    _      -> fail $ name ++ ": " ++ ss
+jsonRead name _ = fail name
+
+
+-- | Sort direction for list retrieval
+data SortDirection = ASC | DESC
+  deriving (Show,Read,Eq,Ord,Bounded, Enum, Typeable)
+
+-- | Sort transactions
+data GenericSort = NoSort | ByCreationDate SortDirection
+  deriving (Show,Eq,Ord,Typeable)
+
+-- | Default sort
+instance Default GenericSort where
+  def = NoSort
+
+-- | get sort attributes for transaction query
+sortAttributes :: GenericSort -> [(ByteString,Maybe ByteString)]
+sortAttributes NoSort = []
+sortAttributes (ByCreationDate dir)=["Sort" ?+ ("CreationDate:" ++ (map toLower $ show dir))]

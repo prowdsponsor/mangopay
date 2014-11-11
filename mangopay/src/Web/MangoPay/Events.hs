@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
+             FlexibleInstances, OverloadedStrings, ScopedTypeVariables #-}
 -- | handle events
 -- <http://docs.mangopay.com/api-references/events/>
 module Web.MangoPay.Events where
@@ -6,7 +7,7 @@ module Web.MangoPay.Events where
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 
-import Data.Text hiding (filter)
+import Data.Text hiding (filter,map,toLower)
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
@@ -18,6 +19,7 @@ import qualified Data.HashMap.Lazy as HM (delete)
 import qualified Data.Text.Encoding as TE
 import Control.Monad (join)
 import qualified Data.ByteString.Char8 as BS
+import Data.Char (toLower)
 
 -- | search events, returns a paginated list
 searchEvents ::  (MPUsableMonad m) => EventSearchParams -> AccessToken -> MangoPayT m  (PagedList Event)
@@ -40,7 +42,7 @@ checkEvent :: (MPUsableMonad m) => Event -> AccessToken ->  MangoPayT m Bool
 checkEvent evt at= do
   -- documentation doesn't say it, but tests show dates are inclusive
   let dt = Just $ eDate evt
-  let esp = EventSearchParams (Just $ eEventType evt) dt dt Nothing
+  let esp = EventSearchParams (Just $ eEventType evt) dt dt Nothing Nothing
   evts <- searchAllEvents esp at
   return $ evt `elem` evts
 
@@ -97,26 +99,27 @@ instance ToJSON EventType where
 
 -- | from json as per MangoPay format
 instance FromJSON EventType where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "EventType"
+        parseJSON = jsonRead "EventType"
 
 -- | search parameters for events
 data EventSearchParams=EventSearchParams{
-        espEventType :: Maybe EventType
+        espEventType   :: Maybe EventType
         ,espBeforeDate :: Maybe POSIXTime
-        ,espAfterDate :: Maybe POSIXTime
+        ,espAfterDate  :: Maybe POSIXTime
         ,espPagination :: Maybe Pagination
+        ,espSortByDate :: Maybe SortDirection
         }
         deriving (Show,Eq,Ord,Typeable)
 
 instance Default EventSearchParams where
-  def=EventSearchParams Nothing Nothing Nothing Nothing
+  def=EventSearchParams Nothing Nothing Nothing Nothing Nothing
 
 instance HT.QueryLike EventSearchParams where
-  toQuery (EventSearchParams et bd ad p)=filter (isJust .snd)
+  toQuery (EventSearchParams et bd ad p ms)=filter (isJust .snd)
     ["eventtype" ?+ et
     ,"beforeDate" ?+ bd
     ,"afterDate" ?+ ad
+    ,"Sort" ?+ ((("Date:" ++) . map toLower . show) <$> ms)
    ] ++ paginationAttributes p
 
 --instance ToJSON EventSearchParams where
@@ -128,13 +131,13 @@ instance HT.QueryLike EventSearchParams where
 data Event=Event {
         eResourceId :: Text
         ,eEventType :: EventType
-        ,eDate :: POSIXTime
+        ,eDate      :: POSIXTime
         }
         deriving (Show,Eq,Ord,Typeable)
 
 -- | to json as per MangoPay format
 instance ToJSON Event where
-        toJSON e=object ["ResourceId"  .= eResourceId e,"EventType" .= eEventType e,"Date" .= eDate e]
+        toJSON e=objectSN ["ResourceId"  .= eResourceId e,"EventType" .= eEventType e,"Date" .= eDate e]
 
 -- | from json as per MangoPay format
 instance FromJSON Event where
@@ -200,19 +203,19 @@ type HookId=Text
 
 -- | a notification hook
 data Hook=Hook {
-        hId :: Maybe HookId -- ^ The Id of the hook details
+        hId            :: Maybe HookId -- ^ The Id of the hook details
         ,hCreationDate :: Maybe POSIXTime
-        ,hTag :: Maybe Text -- ^ Custom data
-        ,hUrl :: Text -- ^This is the URL where you receive notification for each EventType
-        ,hStatus :: HookStatus
-        ,hValidity :: Maybe HookValidity
-        ,hEventType :: EventType
+        ,hTag          :: Maybe Text -- ^ Custom data
+        ,hUrl          :: Text -- ^This is the URL where you receive notification for each EventType
+        ,hStatus       :: HookStatus
+        ,hValidity     :: Maybe HookValidity
+        ,hEventType    :: EventType
         }
         deriving (Show,Eq,Ord,Typeable)
 
 -- | to json as per MangoPay format
 instance ToJSON Hook where
-        toJSON h=object ["Tag"  .= hTag h,"EventType" .= hEventType h,"Url" .= hUrl h,"Status" .= hStatus h]
+        toJSON h=objectSN ["Tag"  .= hTag h,"EventType" .= hEventType h,"Url" .= hUrl h,"Status" .= hStatus h]
 
 -- | from json as per MangoPay format
 instance FromJSON Hook where

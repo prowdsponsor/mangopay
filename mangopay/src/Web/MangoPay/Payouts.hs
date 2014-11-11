@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
+             FlexibleInstances, OverloadedStrings, ScopedTypeVariables #-}
 -- | handle payouts
 module Web.MangoPay.Payouts where
 
@@ -22,10 +23,10 @@ createPayout = createGeneric "/payouts/bankwire"
 fetchPayout :: (MPUsableMonad m) => PayoutId -> AccessToken -> MangoPayT m Payout
 fetchPayout = fetchGeneric "/payouts/"
 
--- | make a simplep payout for creation
+-- | make a simple payout for creation
 mkPayout :: AnyUserId -> WalletId -> Amount -> Amount -> BankAccountId -> Payout
 mkPayout aid wid fds fees bid=Payout Nothing Nothing Nothing aid wid fds fees bid Nothing Nothing Nothing Nothing Nothing
-  Nothing Nothing Nothing Nothing Nothing
+  Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- | id of payout
 type PayoutId = Text
@@ -39,7 +40,7 @@ data Payout=Payout {
   ,ptDebitedWalletId   :: WalletId
   ,ptDebitedFunds      :: Amount
   ,ptFees              :: Amount
-  ,ptBankAccountId     :: BankAccountId
+  ,ptBankAccountId     :: BankAccountId -- ^ The ID of the bank account object
   ,ptCreditedUserId    :: Maybe AnyUserId
   ,ptCreditedFunds     :: Maybe Amount
   ,ptStatus            :: Maybe TransferStatus
@@ -50,14 +51,18 @@ data Payout=Payout {
   ,ptNature            :: Maybe TransactionNature
   ,ptPaymentType       :: Maybe PaymentType
   ,ptMeanOfPaymentType :: Maybe PaymentType -- ^  « BANK_WIRE »,
+  ,ptBankWireRef       :: Maybe Text -- ^ A custom reference you wish to appear on the user’s bank statement
+                                     -- (your ClientId is already shown)
+                                     -- since <http://docs.mangopay.com/release-hamster/>
   } deriving (Show,Eq,Ord,Typeable)
 
 
 -- | to json as per MangoPay format
 instance ToJSON Payout where
-        toJSON pt=object ["Tag" .= ptTag pt,"AuthorId" .= ptAuthorId  pt
+        toJSON pt=objectSN ["Tag" .= ptTag pt,"AuthorId" .= ptAuthorId  pt
           ,"DebitedWalletId" .= ptDebitedWalletId pt
-          ,"DebitedFunds" .= ptDebitedFunds pt,"Fees" .= ptFees pt,"BankAccountId" .= ptBankAccountId pt]
+          ,"DebitedFunds" .= ptDebitedFunds pt,"Fees" .= ptFees pt,"BankAccountId" .= ptBankAccountId pt
+          ,"BankWireRef" .= ptBankWireRef pt]
 
 -- | from json as per MangoPay format
 instance FromJSON Payout where
@@ -79,5 +84,6 @@ instance FromJSON Payout where
                          v .:? "Type" <*>
                          v .:? "Nature" <*>
                          v .:? "PaymentType" <*>
-                         v .:? "MeanOfPaymentType"
+                         v .:? "MeanOfPaymentType" <*>
+                         v .:? "BankWireRef"
         parseJSON _=fail "Payout"

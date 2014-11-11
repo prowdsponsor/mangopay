@@ -9,12 +9,15 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
-import Data.Text
+import Data.ByteString (ByteString)
+import Data.Text hiding (map,toLower)
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Data.HashMap.Lazy as HM (delete)
+import Data.Default (Default(..))
+import Data.Char (toLower)
 
 -- | create a wallet
 createWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
@@ -31,8 +34,8 @@ fetchWallet :: (MPUsableMonad m) => WalletId -> AccessToken -> MangoPayT m Walle
 fetchWallet = fetchGeneric "/wallets/"
 
 -- | list all wallets for a given user
-listWallets :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
-listWallets uid = genericList ["/users/",uid,"/wallets"]
+listWallets :: (MPUsableMonad m) => AnyUserId -> GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
+listWallets uid gs = genericListExtra (sortAttributes gs) ["/users/",uid,"/wallets"]
 
 -- | create a new fund transfer
 createTransfer :: (MPUsableMonad m) => Transfer -> AccessToken -> MangoPayT m Transfer
@@ -43,12 +46,14 @@ fetchTransfer :: (MPUsableMonad m) => TransferId -> AccessToken -> MangoPayT m T
 fetchTransfer = fetchGeneric "/transfers/"
 
 -- | list transfers for a given wallet
-listTransactions ::  (MPUsableMonad m) =>  WalletId  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactions wid = genericList ["/wallets/",wid,"/transactions"]
+listTransactions ::  (MPUsableMonad m) =>  WalletId -> TransactionFilter -> TransactionSort ->  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactions wid tf ts = genericListExtra (transactionFilterAttributes tf ++ transactionSortAttributes ts)
+  ["/wallets/",wid,"/transactions"]
 
 -- | list transfer for a given user
-listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserId  -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactionsForUser uid = genericList ["/users/",uid,"/transactions"]
+listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserId  -> TransactionFilter -> TransactionSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactionsForUser uid tf ts = genericListExtra (transactionFilterAttributes tf ++ transactionSortAttributes ts)
+  ["/users/",uid,"/transactions"]
 
 
 -- | Id of a wallet
@@ -68,7 +73,7 @@ data Wallet = Wallet {
 
 -- | to json as per MangoPay format
 instance ToJSON Wallet where
-        toJSON w=object ["Tag"  .= wTag w,"Owners" .= wOwners w,"Description" .= wDescription w,"Currency" .= wCurrency w]
+        toJSON w=objectSN ["Tag"  .= wTag w,"Owners" .= wOwners w,"Description" .= wDescription w,"Currency" .= wCurrency w]
 
 -- | from json as per MangoPay format
 instance FromJSON Wallet where
@@ -124,7 +129,7 @@ data Transfer = Transfer{
 
 -- | to json as per MangoPay format
 instance ToJSON Transfer  where
-    toJSON t=object ["AuthorId" .= tAuthorId t,"CreditedUserId" .= tCreditedUserId t,"DebitedFunds" .= tDebitedFunds t,
+    toJSON t=objectSN ["AuthorId" .= tAuthorId t,"CreditedUserId" .= tCreditedUserId t,"DebitedFunds" .= tDebitedFunds t,
         "Fees" .= tFees t,"DebitedWalletId" .= tDebitedWalletId t,"CreditedWalletId" .= tCreditedWalletId t,
         "Tag" .= tTag t]
 
@@ -191,7 +196,7 @@ data Transaction = Transaction{
         ,txDebitedFunds     :: Amount -- ^ The funds debited from the « debited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txFees             :: Amount -- ^  The fees taken on the transfer.DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txDebitedWalletId  :: Maybe WalletId -- ^  The debited wallet (where the funds are held before the transfer)
-        ,txCreditedWalletId:: Maybe WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
+        ,txCreditedWalletId :: Maybe WalletId -- ^ The credited wallet (where the funds will be held after the transfer)
         ,txCreditedFunds    :: Maybe Amount -- ^  The funds credited on the « credited wallet »DebitedFunds – Fees = CreditedFunds (amount received on wallet)
         ,txStatus           :: Maybe TransferStatus -- ^   The status of the transfer:
         ,txResultCode       :: Maybe Text -- ^   The transaction result code
@@ -204,7 +209,7 @@ data Transaction = Transaction{
 
 -- | to json as per MangoPay format
 instance ToJSON Transaction  where
-    toJSON t=object ["AuthorId" .= txAuthorId t,"CreditedUserId" .= txCreditedUserId t,"DebitedFunds" .= txDebitedFunds t,
+    toJSON t=objectSN ["AuthorId" .= txAuthorId t,"CreditedUserId" .= txCreditedUserId t,"DebitedFunds" .= txDebitedFunds t,
         "Fees" .= txFees t,"DebitedWalletID" .= txDebitedWalletId t,"CreditedWalletID" .= txCreditedWalletId t,
         "Tag" .= txTag t,"Type" .= txType t,"Nature" .= txNature t]
 
@@ -218,8 +223,8 @@ instance FromJSON Transaction where
                          v .: "CreditedUserId" <*>
                          v .: "DebitedFunds" <*>
                          v .: "Fees" <*>
-                         v .:? "DebitedWalletId" <*> -- yes, it's Id one way, Id the other
-                         v .:? "CreditedWalletId" <*> -- yes, it's Id one way, Id the other
+                         v .:? "DebitedWalletId" <*> -- yes, it's Id one way, ID the other
+                         v .:? "CreditedWalletId" <*> -- yes, it's Id one way, ID the other
                          v .:? "CreditedFunds" <*>
                          v .:? "Status" <*>
                          v .:? "ResultCode" <*>
@@ -228,3 +233,39 @@ instance FromJSON Transaction where
                          v .: "Type"  <*>
                          v .: "Nature"
         parseJSON _=fail "Transfer"
+
+
+-- | A filter for transaction lists.
+data TransactionFilter = TransactionFilter
+  { tfBefore :: Maybe POSIXTime
+  , tfAfter  :: Maybe POSIXTime
+  , tfNature :: Maybe TransactionNature
+  , tfStatus :: Maybe TransferStatus
+  , tfType   :: Maybe TransactionType
+  } deriving (Show,Eq,Ord,Typeable)
+
+instance Default TransactionFilter where
+  def = TransactionFilter Nothing Nothing Nothing Nothing Nothing
+
+-- | get filter attributes for transaction query
+transactionFilterAttributes :: TransactionFilter -> [(ByteString,Maybe ByteString)]
+transactionFilterAttributes f=[ "BeforeDate" ?+ tfBefore f
+                                     , "AfterDate" ?+ tfAfter f
+                                     , "Nature" ?+ (show <$> (tfNature f))
+                                     , "Status" ?+ (show <$> (tfStatus f))
+                                     , "Type" ?+ (show <$> (tfType f))]
+
+-- | Sort transactions
+data TransactionSort = TxNoSort | TxByCreationDate SortDirection | TxByExecutionDate SortDirection
+  deriving (Show,Eq,Ord,Typeable)
+
+-- | Default sort
+instance Default TransactionSort where
+  def = TxNoSort
+
+-- | get sort attributes for transaction query
+transactionSortAttributes :: TransactionSort -> [(ByteString,Maybe ByteString)]
+transactionSortAttributes TxNoSort = []
+transactionSortAttributes (TxByCreationDate dir)=["Sort" ?+ ("CreationDate:" ++ (map toLower $ show dir))]
+transactionSortAttributes (TxByExecutionDate dir)=["Sort" ?+ ("ExecutionDate:" ++ (map toLower $ show dir))]
+

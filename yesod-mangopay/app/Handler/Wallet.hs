@@ -12,7 +12,7 @@ import Data.Text (pack)
 getWalletsR :: AnyUserId -> Handler Html
 getWalletsR uid=do
   -- no paging, should be reasonable
-  wallets<-runYesodMPTToken $ getAll $ listWallets uid
+  wallets<-runYesodMPTToken $ getAll $ listWallets uid (ByCreationDate ASC)
   defaultLayout $ do
         setTitleI MsgTitleWallets
         $(widgetFile "wallets")

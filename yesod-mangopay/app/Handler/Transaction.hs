@@ -8,12 +8,13 @@ import Web.MangoPay
 import Data.Maybe (fromJust)
 import Control.Arrow ((&&&))
 import Data.Text (pack)
+import Data.Default
 
 -- | transaction list
 getTransactionsR :: AnyUserId -> Handler Html
 getTransactionsR uid= do
     pg<-getPagination
-    txsL<-runYesodMPTToken $ listTransactionsForUser uid pg
+    txsL<-runYesodMPTToken $ listTransactionsForUser uid def (TxByCreationDate ASC) pg
     -- pagination links
     let (previous,next)=getPaginationNav pg txsL
     let txs=plData txsL
@@ -25,8 +26,8 @@ getTransactionsR uid= do
 -- | get payin form
 getPayinR :: AnyUserId -> Handler Html
 getPayinR uid=do
-    cards<-runYesodMPTToken $ getAll $ listCards uid
-    wallets<-runYesodMPTToken $ getAll $ listWallets uid
+    cards<-runYesodMPTToken $ getAll $ listCards uid def
+    wallets<-runYesodMPTToken $ getAll $ listWallets uid def
     (widget, enctype) <- generateFormPost $ payinInForm cards wallets
     defaultLayout $ do
         setTitleI MsgTitlePayIn
@@ -35,8 +36,8 @@ getPayinR uid=do
 -- | payin
 postPayinR :: AnyUserId -> Handler Html
 postPayinR uid=do
-  cards<-runYesodMPTToken $ getAll $ listCards uid
-  wallets<-runYesodMPTToken $ getAll $ listWallets uid
+  cards<-runYesodMPTToken $ getAll $ listCards uid def
+  wallets<-runYesodMPTToken $ getAll $ listWallets uid def
 
   ((result, widget), enctype) <- runFormPost $ payinInForm cards wallets
   case result of
@@ -62,7 +63,7 @@ postPayinR uid=do
 -- | get first transfer page: choose the target user
 getTransfer1R :: AnyUserId -> Handler Html
 getTransfer1R uid=do
-  users<-runYesodMPTToken $ getAll listUsers
+  users<-runYesodMPTToken $ getAll $ listUsers def
   defaultLayout $ do
         setTitleI MsgTitleTransfer
         $(widgetFile "transfer1")
@@ -70,8 +71,8 @@ getTransfer1R uid=do
 -- | get second transfer page: choose between wallets
 getTransfer2R :: AnyUserId -> AnyUserId -> Handler Html
 getTransfer2R uid touid=do
-    fromWallets<-runYesodMPTToken $ getAll $ listWallets uid
-    toWallets<-runYesodMPTToken $ getAll $ listWallets touid
+    fromWallets<-runYesodMPTToken $ getAll $ listWallets uid def
+    toWallets<-runYesodMPTToken $ getAll $ listWallets touid def
     (widget, enctype) <- generateFormPost $ transferForm fromWallets toWallets
     defaultLayout $ do
         setTitleI MsgTitleTransfer
@@ -80,8 +81,8 @@ getTransfer2R uid touid=do
 -- | perfrm transfer
 postTransfer2R :: AnyUserId -> AnyUserId -> Handler Html
 postTransfer2R uid touid=do
-  fromWallets<-runYesodMPTToken $ getAll $ listWallets uid
-  toWallets<-runYesodMPTToken $ getAll $ listWallets touid
+  fromWallets<-runYesodMPTToken $ getAll $ listWallets uid def
+  toWallets<-runYesodMPTToken $ getAll $ listWallets touid def
 
   ((result, widget), enctype) <- runFormPost $ transferForm fromWallets toWallets
   case result of
@@ -108,8 +109,8 @@ postTransfer2R uid touid=do
 -- | get payout form
 getPayoutR :: AnyUserId -> Handler Html
 getPayoutR uid=do
-    wallets<-runYesodMPTToken $ getAll $ listWallets uid
-    accounts<-runYesodMPTToken $ getAll $ listAccounts uid
+    wallets<-runYesodMPTToken $ getAll $ listWallets uid def
+    accounts<-runYesodMPTToken $ getAll $ listAccounts uid def
 
     (widget, enctype) <- generateFormPost $ payoutForm wallets accounts
     defaultLayout $ do
@@ -119,8 +120,8 @@ getPayoutR uid=do
 -- | payout
 postPayoutR :: AnyUserId -> Handler Html
 postPayoutR uid=do
-  wallets<-runYesodMPTToken $ getAll $ listWallets uid
-  accounts<-runYesodMPTToken $ getAll $ listAccounts uid
+  wallets<-runYesodMPTToken $ getAll $ listWallets uid def
+  accounts<-runYesodMPTToken $ getAll $ listAccounts uid def
 
   ((result, widget), enctype) <- runFormPost $ payoutForm wallets accounts
   case result of

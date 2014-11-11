@@ -31,18 +31,22 @@ createCardPayin = createGeneric "/payins/card/direct"
 fetchCardPayin :: (MPUsableMonad m) => CardPayinId -> AccessToken -> MangoPayT m CardPayin
 fetchCardPayin = fetchGeneric "/payins/"
 
+
+-- | Type of payment execution.
 data PaymentExecution = WEB  -- ^ through a web interface
  | DIRECT -- ^ with a tokenized card
   deriving (Show,Read,Eq,Ord,Bounded,Enum,Typeable)
+
 
 -- | to json as per MangoPay format
 instance ToJSON PaymentExecution where
         toJSON =toJSON . show
 
+
 -- | from json as per MangoPay format
 instance FromJSON PaymentExecution where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "PaymentExecution"
+        parseJSON = jsonRead "PaymentExecution"
+
 
 -- | helper function to create a new bank wire with the needed information
 mkBankWire :: AnyUserId -> AnyUserId -> WalletId -> Amount -> Amount -> BankWire
@@ -85,7 +89,7 @@ data BankWire=BankWire {
 
 -- | to json as per MangoPay format
 instance ToJSON BankWire where
-        toJSON bw=object ["Tag" .= bwTag bw,"AuthorId" .= bwAuthorId  bw
+        toJSON bw=objectSN ["Tag" .= bwTag bw,"AuthorId" .= bwAuthorId  bw
           ,"CreditedUserId" .= bwCreditedUserId bw,"CreditedWalletId" .= bwCreditedWalletId bw
           ,"DeclaredDebitedFunds" .= bwDeclaredDebitedFunds bw,"DeclaredFees" .= bwDeclaredFees bw]
 
@@ -154,7 +158,7 @@ data CardPayin=CardPayin {
 
 -- | to json as per MangoPay format
 instance ToJSON CardPayin where
-        toJSON cp=object ["Tag" .= cpTag cp,"AuthorId" .= cpAuthorId  cp
+        toJSON cp=objectSN ["Tag" .= cpTag cp,"AuthorId" .= cpAuthorId  cp
           ,"CreditedUserId" .= cpCreditedUserId cp,"CreditedWalletId" .= cpCreditedWalletId cp
           ,"DebitedFunds" .= cpDebitedFunds cp,"Fees" .= cpFees cp,"CardId" .= cpCardId cp
           ,"SecureModeReturnURL" .= cpSecureModeReturnURL cp

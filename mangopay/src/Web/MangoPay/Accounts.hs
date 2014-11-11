@@ -1,4 +1,6 @@
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, OverloadedStrings, FlexibleContexts, FlexibleInstances, PatternGuards, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts,
+             FlexibleInstances, OverloadedStrings, PatternGuards,
+             ScopedTypeVariables #-}
 -- | handle bank accounts
 module Web.MangoPay.Accounts where
 
@@ -30,28 +32,28 @@ fetchAccount uid = fetchGeneric path
         where path = Data.Text.concat ["/users/",uid,"/bankaccounts/"]
 
 -- | list all accounts for a given user
-listAccounts :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
-listAccounts uid = genericList ["/users/",uid,"/bankaccounts/"]
+listAccounts :: (MPUsableMonad m) => AnyUserId ->  GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
+listAccounts uid gs = genericListExtra (sortAttributes gs) ["/users/",uid,"/bankaccounts/"]
 
 -- | account details, depending on the type
 data BankAccountDetails=IBAN {
   atIBAN :: Text
-  ,atBIC :: Text
+  ,atBIC :: Maybe Text
   } | GB {
   atAccountNumber :: Text
-  ,atSortCode :: Text
+  ,atSortCode     :: Text
   } | US {
   atAccountNumber :: Text
-  ,atABA :: Text
+  ,atABA          :: Text
   } | CA {
-  atAccountNumber :: Text
-  ,atBankName :: Text
+  atAccountNumber      :: Text
+  ,atBankName          :: Text
   ,atInstitutionNumber :: Text
-  ,atBranchCode :: Text
+  ,atBranchCode        :: Text
   } | Other {
   atAccountNumber :: Text
-  ,atBIC :: Text
-  ,atCountry :: CountryCode
+  ,atBIC          :: Maybe Text
+  ,atCountry      :: CountryCode
   } deriving (Show,Read,Eq,Ord,Typeable)
 
 -- | from json as per MangoPay format
@@ -60,8 +62,8 @@ instance FromJSON BankAccountDetails where
     typ<-v .: "Type"
     case typ of
       "IBAN"->IBAN <$>
-                v .: "IBAN" <*>
-                v .: "BIC"
+                v .:  "IBAN" <*>
+                v .:? "BIC"
       "GB"->GB <$>
                 v .: "AccountNumber" <*>
                 v .: "SortCode"
@@ -74,9 +76,9 @@ instance FromJSON BankAccountDetails where
                 v .: "InstitutionNumber" <*>
                 v .: "BranchCode"
       "OTHER"->Other <$>
-                v .: "AccountNumber" <*>
-                v .: "BIC" <*>
-                v .: "Country"
+                v .:  "AccountNumber" <*>
+                v .:? "BIC" <*>
+                v .:  "Country"
       _->fail $ "BankAccountDetails: unknown type:" ++ typ
   parseJSON _=fail "BankAccountDetails"
 
@@ -101,18 +103,18 @@ type BankAccountId = Text
 
 -- | bank account details
 data BankAccount = BankAccount {
-  baId :: Maybe BankAccountId
+  baId            :: Maybe BankAccountId
   ,baCreationDate :: Maybe POSIXTime
-  ,baUserId :: Maybe AnyUserId
-  ,baTag :: Maybe Text
-  ,baDetails :: BankAccountDetails
-  ,baOwnerName :: Text
+  ,baUserId       :: Maybe AnyUserId
+  ,baTag          :: Maybe Text
+  ,baDetails      :: BankAccountDetails
+  ,baOwnerName    :: Text
   ,baOwnerAddress :: Maybe Text
 } deriving (Show,Eq,Ord,Typeable)
 
 -- | to json as per MangoPay format
 instance ToJSON BankAccount where
-        toJSON ba=object $ ["OwnerName" .= baOwnerName ba,"Type" .= typeName (baDetails ba)
+        toJSON ba=objectSN $ ["OwnerName" .= baOwnerName ba,"Type" .= typeName (baDetails ba)
            ,"OwnerAddress" .= baOwnerAddress ba, "UserId" .= baUserId ba, "Tag" .= baTag ba]
             ++ toJSONPairs (baDetails ba)
 

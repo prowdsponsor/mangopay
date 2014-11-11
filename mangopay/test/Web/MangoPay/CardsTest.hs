@@ -6,6 +6,7 @@ module Web.MangoPay.CardsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Data.Default
 import Data.Maybe (isJust, isNothing, fromJust)
 import Test.Framework
 import Test.HUnit (Assertion)
@@ -24,7 +25,7 @@ test_CardUSD = doTestCard "USD"
 -- | perform the actual test of card registration in the provided currency
 doTestCard :: T.Text->Assertion
 doTestCard curr=L.handle (\(e::MpException)->assertFailure (show e)) $ do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   let cr1=mkCardRegistration uid curr
@@ -51,10 +52,6 @@ doTestCard curr=L.handle (\(e::MpException)->assertFailure (show e)) $ do
   assertBool $ cActive c
   assertEqual uid $ cUserId c
   assertEqual "CB_VISA_MASTERCARD" $ cCardType c
-  cs<-testMP $ getAll $ listCards uid
+  cs<-testMP $ getAll $ listCards uid def
   assertBool $ not $ null cs
   assertBool $ any (\ c1 -> cId c1 == cid) cs
-
-
-
-

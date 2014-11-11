@@ -6,6 +6,7 @@ module Web.MangoPay.RefundsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Data.Default
 import Data.Maybe (isJust, fromJust)
 import Test.Framework
 import Test.HUnit (Assertion)
@@ -13,7 +14,7 @@ import Test.HUnit (Assertion)
 -- | test a successful card pay in + full refund
 test_SimpleCardRefund :: Assertion
 test_SimpleCardRefund = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   cr<-testMP $ unsafeFullRegistration uid "EUR" testCardInfo1
@@ -38,12 +39,13 @@ test_SimpleCardRefund = do
     r2<-testMP $ fetchRefund (rId r)
     assertEqual cp $ rInitialTransactionId r2
     assertEqual (Amount "EUR" 333) $ rCreditedFunds r2
+    assertEqual INITIALIZED_BY_CLIENT $ rrType $ rReason r2
     return $ Just $ rId r
 
 -- | test a successful card pay in + partial refund
 test_AdvancedCardRefund :: Assertion
 test_AdvancedCardRefund = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   cr<-testMP $ unsafeFullRegistration uid "EUR" testCardInfo1
@@ -68,12 +70,13 @@ test_AdvancedCardRefund = do
     r2<-testMP $ fetchRefund (rId r)
     assertEqual cp $ rInitialTransactionId r2
     assertEqual (Amount "EUR" 99) $ rCreditedFunds r2
+    assertEqual INITIALIZED_BY_CLIENT $ rrType $ rReason r2
     return $ Just $ rId r
 
 -- | test transfer + full refund
 test_TransferRefund :: Assertion
 test_TransferRefund = do
-        usL<-testMP $ listUsers (Just $ Pagination 1 2)
+        usL<-testMP $ listUsers def (Just $ Pagination 1 2)
         assertEqual 2 (length $ plData usL)
         let [uid1,uid2] = map urId $ plData usL
         assertBool (uid1 /= uid2)
@@ -94,7 +97,8 @@ test_TransferRefund = do
           assertEqual (Just Succeeded) (cpStatus cp2)
           return $ cpId cp2
 
-        (Just tr)<-testEventTypes' [{- TRANSFER_NORMAL_CREATED, Not being sent as of 2014-09-19 -} TRANSFER_NORMAL_SUCCEEDED] $ do
+        (Just tr)<-testEventTypes' [TRANSFER_NORMAL_CREATED {- Fixed in Okapi <http://docs.mangopay.com/release-okapi-hook-fixes-and-new-sort-options/> -}
+                  ,TRANSFER_NORMAL_SUCCEEDED] $ do
                 let t1=Transfer Nothing Nothing Nothing uid1 (Just uid2) (Amount "EUR" 100) (Amount "EUR" 1)
                         uw1 uw2 Nothing Nothing Nothing Nothing Nothing
                 t1'<-testMP $ createTransfer t1
@@ -102,11 +106,15 @@ test_TransferRefund = do
                 assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
-                ts1 <- testMP $ listTransactions uw1 Nothing
+                ts1 <- testMP $ listTransactions uw1 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
-                ts2 <- testMP $ listTransactions uw2 Nothing
+                ts1t <- testMP $ listTransactions uw1 def{tfType=Just TRANSFER} def Nothing
+                assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1t)
+                ts1p <- testMP $ listTransactions uw1 def{tfType=Just PAYOUT} def Nothing
+                assertEqual 0 (length $ filter ((tId t1'==) . txId) $ plData ts1p)
+                ts2 <- testMP $ listTransactions uw2 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
-                uts1 <- testMP $ listTransactionsForUser uid1 (Just $ Pagination 1 50)
+                uts1 <- testMP $ listTransactionsForUser uid1 def def (Just $ Pagination 1 50)
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)
                 return $ tId t1'
 
@@ -116,4 +124,6 @@ test_TransferRefund = do
           r2<-testMP $ fetchRefund (rId r)
           assertEqual tr $ rInitialTransactionId r2
           assertEqual (Amount "EUR" 100) $ rCreditedFunds r2
+          assertEqual OTHER $ rrType $ rReason r2
           return $ Just $ rId r
+

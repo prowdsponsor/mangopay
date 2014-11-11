@@ -8,6 +8,8 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
+import Data.ByteString (ByteString)
+import Data.Default
 import Data.Text hiding (any)
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -45,6 +47,20 @@ createPage uid did contents at=do
   url<-getClientURLMultiple ["/users/",uid,"/KYC/documents/",did,"/pages"]
   postNoReply url (Just at) val
 
+
+-- | List all documents uploaded for a user.
+--   Since http://docs.mangopay.com/release-hamster/
+listDocuments :: (MPUsableMonad m) => AnyUserId -> DocumentFilter -> GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listDocuments uid df gs= genericListExtra (documentFilterAttributes df ++ sortAttributes gs)
+  ["/users/",uid,"/KYC/documents"]
+
+
+-- | List all documents uploaded.
+--   Since http://docs.mangopay.com/release-hamster/
+listAllDocuments :: (MPUsableMonad m) => DocumentFilter -> GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listAllDocuments df gs = genericListExtra (documentFilterAttributes df ++ sortAttributes gs)
+  ["/KYC/documents"]
+
 -- | Id of a document
 type DocumentId = Text
 
@@ -62,8 +78,7 @@ instance ToJSON DocumentType where
 
 -- | from json as per MangoPay format
 instance FromJSON DocumentType where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "DocumentType"
+        parseJSON = jsonRead "DocumentType"
 
 -- | status of a document
 data DocumentStatus=CREATED
@@ -78,8 +93,7 @@ instance ToJSON DocumentStatus where
 
 -- | from json as per MangoPay format
 instance FromJSON DocumentStatus where
-        parseJSON (String s)=pure $ read $ unpack s
-        parseJSON _ =fail "DocumentStatus"
+        parseJSON = jsonRead "DocumentStatus"
 
 -- | a document
 data Document = Document {
@@ -95,7 +109,7 @@ data Document = Document {
 
 -- | to json as per MangoPay format
 instance ToJSON Document where
-        toJSON d=object ["Tag" .= dTag d,
+        toJSON d=objectSN ["Tag" .= dTag d,
           "Type" .= dType d,"Status" .= dStatus d]
 
 -- | from json as per MangoPay format
@@ -150,3 +164,23 @@ getRequiredDocumentTypes
   -> [DocumentType]
 getRequiredDocumentTypes (Left _) = [IDENTITY_PROOF, ADDRESS_PROOF]
 getRequiredDocumentTypes (Right _) = [ARTICLES_OF_ASSOCIATION, REGISTRATION_PROOF, SHAREHOLDER_DECLARATION]
+
+
+-- | A filter for document lists.
+data DocumentFilter = DocumentFilter
+  {
+    dfBefore :: Maybe POSIXTime
+  , dfAfter  :: Maybe POSIXTime
+  , dfStatus :: Maybe DocumentStatus
+  , dfType   :: Maybe DocumentType
+  } deriving (Show,Eq,Ord,Typeable)
+
+instance Default DocumentFilter where
+  def = DocumentFilter Nothing Nothing Nothing Nothing
+
+-- | get filter attributes for transaction query
+documentFilterAttributes :: DocumentFilter -> [(ByteString,Maybe ByteString)]
+documentFilterAttributes f=[ "BeforeDate" ?+ dfBefore f
+                                     , "AfterDate" ?+ dfAfter f
+                                     , "Status" ?+ (show <$> (dfStatus f))
+                                     , "Type" ?+ (show <$> (dfType f))]

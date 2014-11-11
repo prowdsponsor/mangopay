@@ -10,7 +10,7 @@ import Yesod.MangoPay
 getAccountsR :: AnyUserId -> Handler Html
 getAccountsR uid=do
   -- no paging, should be reasonable
-  accounts<-runYesodMPTToken $ getAll $ listAccounts uid
+  accounts<-runYesodMPTToken $ getAll $ listAccounts uid (ByCreationDate ASC)
   defaultLayout $ do
         setTitleI MsgTitleAccounts
         $(widgetFile "accounts")
@@ -48,10 +48,10 @@ postAccountR uid=do
 
 -- | partial data for account
 data BankAccountPartial=BankAccountPartial {
-   bapTag :: Maybe Text
-  ,bapIBAN :: Text
-  ,bapBIC :: Text
-  ,bapOwnerName :: Text
+   bapTag          :: Maybe Text
+  ,bapIBAN         :: Text
+  ,bapBIC          :: Maybe Text
+  ,bapOwnerName    :: Text
   ,bapOwnerAddress :: Maybe Text
   }
 
@@ -65,6 +65,6 @@ accountForm :: Html -> MForm Handler (FormResult BankAccountPartial, Widget)
 accountForm = renderDivs $ BankAccountPartial
   <$> aopt textField (localizedFS MsgAccountCustomData) Nothing
   <*> areq textField (localizedFS MsgAccountIBAN) Nothing
-  <*> areq textField (localizedFS MsgAccountBIC) Nothing
+  <*> aopt textField (localizedFS MsgAccountBIC) Nothing
   <*> areq textField (localizedFS MsgAccountOwnerName) Nothing
   <*> aopt textField (localizedFS MsgAccountOwnerAddress) Nothing

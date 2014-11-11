@@ -20,6 +20,8 @@ module Web.MangoPay (
         ,readCardExpiration
         ,writeCardExpiration
         ,KindOfAuthentication(..)
+        ,SortDirection(..)
+        ,GenericSort(..)
 
         -- access
         ,createCredentialsSecret
@@ -64,6 +66,8 @@ module Web.MangoPay (
         ,TransactionId
         ,TransactionType(..)
         ,TransactionNature(..)
+        ,TransactionFilter(..)
+        ,TransactionSort(..)
         ,createTransfer
         ,fetchTransfer
         ,listTransactions
@@ -92,12 +96,15 @@ module Web.MangoPay (
         ,DocumentId
         ,DocumentType(..)
         ,DocumentStatus(..)
+        ,DocumentFilter(..)
         ,createDocument
         ,modifyDocument
         ,fetchDocument
         ,createPage
         ,getKindOfAuthentication
         ,getRequiredDocumentTypes
+        ,listDocuments
+        ,listAllDocuments
 
         -- Accounts
         ,BankAccount(..)
@@ -145,6 +152,8 @@ module Web.MangoPay (
         ,RefundId
         ,Refund(..)
         ,RefundRequest(..)
+        ,RefundReason(..)
+        ,RefundReasonType(..)
         ,refundTransfer
         ,refundPayin
         ,fetchRefund

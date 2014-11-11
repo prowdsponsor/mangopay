@@ -87,12 +87,17 @@ testEventTypes :: [EventType] -> IO (Maybe Text) -> Assertion
 testEventTypes evtTs = void . testEventTypes' evtTs
 
 
+-- | How long to wait for an event, in seconds.
+secondsToWaitForEvent :: Integer
+secondsToWaitForEvent = 20
+
+
 -- | Same as 'testEventTypes', but also return the resource id.
 testEventTypes' :: [EventType] -> IO (Maybe Text) -> IO (Maybe Text)
 testEventTypes' evtTs ops = do
   res <- liftM tsReceivedEvents $ I.readIORef testState
   a <- ops
-  er <- waitForEvent res ((,) a <$> evtTs) 20
+  er <- waitForEvent res ((,) a <$> evtTs) secondsToWaitForEvent
   assertEqual "testEventTypes'" EventsOK er
   return a
 
