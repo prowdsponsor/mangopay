@@ -15,11 +15,12 @@ import Network.Wai (rawQueryString)
 import Data.Text (pack)
 import Control.Arrow ((&&&))
 
+
 -- | get card list
 getCardsR :: AnyUserId -> Handler Html
 getCardsR uid=do
   -- no paging, should be reasonable
-  cards<-runYesodMPTToken $ getAll $ listCards uid
+  cards<-runYesodMPTToken $ getAll $ listCards uid (ByCreationDate ASC)
   ((_,widget), enctype) <- generateFormGet currencyForm
   defaultLayout $ do
         setTitleI MsgTitleCards

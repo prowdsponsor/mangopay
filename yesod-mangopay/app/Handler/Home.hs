@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TupleSections #-}
 -- | home and events pages
 module Handler.Home where
 
@@ -13,7 +13,7 @@ import Control.Monad (when)
 getHomeR :: Handler Html
 getHomeR = do
     pg<-getPagination
-    usersL<-runYesodMPTToken $ listUsers pg
+    usersL<-runYesodMPTToken $ listUsers (ByCreationDate DESC) pg
     -- pagination links
     let (previous,next)=getPaginationNav pg usersL
     let users=plData usersL
