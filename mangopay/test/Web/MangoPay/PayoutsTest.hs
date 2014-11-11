@@ -6,6 +6,7 @@ module Web.MangoPay.PayoutsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Data.Default
 import Data.Maybe (isJust, fromJust)
 import Test.Framework
 import Test.HUnit (Assertion)
@@ -13,13 +14,13 @@ import Test.HUnit (Assertion)
 -- | test successful payout
 test_PayoutOK :: Assertion
 test_PayoutOK=do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
-  accs<-testMP $ listAccounts uid Nothing
+  accs<-testMP $ listAccounts uid def Nothing
   assertBool $ not $ null $ plData accs
   let aid=fromJust $ baId $ head $ plData accs
-  ws<- testMP $ listWallets uid Nothing
+  ws<- testMP $ listWallets uid def Nothing
   assertBool $ not $ null $ plData ws
   let wid=fromJust $ wId $ head $ plData ws
   let Just (Amount _ nb) =wBalance $ head $ plData ws
@@ -40,13 +41,13 @@ test_PayoutOK=do
 -- | test failing payout
 test_PayoutKO :: Assertion
 test_PayoutKO=do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
-  accs<-testMP $ listAccounts uid Nothing
+  accs<-testMP $ listAccounts uid def Nothing
   assertBool $ not $ null $ plData accs
   let aid=fromJust $ baId $ head $ plData accs
-  ws<- testMP $ listWallets uid Nothing
+  ws<- testMP $ listWallets uid def Nothing
   assertBool $ not $ null $ plData ws
   let wid=fromJust $ wId $ head $ plData ws
   -- Fixed in Okapi <http://docs.mangopay.com/release-okapi-hook-fixes-and-new-sort-options/>

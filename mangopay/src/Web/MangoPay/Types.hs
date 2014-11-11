@@ -6,7 +6,7 @@ module Web.MangoPay.Types where
 import Control.Applicative
 import Control.Exception.Lifted (Exception, throwIO)
 import Control.Monad.Base (MonadBase)
-import Data.Text as T hiding (singleton)
+import Data.Text as T hiding (singleton, map, toLower)
 import Data.Text.Read as T
 import Data.Typeable (Typeable)
 import Data.ByteString  as BS (ByteString)
@@ -31,6 +31,7 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (qLocation)
 import Text.Printf (printf)
 import qualified Data.ByteString.Lazy as BS (toStrict)
+import Data.Char (toLower)
 
 
 -- | the MangoPay access point
@@ -444,3 +445,21 @@ jsonRead name (String s) = do
     Just r -> pure r
     _      -> fail $ name ++ ": " ++ ss
 jsonRead name _ = fail name
+
+
+-- | Sort direction for list retrieval
+data SortDirection = ASC | DESC
+  deriving (Show,Read,Eq,Ord,Bounded, Enum, Typeable)
+
+-- | Sort transactions
+data GenericSort = NoSort | ByCreationDate SortDirection
+  deriving (Show,Eq,Ord,Typeable)
+
+-- | Default sort
+instance Default GenericSort where
+  def = NoSort
+
+-- | get sort attributes for transaction query
+sortAttributes :: GenericSort -> [(ByteString,Maybe ByteString)]
+sortAttributes NoSort = []
+sortAttributes (ByCreationDate dir)=["Sort" ?+ ("CreationDate:" ++ (map toLower $ show dir))]

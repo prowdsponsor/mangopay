@@ -93,8 +93,8 @@ fetchCard :: (MPUsableMonad m) => CardId -> AccessToken -> MangoPayT m Card
 fetchCard = fetchGeneric "/cards/"
 
 -- | list all cards for a given user
-listCards :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)
-listCards uid = genericList ["/users/",uid,"/cards"]
+listCards :: (MPUsableMonad m) => AnyUserId -> GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Card)
+listCards uid gs = genericListExtra (sortAttributes gs) ["/users/",uid,"/cards"]
 
 -- | validity of a card
 data CardValidity=UNKNOWN | VALID | INVALID

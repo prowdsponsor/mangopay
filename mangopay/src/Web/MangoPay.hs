@@ -20,6 +20,8 @@ module Web.MangoPay (
         ,readCardExpiration
         ,writeCardExpiration
         ,KindOfAuthentication(..)
+        ,SortDirection(..)
+        ,GenericSort(..)
 
         -- access
         ,createCredentialsSecret
@@ -65,6 +67,7 @@ module Web.MangoPay (
         ,TransactionType(..)
         ,TransactionNature(..)
         ,TransactionFilter(..)
+        ,TransactionSort(..)
         ,createTransfer
         ,fetchTransfer
         ,listTransactions

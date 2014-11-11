@@ -6,6 +6,7 @@ module Web.MangoPay.AccountsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
+import Data.Default
 import Control.Monad (guard)
 import Data.Maybe (isJust, fromJust)
 import Test.Framework
@@ -24,7 +25,7 @@ test_BankAccount_IBAN_only = doBankAccountTest False
 -- | Do the bank account test, using the BIC or not.
 doBankAccountTest :: Bool -> Assertion
 doBankAccountTest useBIC = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid  = urId $ head $ plData usL
       iban = "FR3020041010124530725S03383"
@@ -40,5 +41,5 @@ doBankAccountTest useBIC = do
     else assertBool $ isJust $ atBIC $ baDetails acc2 -- MangoPay fills in the BIC.
   acc3<-testMP $ fetchAccount uid $ fromJust $ baId acc2
   assertEqual (baDetails acc2) (baDetails acc3)
-  accs<-testMP $ listAccounts uid Nothing
+  accs<-testMP $ listAccounts uid def Nothing
   assertBool $ acc3  `elem` (plData accs)

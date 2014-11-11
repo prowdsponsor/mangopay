@@ -15,7 +15,7 @@ import qualified Data.ByteString as BS
 -- | test document API
 test_Document :: Assertion
 test_Document = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   euser <- testMP $ getUser uid
@@ -34,17 +34,17 @@ test_Document = do
     assertEqual (dId d2) (dId d3)
     d4<-testMP $ fetchDocument uid (fromJust $ dId d2)
     assertEqual (Just VALIDATION_ASKED) (dStatus d4)
-    docsUser <- testMP $ getAll $ listDocuments uid def
+    docsUser <- testMP $ getAll $ listDocuments uid def def
     assertBool $ d3 `elem` docsUser
-    docsUserI <- testMP $ getAll $ listDocuments uid def{dfType=Just IDENTITY_PROOF}
+    docsUserI <- testMP $ getAll $ listDocuments uid def{dfType=Just IDENTITY_PROOF} def
     assertBool $ d3 `elem` docsUserI
-    docsUserA <- testMP $ getAll $ listDocuments uid def{dfType=Just ADDRESS_PROOF}
+    docsUserA <- testMP $ getAll $ listDocuments uid def{dfType=Just ADDRESS_PROOF} def
     assertBool $ not $ d3 `elem` docsUserA
-    docsAll <- testMP $ getAll $ listAllDocuments def
+    docsAll <- testMP $ getAll $ listAllDocuments def def
     assertBool $ d3 `elem` docsAll
-    docsAllI <- testMP $ getAll $ listAllDocuments def{dfType=Just IDENTITY_PROOF}
+    docsAllI <- testMP $ getAll $ listAllDocuments def{dfType=Just IDENTITY_PROOF} def
     assertBool $ d3 `elem` docsAllI
-    docsAllA <- testMP $ getAll $ listAllDocuments def{dfType=Just ADDRESS_PROOF}
+    docsAllA <- testMP $ getAll $ listAllDocuments def{dfType=Just ADDRESS_PROOF} def
     assertBool $ not $ d3 `elem` docsAllA
     return $ dId d2
 
@@ -52,7 +52,7 @@ test_Document = do
 -- | test type of authentication
 test_KindOfAuthentication :: Assertion
 test_KindOfAuthentication = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   assertEqual 1 (length $ plData usL)
   let uid=urId $ head $ plData usL
   euser <- testMP $ getUser uid

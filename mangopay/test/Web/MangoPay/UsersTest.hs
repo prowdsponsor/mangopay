@@ -10,6 +10,7 @@ import Test.HUnit (Assertion)
 import Data.Maybe (fromJust, isJust)
 
 import Data.CountryCodes (CountryCode(FR))
+import Data.Default
 
 testNaturalUser :: NaturalUser
 testNaturalUser=NaturalUser Nothing Nothing "jpmoresmau@gmail.com" "JP" "Moresmau" Nothing 11111 FR FR
@@ -28,7 +29,7 @@ test_NaturalUser = do
         assertEqual (Just IncomeRange2) (uIncomeRange ue)
         eu<-testMP $ getUser (fromJust $ uId u)
         assertEqual (Left ue) eu
-        usL<-testMP $ listUsers (Just $ Pagination 1 100)
+        usL<-testMP $ listUsers def (Just $ Pagination 1 100)
         assertEqual 1 (length $ filter (((fromJust $ uId u)==) . urId) $ plData usL)
         assertEqual (fromJust $ uId u) (getExistingUserId $ Left u)
 
@@ -52,20 +53,30 @@ test_LegalUser = do
         assertEqual Nothing (lShareholderDeclaration le)
         el<-testMP $ getUser (fromJust $ lId l)
         assertEqual (Right le) el
-        usL<-testMP $ listUsers  (Just $ Pagination 1 100)
+        usL<-testMP $ listUsers def (Just $ Pagination 1 100)
         assertEqual 1 (length $ filter (((fromJust $ lId l)==) . urId) $ plData usL)
         assertEqual (fromJust $ lId l) (getExistingUserId $ Right l)
 
 test_PaginationUsers :: Assertion
 test_PaginationUsers = do
-  usL<-testMP $ listUsers (Just $ Pagination 1 1)
+  usL<-testMP $ listUsers def (Just $ Pagination 1 1)
   --print usL
   assertEqual 1 (length $ plData usL)
   assertEqual 2 (plItemCount usL)
   assertEqual 2 (plPageCount usL)
-  usL2<-testMP $ listUsers (Just $ Pagination 1 10)
+  usL2<-testMP $ listUsers def (Just $ Pagination 1 10)
   assertEqual 2 (length $ plData usL2)
   assertEqual 2 (plItemCount usL2)
   assertEqual 1 (plPageCount usL2)
-  us<-testMP $ getAll listUsers
+  us<-testMP $ getAll $ listUsers def
   assertEqual 2 (length us)
+
+test_OrderUsers :: Assertion
+test_OrderUsers = do
+  usL<-testMP $ listUsers (ByCreationDate ASC) (Just $ Pagination 1 10)
+  assertEqual 2 (length $ plData usL)
+  let idsAsc = map urId $ plData usL
+  usLd<-testMP $ listUsers (ByCreationDate DESC) (Just $ Pagination 1 10)
+  assertEqual 2 (length $ plData usLd)
+  let idsDesc = map urId $ plData usLd
+  assertEqual idsAsc $ reverse idsDesc

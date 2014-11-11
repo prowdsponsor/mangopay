@@ -52,8 +52,8 @@ getUser = fetchGeneric "/users/"
 
 
 -- | list all user references
-listUsers :: (MPUsableMonad m) => Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
-listUsers = genericList ["/users/"]
+listUsers :: (MPUsableMonad m) => GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList UserRef)
+listUsers gs = genericListExtra (sortAttributes gs) ["/users/"]
 
 
 -- | Convenience function to extract the user Id of an EXISTING user (one with an id).

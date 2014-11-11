@@ -50,15 +50,15 @@ createPage uid did contents at=do
 
 -- | List all documents uploaded for a user.
 --   Since http://docs.mangopay.com/release-hamster/
-listDocuments :: (MPUsableMonad m) => AnyUserId -> DocumentFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
-listDocuments uid df= genericListExtra (documentFilterAttributes df)
+listDocuments :: (MPUsableMonad m) => AnyUserId -> DocumentFilter -> GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listDocuments uid df gs= genericListExtra (documentFilterAttributes df ++ sortAttributes gs)
   ["/users/",uid,"/KYC/documents"]
 
 
 -- | List all documents uploaded.
 --   Since http://docs.mangopay.com/release-hamster/
-listAllDocuments :: (MPUsableMonad m) => DocumentFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
-listAllDocuments df = genericListExtra (documentFilterAttributes df)
+listAllDocuments :: (MPUsableMonad m) => DocumentFilter -> GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Document)
+listAllDocuments df gs = genericListExtra (documentFilterAttributes df ++ sortAttributes gs)
   ["/KYC/documents"]
 
 -- | Id of a document

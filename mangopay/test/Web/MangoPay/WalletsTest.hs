@@ -14,7 +14,7 @@ import Data.Maybe (isJust, fromJust)
 -- | test wallet API
 test_Wallet :: Assertion
 test_Wallet = do
-        usL<-testMP $ listUsers (Just $ Pagination 1 1)
+        usL<-testMP $ listUsers def (Just $ Pagination 1 1)
         assertEqual 1 (length $ plData usL)
         let uid=urId $ head $ plData usL
         let w=Wallet Nothing Nothing (Just "custom") [uid] "my wallet" "EUR" Nothing
@@ -28,18 +28,18 @@ test_Wallet = do
         assertEqual (Just "custom2") (wTag w4)
         assertEqual (wId w2) (wId w4)
         assertEqual (Just $ Amount "EUR" 0) (wBalance w4)
-        ws<-testMP $ listWallets uid (Just $ Pagination 1 100)
+        ws<-testMP $ listWallets uid def (Just $ Pagination 1 100)
         assertBool (not (null $ plData ws))
         assertEqual 1 (length $ filter ((wId w3 ==) . wId) $ plData ws)
 
 -- | test transfer API + notifications on failure
 test_FailedTransfer :: Assertion
 test_FailedTransfer = do
-        usL<-testMP $ listUsers (Just $ Pagination 1 2)
+        usL<-testMP $ listUsers def (Just $ Pagination 1 2)
         assertEqual 2 (length $ plData usL)
         let [uid1,uid2] = map urId $ plData usL
         assertBool (uid1 /= uid2)
-        ws<- testMP $ listWallets uid1 Nothing
+        ws<- testMP $ listWallets uid1 def Nothing
         assertBool $ not $ null $ plData ws
         let uw1=fromJust $ wId $ head $ plData ws
         let w2=Wallet Nothing Nothing (Just "custom") [uid2] "my wallet" "EUR" Nothing
@@ -56,28 +56,28 @@ test_FailedTransfer = do
                 assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
-                ts1 <- testMP $ listTransactions uw1 def Nothing
+                ts1 <- testMP $ listTransactions uw1 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
-                ts1f <- testMP $ listTransactions uw1 (def{tfStatus=Just Failed}) Nothing
+                ts1f <- testMP $ listTransactions uw1 (def{tfStatus=Just Failed}) def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1f)
-                ts1ft <- testMP $ listTransactions uw1 (def{tfStatus=Just Failed,tfType=Just TRANSFER}) Nothing
+                ts1ft <- testMP $ listTransactions uw1 (def{tfStatus=Just Failed,tfType=Just TRANSFER}) def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1ft)
-                ts1st <- testMP $ listTransactions uw1 (def{tfStatus=Just Succeeded,tfType=Just TRANSFER}) Nothing
+                ts1st <- testMP $ listTransactions uw1 (def{tfStatus=Just Succeeded,tfType=Just TRANSFER}) def Nothing
                 assertEqual 0 (length $ filter ((tId t1'==) . txId) $ plData ts1st)
-                ts2 <- testMP $ listTransactions uw2 def Nothing
+                ts2 <- testMP $ listTransactions uw2 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
-                uts1 <- testMP $ listTransactionsForUser uid1 def Nothing
+                uts1 <- testMP $ listTransactionsForUser uid1 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)
                 return $ tId t1'
 
 -- | test transfer API + notifications on success
 test_SuccessfulTransfer :: Assertion
 test_SuccessfulTransfer = do
-        usL<-testMP $ listUsers (Just $ Pagination 1 2)
+        usL<-testMP $ listUsers def (Just $ Pagination 1 2)
         assertEqual 2 (length $ plData usL)
         let [uid1,uid2] = map urId $ plData usL
         assertBool (uid1 /= uid2)
-        ws<- testMP $ listWallets uid1 Nothing
+        ws<- testMP $ listWallets uid1 def Nothing
         assertBool $ not $ null $ plData ws
         let uw1=fromJust $ wId $ head $ plData ws
         let w2=Wallet Nothing Nothing (Just "custom") [uid2] "my wallet" "EUR" Nothing
@@ -103,10 +103,31 @@ test_SuccessfulTransfer = do
                 assertEqual (Just $ Amount "EUR" 99) (tCreditedFunds t1')
                 t2'<-testMP $ fetchTransfer (fromJust $ tId t1')
                 assertEqual t1' t2'
-                ts1 <- testMP $ listTransactions uw1 def Nothing
+                ts1 <- testMP $ listTransactions uw1 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts1)
-                ts2 <- testMP $ listTransactions uw2 def Nothing
+                ts2 <- testMP $ listTransactions uw2 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData ts2)
-                uts1 <- testMP $ listTransactionsForUser uid1 def Nothing
+                uts1 <- testMP $ listTransactionsForUser uid1 def def Nothing
                 assertEqual 1 (length $ filter ((tId t1'==) . txId) $ plData uts1)
                 return $ tId t1'
+
+
+test_OrderTransactions :: Assertion
+test_OrderTransactions = do
+  usL<-testMP $ listUsers def (Just $ Pagination 1 2)
+  assertEqual 2 (length $ plData usL)
+  let uid1 = head $ map urId $ plData usL
+  uts1 <- testMP $ listTransactionsForUser uid1 def (TxByExecutionDate ASC) Nothing
+  assertBool $ length (plData uts1) > 1
+  uts2 <- testMP $ listTransactionsForUser uid1 def (TxByExecutionDate DESC) Nothing
+  assertEqual (map txId $ plData uts1) $ reverse $ map txId $ plData uts2
+  utsc1 <- testMP $ listTransactionsForUser uid1 def (TxByCreationDate ASC) Nothing
+  assertBool $ length (plData utsc1) > 1
+  utsc2 <- testMP $ listTransactionsForUser uid1 def (TxByCreationDate DESC) Nothing
+  assertEqual (map txId $ plData utsc1) $ reverse $ map txId $ plData utsc2
+
+test_OrderEvents :: Assertion
+test_OrderEvents = do
+  evt1 <- testMP $  searchAllEvents def{espSortByDate=Just ASC}
+  evt2 <- testMP $  searchAllEvents def{espSortByDate=Just DESC}
+  assertEqual evt1 $ reverse evt2

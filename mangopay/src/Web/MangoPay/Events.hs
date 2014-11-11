@@ -7,7 +7,7 @@ module Web.MangoPay.Events where
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 
-import Data.Text hiding (filter)
+import Data.Text hiding (filter,map,toLower)
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
@@ -19,6 +19,7 @@ import qualified Data.HashMap.Lazy as HM (delete)
 import qualified Data.Text.Encoding as TE
 import Control.Monad (join)
 import qualified Data.ByteString.Char8 as BS
+import Data.Char (toLower)
 
 -- | search events, returns a paginated list
 searchEvents ::  (MPUsableMonad m) => EventSearchParams -> AccessToken -> MangoPayT m  (PagedList Event)
@@ -41,7 +42,7 @@ checkEvent :: (MPUsableMonad m) => Event -> AccessToken ->  MangoPayT m Bool
 checkEvent evt at= do
   -- documentation doesn't say it, but tests show dates are inclusive
   let dt = Just $ eDate evt
-  let esp = EventSearchParams (Just $ eEventType evt) dt dt Nothing
+  let esp = EventSearchParams (Just $ eEventType evt) dt dt Nothing Nothing
   evts <- searchAllEvents esp at
   return $ evt `elem` evts
 
@@ -106,17 +107,19 @@ data EventSearchParams=EventSearchParams{
         ,espBeforeDate :: Maybe POSIXTime
         ,espAfterDate  :: Maybe POSIXTime
         ,espPagination :: Maybe Pagination
+        ,espSortByDate :: Maybe SortDirection
         }
         deriving (Show,Eq,Ord,Typeable)
 
 instance Default EventSearchParams where
-  def=EventSearchParams Nothing Nothing Nothing Nothing
+  def=EventSearchParams Nothing Nothing Nothing Nothing Nothing
 
 instance HT.QueryLike EventSearchParams where
-  toQuery (EventSearchParams et bd ad p)=filter (isJust .snd)
+  toQuery (EventSearchParams et bd ad p ms)=filter (isJust .snd)
     ["eventtype" ?+ et
     ,"beforeDate" ?+ bd
     ,"afterDate" ?+ ad
+    ,"Sort" ?+ ((("Date:" ++) . map toLower . show) <$> ms)
    ] ++ paginationAttributes p
 
 --instance ToJSON EventSearchParams where

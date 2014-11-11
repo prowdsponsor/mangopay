@@ -10,13 +10,14 @@ import Web.MangoPay.Types
 import Web.MangoPay.Users
 
 import Data.ByteString (ByteString)
-import Data.Text
+import Data.Text hiding (map,toLower)
 import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Data.HashMap.Lazy as HM (delete)
 import Data.Default (Default(..))
+import Data.Char (toLower)
 
 -- | create a wallet
 createWallet ::  (MPUsableMonad m) => Wallet -> AccessToken -> MangoPayT m Wallet
@@ -33,8 +34,8 @@ fetchWallet :: (MPUsableMonad m) => WalletId -> AccessToken -> MangoPayT m Walle
 fetchWallet = fetchGeneric "/wallets/"
 
 -- | list all wallets for a given user
-listWallets :: (MPUsableMonad m) => AnyUserId -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
-listWallets uid = genericList ["/users/",uid,"/wallets"]
+listWallets :: (MPUsableMonad m) => AnyUserId -> GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Wallet)
+listWallets uid gs = genericListExtra (sortAttributes gs) ["/users/",uid,"/wallets"]
 
 -- | create a new fund transfer
 createTransfer :: (MPUsableMonad m) => Transfer -> AccessToken -> MangoPayT m Transfer
@@ -45,13 +46,13 @@ fetchTransfer :: (MPUsableMonad m) => TransferId -> AccessToken -> MangoPayT m T
 fetchTransfer = fetchGeneric "/transfers/"
 
 -- | list transfers for a given wallet
-listTransactions ::  (MPUsableMonad m) =>  WalletId -> TransactionFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactions wid mtf = genericListExtra (transactionFilterAttributes mtf)
+listTransactions ::  (MPUsableMonad m) =>  WalletId -> TransactionFilter -> TransactionSort ->  Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactions wid tf ts = genericListExtra (transactionFilterAttributes tf ++ transactionSortAttributes ts)
   ["/wallets/",wid,"/transactions"]
 
 -- | list transfer for a given user
-listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserId  -> TransactionFilter -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
-listTransactionsForUser uid mtf = genericListExtra (transactionFilterAttributes mtf)
+listTransactionsForUser ::  (MPUsableMonad m) =>  AnyUserId  -> TransactionFilter -> TransactionSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList Transaction)
+listTransactionsForUser uid tf ts = genericListExtra (transactionFilterAttributes tf ++ transactionSortAttributes ts)
   ["/users/",uid,"/transactions"]
 
 
@@ -236,8 +237,7 @@ instance FromJSON Transaction where
 
 -- | A filter for transaction lists.
 data TransactionFilter = TransactionFilter
-  {
-    tfBefore :: Maybe POSIXTime
+  { tfBefore :: Maybe POSIXTime
   , tfAfter  :: Maybe POSIXTime
   , tfNature :: Maybe TransactionNature
   , tfStatus :: Maybe TransferStatus
@@ -254,4 +254,18 @@ transactionFilterAttributes f=[ "BeforeDate" ?+ tfBefore f
                                      , "Nature" ?+ (show <$> (tfNature f))
                                      , "Status" ?+ (show <$> (tfStatus f))
                                      , "Type" ?+ (show <$> (tfType f))]
+
+-- | Sort transactions
+data TransactionSort = TxNoSort | TxByCreationDate SortDirection | TxByExecutionDate SortDirection
+  deriving (Show,Eq,Ord,Typeable)
+
+-- | Default sort
+instance Default TransactionSort where
+  def = TxNoSort
+
+-- | get sort attributes for transaction query
+transactionSortAttributes :: TransactionSort -> [(ByteString,Maybe ByteString)]
+transactionSortAttributes TxNoSort = []
+transactionSortAttributes (TxByCreationDate dir)=["Sort" ?+ ("CreationDate:" ++ (map toLower $ show dir))]
+transactionSortAttributes (TxByExecutionDate dir)=["Sort" ?+ ("ExecutionDate:" ++ (map toLower $ show dir))]
 
