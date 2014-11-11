@@ -6,7 +6,6 @@ module Web.MangoPay.RefundsTest where
 import Web.MangoPay
 import Web.MangoPay.TestUtils
 
-import Control.Applicative
 import Data.Default
 import Data.Maybe (isJust, fromJust)
 import Test.Framework
@@ -128,24 +127,3 @@ test_TransferRefund = do
           assertEqual OTHER $ rrType $ rReason r2
           return $ Just $ rId r
 
--- | test a successful card pay in + full refund
---test_PayoutRefund :: Assertion
---test_PayoutRefund = do
---  usL<-testMP $ listUsers (Just $ Pagination 1 1)
---  assertEqual 1 (length $ plData usL)
---  let uid=urId $ head $ plData usL
---  trs <- (filter ((Just Succeeded ==) . txStatus) .
---          filter ((PAYOUT ==) . txType) .
---          plData)
---          <$> (testMP $ listTransactionsForUser uid Nothing)
---  assertBool $ (length trs) > 0
---  let (Just cp) = txId $ head trs
---  testEventTypes [PAYOUT_REFUND_CREATED, PAYOUT_REFUND_SUCCEEDED] $ do
---    let rr=RefundRequest uid Nothing Nothing
---    r<-testMP $ refundPayout cp rr
---    assertEqual PAYIN (rInitialTransactionType r)
---    r2<-testMP $ fetchRefund (rId r)
---    assertEqual cp $ rInitialTransactionId r2
---    assertEqual (Amount "EUR" 333) $ rCreditedFunds r2
---    assertEqual INITIALIZED_BY_CLIENT $ rrType $ rReason r2
---    return $ Just $ rId r
