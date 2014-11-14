@@ -29,6 +29,8 @@ test_Document = do
     tf<-BS.readFile "data/test.jpg"
     -- document has to be in CREATED status
     testMP $ createPage uid (fromJust $ dId d2) tf
+    tf2<-BS.readFile "data/test.png"
+    testMP $ createPage uid (fromJust $ dId d2) tf2
     d3<-testMP $ modifyDocument uid d2{dStatus=Just VALIDATION_ASKED}
     assertEqual (Just VALIDATION_ASKED) (dStatus d3)
     assertEqual (dId d2) (dId d3)
