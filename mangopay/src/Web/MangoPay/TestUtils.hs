@@ -16,6 +16,10 @@ module Web.MangoPay.TestUtils
 
     -- ** Tear down
   , ensureNoEvents
+
+    -- ** Bug workarounds
+  , withWorkaroundManager
+  , newWorkaroundManager
   ) where
 
 import Blaze.ByteString.Builder (copyByteString)
@@ -285,7 +289,19 @@ withMangoPayTestUtils act =
 -- eventually be changed to be the same as 'H.withManager' as
 -- soon as this bug is fixed.
 withWorkaroundManager :: (MonadIO m, MonadBaseControl IO m) => (H.Manager -> ResourceT m a) -> m a
-withWorkaroundManager act = liftIO ioActions >>= flip H.withManagerSettings act . mkSettings
+withWorkaroundManager act = workaroundSettings >>= flip H.withManagerSettings act
+
+
+-- | Create a new 'H.Manager' with the same workarounds as
+-- 'withWorkaroundManager', but does not automatically release
+-- it so that you have full control of its life cycle.
+newWorkaroundManager :: MonadIO m => m H.Manager
+newWorkaroundManager = liftIO . H.newManager =<< workaroundSettings
+
+
+-- | Settings needed for 'withWorkaroundManager'.
+workaroundSettings :: MonadIO m => m H.ManagerSettings
+workaroundSettings = mkSettings `liftM` liftIO ioActions
   where
     ioActions =
       X509.getSystemCertificateStore
