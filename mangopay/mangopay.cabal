@@ -62,6 +62,11 @@ library
      , wai                  >= 3.0        && < 3.1
      , warp                 >= 3.0        && < 3.1
 
+       -- Needed for withWorkaroundManager
+     , tls
+     , connection
+     , x509-system
+
   if flag(conduit11)
     build-depends:
          conduit              == 1.1.*
@@ -115,6 +120,8 @@ test-suite mangopay-tests
      resourcet, template-haskell, text, time, transformers,
      transformers-base, unordered-containers, utf8-string,
      vector, wai, warp, country-codes
+
+     , tls, connection, x509-system
 
      , HTF            >  0.9
   if flag(conduit11)

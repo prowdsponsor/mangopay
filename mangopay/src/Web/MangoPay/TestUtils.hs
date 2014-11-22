@@ -24,10 +24,12 @@ import Control.Concurrent (forkIO, killThread, ThreadId, threadDelay)
 import Control.Concurrent.MVar (MVar, newMVar, putMVar, takeMVar)
 import Control.Exception (bracket)
 import Control.Monad (void, liftM)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Logger (LoggingT, runStdoutLoggingT, logDebugS, logWarnS)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 import Data.Conduit (($$+-))
+import Data.Default (def)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
 import Data.Text (Text)
@@ -49,8 +51,12 @@ import qualified Data.IORef as I
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString as BS
+import qualified Network.Connection as Conn
 import qualified Network.HTTP.Types as HT
+import qualified Network.TLS as TLS
+import qualified Network.TLS.Extra as TLSX
 import qualified Network.Wai as W
+import qualified System.X509 as X509
 
 
 ----------------------------------------------------------------------
@@ -254,7 +260,7 @@ withMangoPayTestUtils
      -- this module.
   -> IO a
 withMangoPayTestUtils act =
-  H.withManager $ \mgr -> liftIO $ do
+  withWorkaroundManager $ \mgr -> liftIO $ do
     hook <- getHookEndPoint
     res  <- newReceivedEvents
     -- Initial state.
@@ -266,6 +272,37 @@ withMangoPayTestUtils act =
       (startHTTPServer hook res)
       killThread
       (const $ initializeTestState >>= \(creds, at) -> act creds at mgr)
+
+
+-- | Same as 'H.withManager', but without TLS 1.2 support.
+--
+-- As of 2014-11-22, there's a bug on the @tls@ package that
+-- prevents connections to be made to the MangoPay servers.  For
+-- some reason, disabling TLS 1.2 works around this problem.
+-- Cf. <https://github.com/vincenthz/hs-tls/issues/87>.
+--
+-- This function isn't named @withTLS11Manager@ because it will
+-- eventually be changed to be the same as 'H.withManager' as
+-- soon as this bug is fixed.
+withWorkaroundManager :: (MonadIO m, MonadBaseControl IO m) => (H.Manager -> ResourceT m a) -> m a
+withWorkaroundManager act = liftIO ioActions >>= flip H.withManagerSettings act . mkSettings
+  where
+    ioActions =
+      X509.getSystemCertificateStore
+    mkParams certStore =
+      (TLS.defaultParamsClient neverHere neverHere)
+        { TLS.clientSupported = def
+            { TLS.supportedVersions = noTLS12
+            , TLS.supportedCiphers = TLSX.ciphersuite_all }
+        , TLS.clientShared = def
+            { TLS.sharedCAStore = certStore }
+        }
+      where
+        noTLS12 = filter (/= TLS.TLS12) (TLS.supportedVersions def)
+        neverHere :: a
+        neverHere = error "withWorkaroundManager: never here, TLSSettings/ClientParams"
+    mkSettings =
+      flip H.mkManagerSettings Nothing . Conn.TLSSettings . mkParams
 
 
 ----------------------------------------------------------------------
