@@ -130,4 +130,6 @@ test_OrderEvents :: Assertion
 test_OrderEvents = do
   evt1 <- testMP $  searchAllEvents def{espSortByDate=Just ASC}
   evt2 <- testMP $  searchAllEvents def{espSortByDate=Just DESC}
-  assertEqual evt1 $ reverse evt2
+  -- we just check the resource id because the failed transfer may have the same date
+  -- as the creation, so we can't compare on the full even (with status)
+  assertEqual (map eResourceId evt1) $ reverse (map eResourceId evt2)
