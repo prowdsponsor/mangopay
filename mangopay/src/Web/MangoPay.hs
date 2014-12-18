@@ -114,6 +114,7 @@ module Web.MangoPay (
         ,createAccount
         ,fetchAccount
         ,listAccounts
+        ,accountCountry
 
         -- Payins
         ,PaymentExecution(..)

@@ -12,6 +12,8 @@ import Data.Maybe (isJust, fromJust)
 import Test.Framework
 import Test.HUnit (Assertion)
 
+import qualified Data.CountryCodes as C
+
 -- | Test bank account creation using IBAN with BIC.
 test_BankAccount_IBAN_BIC :: Assertion
 test_BankAccount_IBAN_BIC = doBankAccountTest True
@@ -36,6 +38,7 @@ doBankAccountTest useBIC = do
   assertBool $ isJust $ baId acc2
   assertBool $ isJust $ baCreationDate acc2
   assertEqual iban $ atIBAN $ baDetails acc2
+  assertEqual (Just C.FR) $ accountCountry acc2
   if useBIC
     then assertEqual (Just bic) $ atBIC $ baDetails acc2
     else assertBool $ isJust $ atBIC $ baDetails acc2 -- MangoPay fills in the BIC.

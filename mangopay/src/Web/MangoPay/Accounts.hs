@@ -8,7 +8,7 @@ import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
 
-import Data.Text
+import Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Typeable (Typeable)
 import Data.Aeson
@@ -16,9 +16,9 @@ import Data.Aeson.Types
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
-import qualified Data.ByteString as BS
 
-import Data.CountryCodes (CountryCode)
+import qualified Data.ByteString as BS
+import qualified Data.CountryCodes as C
 
 -- | create an account
 createAccount ::  (MPUsableMonad m) => BankAccount -> AccessToken -> MangoPayT m BankAccount
@@ -29,7 +29,7 @@ createAccount ba = createGeneric path ba
 -- | fetch an account from its Id
 fetchAccount :: (MPUsableMonad m) => AnyUserId -> BankAccountId -> AccessToken -> MangoPayT m BankAccount
 fetchAccount uid = fetchGeneric path
-        where path = Data.Text.concat ["/users/",uid,"/bankaccounts/"]
+        where path = T.concat ["/users/",uid,"/bankaccounts/"]
 
 -- | list all accounts for a given user
 listAccounts :: (MPUsableMonad m) => AnyUserId ->  GenericSort -> Maybe Pagination -> AccessToken -> MangoPayT m (PagedList BankAccount)
@@ -53,7 +53,7 @@ data BankAccountDetails=IBAN {
   } | Other {
   atAccountNumber :: Text
   ,atBIC          :: Maybe Text
-  ,atCountry      :: CountryCode
+  ,atCountry      :: C.CountryCode
   } deriving (Show,Read,Eq,Ord,Typeable)
 
 -- | from json as per MangoPay format
@@ -97,6 +97,17 @@ toJSONPairs (GB nb sc)=["AccountNumber" .= nb,"SortCode" .= sc]
 toJSONPairs (US nb aba)=["AccountNumber" .= nb,"ABA" .= aba]
 toJSONPairs (CA nb bn inb bc)=["AccountNumber" .= nb,"BankName" .= bn,"InstitutionNumber" .= inb, "BranchCode" .= bc]
 toJSONPairs (Other nb bic c)=["AccountNumber" .= nb,"BIC" .= bic,"Country" .= c]
+
+
+-- | Get the country for a BankAccount
+accountCountry :: BankAccount -> Maybe C.CountryCode
+accountCountry ba = case baDetails ba of
+  GB{} -> Just C.GB
+  US{} -> Just C.US
+  CA{} -> Just C.CA
+  Other _ _ c -> Just c
+  IBAN ib _ -> C.fromMText $ T.take 2 ib
+
 
 -- | Id of a bank account
 type BankAccountId = Text
