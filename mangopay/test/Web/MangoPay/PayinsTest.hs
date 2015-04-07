@@ -70,7 +70,7 @@ test_CardKO = do
   w2<-testMP $ createWallet w
   assertBool (isJust $ wId w2)
   let wid=fromJust $ wId w2
-  testEventTypes [PAYIN_NORMAL_CREATED {- ,PAYIN_NORMAL_FAILED not thrown - MangoPay support notified -}] $ do
+  testEventTypes [PAYIN_NORMAL_CREATED, PAYIN_NORMAL_FAILED] $ do
     let cp=mkCardPayin uid uid wid (Amount "EUR" 33394) (Amount "EUR" 0) "http://dummy" cid
     cp2<-testMP $ createCardPayin cp
     assertBool (isJust $ cpId cp2)
@@ -80,4 +80,3 @@ test_CardKO = do
     w3<-testMP $ fetchWallet wid
     assertEqual (Just $ Amount "EUR" 0) (wBalance w3)
     return $ cpId cp2
-
