@@ -13,9 +13,10 @@ import Control.Monad.Base (MonadBase(..))
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (MonadTrans(lift))
-import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
-                                   , ComposeSt, defaultLiftBaseWith
-                                   , defaultRestoreM )
+import Control.Monad.Trans.Control
+  ( MonadTransControl(..), MonadBaseControl(..)
+  , ComposeSt, defaultLiftBaseWith, defaultLiftWith
+  , defaultRestoreM, defaultRestoreT )
 import Control.Monad.Trans.Reader (ReaderT(..), ask, mapReaderT)
 import Data.Monoid ((<>))
 import Data.Typeable (Typeable)
@@ -62,14 +63,14 @@ instance MonadBase b m => MonadBase b (MangoPayT m) where
     liftBase = lift . liftBase
 
 instance MonadTransControl MangoPayT where
-    newtype StT MangoPayT a = MpStT { unMpStT :: StT (ReaderT MpData) a }
-    liftWith f = Mp $ liftWith (\run -> f (liftM MpStT . run . unIs))
-    restoreT = Mp . restoreT . liftM unMpStT
+    type StT MangoPayT a = StT (ReaderT MpData) a
+    liftWith = defaultLiftWith Mp unIs
+    restoreT = defaultRestoreT Mp
 
 instance MonadBaseControl b m => MonadBaseControl b (MangoPayT m) where
-    newtype StM (MangoPayT m) a = StMT {unStMT :: ComposeSt MangoPayT m a}
-    liftBaseWith = defaultLiftBaseWith StMT
-    restoreM = defaultRestoreM unStMT
+    type StM (MangoPayT m) a = ComposeSt MangoPayT m a
+    liftBaseWith = defaultLiftBaseWith
+    restoreM = defaultRestoreM
 
 instance (MonadLogger m) => MonadLogger (MangoPayT m) where
     monadLoggerLog loc src lvl msg=lift $ monadLoggerLog loc src lvl msg

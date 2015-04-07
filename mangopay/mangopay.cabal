@@ -25,9 +25,6 @@ flag debug
   default:      False
   description:  Print debugging info.
 
-flag conduit11
-  description: conduit >= 1.1
-
 library
   hs-source-dirs:   src
   build-depends:
@@ -38,6 +35,8 @@ library
      , transformers-base
      , monad-control
      , resourcet
+     , conduit              == 1.2.*
+     , conduit-extra        == 1.1.*
      , http-types
      , http-conduit         >= 2.0  && < 2.2
      , attoparsec           >= 0.10 && < 0.13
@@ -67,14 +66,6 @@ library
      , connection
      , x509-system
 
-  if flag(conduit11)
-    build-depends:
-         conduit              == 1.1.*
-       , conduit-extra        == 1.1.*
-  else
-    build-depends:
-         conduit              == 1.0.*
-       , attoparsec-conduit   == 1.0.*
   ghc-options:      -Wall
   other-modules:
       Web.MangoPay.Access
@@ -115,7 +106,7 @@ test-suite mangopay-tests
   build-depends:
      base, aeson, async, attoparsec, base16-bytestring,
      base64-bytestring, blaze-builder, bytestring,
-     case-insensitive, conduit, data-default, http-conduit,
+     case-insensitive, conduit, conduit-extra, data-default, http-conduit,
      http-types, HUnit, lifted-base, monad-control, monad-logger,
      resourcet, template-haskell, text, time, transformers,
      transformers-base, unordered-containers, utf8-string,
@@ -124,10 +115,6 @@ test-suite mangopay-tests
      , tls, connection, x509-system
 
      , HTF            >  0.9
-  if flag(conduit11)
-    build-depends: conduit-extra
-  else
-    build-depends: attoparsec-conduit
   other-modules:
                   Web.MangoPay.UsersTest,
                   Web.MangoPay.WalletsTest,
