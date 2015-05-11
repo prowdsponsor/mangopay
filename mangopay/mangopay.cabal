@@ -39,7 +39,7 @@ library
      , conduit-extra        == 1.1.*
      , http-types
      , http-conduit         >= 2.0  && < 2.2
-     , attoparsec           >= 0.10 && < 0.13
+     , attoparsec           >= 0.10 && < 0.14
      , aeson                >= 0.7  && < 0.9
      , time
      , data-default
