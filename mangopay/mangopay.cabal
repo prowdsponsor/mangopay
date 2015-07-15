@@ -1,5 +1,5 @@
 name:           mangopay
-version:        1.11.2
+version:        1.11.3
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
@@ -50,7 +50,7 @@ library
      , base64-bytestring    >= 1.0
      , case-insensitive     >= 1.1
      , monad-logger         >= 0.3        && < 0.4
-     , vector               >=0.10.9 && <0.11
+     , vector               >= 0.10.9     && < 0.12
      , template-haskell
      , country-codes        == 0.1.*
 
