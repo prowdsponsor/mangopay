@@ -59,7 +59,7 @@ library
      , blaze-builder
      , HUnit                >= 1.2.5
      , wai                  >= 3.0        && < 3.1
-     , warp                 >= 3.0        && < 3.1
+     , warp                 >= 3.0        && < 3.2
 
        -- Needed for withWorkaroundManager
      , tls
