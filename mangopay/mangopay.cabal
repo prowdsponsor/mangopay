@@ -1,5 +1,5 @@
 name:           mangopay
-version:        1.11.5
+version:        1.12
 cabal-version:  >= 1.8
 build-type:     Simple
 author:         JP Moresmau <jpmoresmau@gmail.com>
