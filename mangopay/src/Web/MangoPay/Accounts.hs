@@ -14,7 +14,6 @@ import Data.Typeable (Typeable)
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Maybe (fromMaybe)
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 import qualified Data.ByteString as BS
@@ -115,7 +114,7 @@ type BankAccountId = Text
 -- | bank account details
 data BankAccount = BankAccount {
   baId            :: Maybe BankAccountId
-  ,baCreationDate :: Maybe POSIXTime
+  ,baCreationDate :: Maybe MpTime
   ,baUserId       :: Maybe AnyUserId
   ,baTag          :: Maybe Text
   ,baDetails      :: BankAccountDetails

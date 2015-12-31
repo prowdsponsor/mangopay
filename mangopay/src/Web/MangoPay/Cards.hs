@@ -12,7 +12,6 @@ import Web.MangoPay.Users
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 import qualified Data.HashMap.Lazy as HM
@@ -46,7 +45,7 @@ mkCardRegistration uid currency=CardRegistration Nothing Nothing Nothing uid cur
 -- | a card registration
 data CardRegistration = CardRegistration {
   crId                   :: Maybe CardRegistrationId -- ^ The Id of the object
-  ,crCreationDate        :: Maybe POSIXTime -- ^ The creation date of the object
+  ,crCreationDate        :: Maybe MpTime -- ^ The creation date of the object
   ,crTag                 :: Maybe Text -- ^  Custom data
   ,crUserId              :: AnyUserId -- ^  The Id of the author
   ,crCurrency            :: Currency -- ^ The currency of the card registrated
@@ -113,7 +112,7 @@ instance FromJSON CardValidity where
 -- | a registered card
 data Card=Card {
   cId              :: CardId
-  ,cCreationDate   :: POSIXTime
+  ,cCreationDate   :: MpTime
   ,cTag            :: Maybe Text
   ,cExpirationDate :: CardExpiration -- ^  MMYY
   ,cAlias          :: Text -- ^ Example: 497010XXXXXX4414

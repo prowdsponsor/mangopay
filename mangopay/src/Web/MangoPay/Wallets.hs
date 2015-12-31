@@ -4,7 +4,6 @@
 -- | handle wallets
 module Web.MangoPay.Wallets where
 
-
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
@@ -13,7 +12,6 @@ import Data.ByteString (ByteString)
 import Data.Text hiding (map,toLower)
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 import qualified Data.HashMap.Lazy as HM (delete)
 import Data.Default (Default(..))
@@ -62,7 +60,7 @@ type WalletId=Text
 -- | a wallet
 data Wallet = Wallet {
         wId            :: Maybe WalletId -- ^ The Id of the wallet
-        ,wCreationDate :: Maybe POSIXTime -- ^ The creation date of the object
+        ,wCreationDate :: Maybe MpTime -- ^ The creation date of the object
         ,wTag          :: Maybe Text -- ^  Custom data
         ,wOwners       :: [Text] -- ^ The owner of the wallet
         ,wDescription  :: Text -- ^ A description of the wallet
@@ -111,7 +109,7 @@ instance FromJSON TransferStatus where
 -- | transfer between wallets
 data Transfer = Transfer{
         tId                :: Maybe TransferId -- ^ Id of the transfer
-        ,tCreationDate     :: Maybe POSIXTime -- ^  The creation date of the object
+        ,tCreationDate     :: Maybe MpTime -- ^  The creation date of the object
         ,tTag              :: Maybe Text -- ^   Custom data
         ,tAuthorId         :: AnyUserId -- ^ The Id of the author
         ,tCreditedUserId   :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
@@ -123,7 +121,7 @@ data Transfer = Transfer{
         ,tStatus           :: Maybe TransferStatus -- ^   The status of the transfer:
         ,tResultCode       :: Maybe Text -- ^   The transaction result code
         ,tResultMessage    :: Maybe Text -- ^   The transaction result message
-        ,tExecutionDate    :: Maybe POSIXTime -- ^  The execution date of the transfer
+        ,tExecutionDate    :: Maybe MpTime -- ^  The execution date of the transfer
         }
         deriving (Show,Eq,Ord,Typeable)
 
@@ -189,7 +187,7 @@ type TransactionId = Text
 -- | any transaction
 data Transaction = Transaction{
         txId                :: Maybe TransactionId -- ^ Id of the transfer
-        ,txCreationDate     :: Maybe POSIXTime -- ^  The creation date of the object
+        ,txCreationDate     :: Maybe MpTime -- ^  The creation date of the object
         ,txTag              :: Maybe Text -- ^   Custom data
         ,txAuthorId         :: AnyUserId -- ^ The Id of the author
         ,txCreditedUserId   :: Maybe AnyUserId -- ^ The Id of the user owner of the credited wallet
@@ -201,7 +199,7 @@ data Transaction = Transaction{
         ,txStatus           :: Maybe TransferStatus -- ^   The status of the transfer:
         ,txResultCode       :: Maybe Text -- ^   The transaction result code
         ,txResultMessage    :: Maybe Text -- ^   The transaction result message
-        ,txExecutionDate    :: Maybe POSIXTime -- ^  The execution date of the transfer
+        ,txExecutionDate    :: Maybe MpTime -- ^  The execution date of the transfer
         ,txType             :: TransactionType -- ^  The type of the transaction
         ,txNature           :: TransactionNature -- ^  The nature of the transaction:
         }
@@ -237,8 +235,8 @@ instance FromJSON Transaction where
 
 -- | A filter for transaction lists.
 data TransactionFilter = TransactionFilter
-  { tfBefore :: Maybe POSIXTime
-  , tfAfter  :: Maybe POSIXTime
+  { tfBefore :: Maybe MpTime
+  , tfAfter  :: Maybe MpTime
   , tfNature :: Maybe TransactionNature
   , tfStatus :: Maybe TransferStatus
   , tfType   :: Maybe TransactionType
@@ -268,4 +266,3 @@ transactionSortAttributes :: TransactionSort -> [(ByteString,Maybe ByteString)]
 transactionSortAttributes TxNoSort = []
 transactionSortAttributes (TxByCreationDate dir)=["Sort" ?+ ("CreationDate:" ++ (map toLower $ show dir))]
 transactionSortAttributes (TxByExecutionDate dir)=["Sort" ?+ ("ExecutionDate:" ++ (map toLower $ show dir))]
-

@@ -12,7 +12,6 @@ import Web.MangoPay.Wallets
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 -- | create a payout
@@ -34,7 +33,7 @@ type PayoutId = Text
 -- | payout
 data Payout=Payout {
   ptId                 :: Maybe PayoutId
-  ,ptCreationDate      :: Maybe POSIXTime
+  ,ptCreationDate      :: Maybe MpTime
   ,ptTag               :: Maybe Text -- ^ custom data for client
   ,ptAuthorId          :: AnyUserId -- ^ The user Id of the author
   ,ptDebitedWalletId   :: WalletId
@@ -46,7 +45,7 @@ data Payout=Payout {
   ,ptStatus            :: Maybe TransferStatus
   ,ptResultCode        :: Maybe Text -- ^ The transaction result code
   ,ptResultMessage     :: Maybe Text -- ^ The transaction result code
-  ,ptExecutionDate     :: Maybe  POSIXTime
+  ,ptExecutionDate     :: Maybe  MpTime
   ,ptType              :: Maybe TransactionType
   ,ptNature            :: Maybe TransactionNature
   ,ptPaymentType       :: Maybe PaymentType

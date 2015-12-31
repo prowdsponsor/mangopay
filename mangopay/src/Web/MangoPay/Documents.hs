@@ -3,7 +3,6 @@
 -- | handle documents and pages
 module Web.MangoPay.Documents where
 
-
 import Web.MangoPay.Monad
 import Web.MangoPay.Types
 import Web.MangoPay.Users
@@ -13,7 +12,6 @@ import Data.Default
 import Data.Text hiding (any)
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 import qualified Data.ByteString as BS
@@ -98,7 +96,7 @@ instance FromJSON DocumentStatus where
 -- | a document
 data Document = Document {
   dId                    :: Maybe DocumentId
-  ,dCreationDate         :: Maybe POSIXTime
+  ,dCreationDate         :: Maybe MpTime
   ,dTag                  :: Maybe Text -- ^  custom data for client
   ,dType                 :: DocumentType
   ,dStatus               :: Maybe DocumentStatus
@@ -169,8 +167,8 @@ getRequiredDocumentTypes (Right _) = [ARTICLES_OF_ASSOCIATION, REGISTRATION_PROO
 -- | A filter for document lists.
 data DocumentFilter = DocumentFilter
   {
-    dfBefore :: Maybe POSIXTime
-  , dfAfter  :: Maybe POSIXTime
+    dfBefore :: Maybe MpTime
+  , dfAfter  :: Maybe MpTime
   , dfStatus :: Maybe DocumentStatus
   , dfType   :: Maybe DocumentType
   } deriving (Show,Eq,Ord,Typeable)

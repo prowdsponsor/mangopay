@@ -12,7 +12,6 @@ import Web.MangoPay.Wallets
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 -- | refund a transfer
@@ -51,7 +50,7 @@ type RefundId = Text
 -- | refund of a transfer
 data Refund=Refund{
   rId                      :: RefundId -- ^ Id of the refund
-  ,rCreationDate           :: POSIXTime
+  ,rCreationDate           :: MpTime
   ,rTag                    :: Maybe Text -- ^ Custom data
   ,rAuthorId               :: AnyUserId -- ^ The user Id of the author
   ,rDebitedFunds           :: Amount -- ^ Strictly positive amount. In cents.
@@ -60,7 +59,7 @@ data Refund=Refund{
   ,rStatus                 :: TransferStatus
   ,rResultCode             :: Text -- ^ The transaction result code
   ,rResultMessage          :: Maybe Text -- ^ The transaction result Message
-  ,rExecutionDate          :: Maybe POSIXTime
+  ,rExecutionDate          :: Maybe MpTime
   ,rType                   :: TransactionType
   ,rNature                 :: TransactionNature
   ,rCreditedUserId         :: Maybe AnyUserId -- ^ Id of the user owner of the credited wallet

@@ -129,10 +129,10 @@ naturalUserForm muser= renderDivs $ NaturalUser
     <*> areq textField (localizedFS MsgUserFirst) (uFirstName <$> muser)
     <*> areq textField (localizedFS MsgUserLast) (uLastName <$> muser)
     <*> aopt textField (localizedFS MsgUserAddress) (uAddress <$> muser)
-    <*> (day2Posix <$> areq (jqueryDayField def
+    <*> (dayToMpTime <$> areq (jqueryDayField def
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
-        }) (localizedFS MsgUserBirthday) (posix2Day <$> uBirthday <$> muser))
+        }) (localizedFS MsgUserBirthday) (mpTimeToDay <$> uBirthday <$> muser))
     <*> areq countryField (localizedFS MsgUserNationality)  (uNationality <$> muser)
     <*> areq countryField (localizedFS MsgUserCountry) (uCountryOfResidence <$> muser)
     <*> aopt textField (localizedFS MsgUserOccupation) (uOccupation <$> muser)
@@ -155,10 +155,10 @@ legalUserForm muser= renderDivs $ LegalUser
     <*> areq textField (localizedFS MsgUserRepLast) (lLegalRepresentativeLastName <$> muser)
     <*> aopt textField (localizedFS MsgUserRepAddress) (lLegalRepresentativeAddress <$> muser)
     <*> aopt textField (localizedFS MsgUserRepEmail) (lLegalRepresentativeEmail <$> muser)
-    <*> (day2Posix <$> areq (jqueryDayField def
+    <*> (dayToMpTime <$> areq (jqueryDayField def
         { jdsChangeYear = True -- give a year dropdown
         , jdsYearRange = "1900:-5" -- 1900 till five years ago
-        }) (localizedFS MsgUserRepBirthday) (posix2Day <$> lLegalRepresentativeBirthday <$> muser))
+        }) (localizedFS MsgUserRepBirthday) (mpTimeToDay <$> lLegalRepresentativeBirthday <$> muser))
     <*> areq countryField (localizedFS MsgUserRepNationality) (lLegalRepresentativeNationality <$> muser)
     <*> areq countryField (localizedFS MsgUserRepCountry) (lLegalRepresentativeCountryOfResidence <$> muser)
     <*> pure Nothing  -- value comes from Documents uploaded (I think)

@@ -10,7 +10,6 @@ import Web.MangoPay.Types
 import Data.Text hiding (filter,map,toLower)
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Default
 import Control.Applicative
 import qualified Network.HTTP.Types as HT
@@ -104,8 +103,8 @@ instance FromJSON EventType where
 -- | search parameters for events
 data EventSearchParams=EventSearchParams{
         espEventType   :: Maybe EventType
-        ,espBeforeDate :: Maybe POSIXTime
-        ,espAfterDate  :: Maybe POSIXTime
+        ,espBeforeDate :: Maybe MpTime
+        ,espAfterDate  :: Maybe MpTime
         ,espPagination :: Maybe Pagination
         ,espSortByDate :: Maybe SortDirection
         }
@@ -131,7 +130,7 @@ instance HT.QueryLike EventSearchParams where
 data Event=Event {
         eResourceId :: Text
         ,eEventType :: EventType
-        ,eDate      :: POSIXTime
+        ,eDate      :: MpTime
         }
         deriving (Show,Eq,Ord,Typeable)
 
@@ -152,9 +151,9 @@ instance FromJSON Event where
 -- v2 works the same, the event is passed via parameters of the query string
 eventFromQueryString :: HT.Query -> Maybe Event
 eventFromQueryString q=do
-  rid<-fmap TE.decodeUtf8 $ join $ findAssoc q "RessourceId" -- yes, two ss here
-  et<-join $ fmap (maybeRead . BS.unpack) $ join $ findAssoc q "EventType"
-  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). BS.unpack) $ join $ findAssoc q "Date"
+  rid <- fmap TE.decodeUtf8 $ join $ findAssoc q "RessourceId" -- yes, two ss here
+  et  <- join $ fmap (maybeRead . BS.unpack) $ join $ findAssoc q "EventType"
+  d   <- fmap (MpTime . fromIntegral) $ join $ fmap ((maybeRead :: String -> Maybe Integer). BS.unpack) $ join $ findAssoc q "Date"
   return $ Event rid et d
 
 
@@ -163,9 +162,9 @@ eventFromQueryString q=do
 -- v2 works the same, the event is passed via parameters of the query string
 eventFromQueryStringT :: [(Text, Text)] -> Maybe Event
 eventFromQueryStringT q=do
-  rid<- findAssoc q "RessourceId" -- yes, two ss here
-  et<-join $ fmap (maybeRead . unpack) $ findAssoc q "EventType"
-  d<-fmap fromIntegral $ join $ fmap ((maybeRead :: String -> Maybe Integer). unpack) $ findAssoc q "Date"
+  rid <- findAssoc q "RessourceId" -- yes, two ss here
+  et  <- join $ fmap (maybeRead . unpack) $ findAssoc q "EventType"
+  d   <- fmap (MpTime . fromIntegral) $ join $ fmap ((maybeRead :: String -> Maybe Integer). unpack) $ findAssoc q "Date"
   return $ Event rid et d
 
 -- | status of notification hook
@@ -204,7 +203,7 @@ type HookId=Text
 -- | a notification hook
 data Hook=Hook {
         hId            :: Maybe HookId -- ^ The Id of the hook details
-        ,hCreationDate :: Maybe POSIXTime
+        ,hCreationDate :: Maybe MpTime
         ,hTag          :: Maybe Text -- ^ Custom data
         ,hUrl          :: Text -- ^This is the URL where you receive notification for each EventType
         ,hStatus       :: HookStatus

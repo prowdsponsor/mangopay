@@ -135,7 +135,7 @@ data MpError = MpError {
   igeId :: Text
   ,igeType :: Text
   ,igeMessage :: Text
-  ,igeDate :: Maybe POSIXTime
+  ,igeDate :: Maybe MpTime
   }
   deriving (Show,Eq,Ord,Typeable)
 
@@ -154,14 +154,17 @@ instance FromJSON MpError where
                          v .: "Date"
     parseJSON _= fail "MpError"
 
+-- | @newtype@ of 'POSIXTime' with MangoPay's JSON format.
+newtype MpTime = MpTime { unMpTime :: POSIXTime } deriving (Eq, Ord, Show)
+
 -- | from json as per MangoPay format
-instance FromJSON POSIXTime where
-    parseJSON n@(Number _)=(fromIntegral . (round::Double -> Integer)) <$> parseJSON n
-    parseJSON o = fail $ "POSIXTime: " ++ show o
+instance FromJSON MpTime where
+    parseJSON n@(Number _) = (MpTime . fromIntegral . (round::Double -> Integer)) <$> parseJSON n
+    parseJSON o = fail $ "MpTime: " ++ show o
 
 -- | to json as per MangoPay format
-instance ToJSON POSIXTime  where
-    toJSON pt=toJSON (round pt :: Integer)
+instance ToJSON MpTime  where
+    toJSON (MpTime pt) = toJSON (round pt :: Integer)
 
 
 -- | Pagination info for searches
@@ -399,8 +402,8 @@ instance ToHtQuery Integer where
 instance ToHtQuery (Maybe Integer) where
   n ?+ d=n ?+ fmap show d
 
-instance ToHtQuery (Maybe POSIXTime) where
-  n ?+ d=n ?+ fmap (show . (round :: POSIXTime -> Integer)) d
+instance ToHtQuery (Maybe MpTime) where
+  n ?+ d=n ?+ fmap (show . (round :: POSIXTime -> Integer) . unMpTime) d
 
 instance ToHtQuery (Maybe T.Text) where
   n ?+ d=(n,fmap TE.encodeUtf8 d)

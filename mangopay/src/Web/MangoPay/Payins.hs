@@ -12,7 +12,6 @@ import Web.MangoPay.Wallets
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 -- | create a bankwire pay-in
@@ -64,7 +63,7 @@ type BankWireId=Text
 -- so this could probably become a "Payment" type
 data BankWire=BankWire {
   bwId                    :: Maybe BankWireId
-  ,bwCreationDate         :: Maybe POSIXTime
+  ,bwCreationDate         :: Maybe MpTime
   ,bwTag                  :: Maybe Text -- ^  custom data
   ,bwAuthorId             :: AnyUserId -- ^   The user Id of the author
   ,bwCreditedUserId       :: AnyUserId -- ^  It represents the amount credited on the targeted e-wallet.
@@ -80,7 +79,7 @@ data BankWire=BankWire {
   ,bwStatus               :: Maybe TransferStatus -- ^  The status of the payment
   ,bwResultCode           :: Maybe Text -- ^  The transaction result code
   ,bwResultMessage        :: Maybe Text -- ^  The transaction result Message
-  ,bwExecutionDate        :: Maybe POSIXTime -- ^ The date when the payment is processed
+  ,bwExecutionDate        :: Maybe MpTime -- ^ The date when the payment is processed
   ,bwType                 :: Maybe TransactionType -- ^  The type of the transaction
   ,bwNature               :: Maybe TransactionNature -- ^  The nature of the transaction:
   ,bwPaymentType          :: Maybe PaymentType -- ^  The type of the payment (which type of mean of payment is used).
@@ -133,7 +132,7 @@ mkCardPayin aid uid wid amount fees url cid= CardPayin Nothing Nothing Nothing a
 -- | direct pay in via registered card
 data CardPayin=CardPayin {
   cpId                     :: Maybe CardPayinId
-  ,cpCreationDate          :: Maybe POSIXTime
+  ,cpCreationDate          :: Maybe MpTime
   ,cpTag                   :: Maybe Text -- ^  custom data
   ,cpAuthorId              :: AnyUserId -- ^   The user Id of the author
   ,cpCreditedUserId        :: AnyUserId -- ^  The user Id of the owner of the credited wallet
@@ -149,7 +148,7 @@ data CardPayin=CardPayin {
   ,cpStatus                :: Maybe TransferStatus -- ^  The status of the payment
   ,cpResultCode            :: Maybe Text -- ^  The transaction result code
   ,cpResultMessage         :: Maybe Text -- ^  The transaction result Message
-  ,cpExecutionDate         :: Maybe POSIXTime --   The date when the payment is processed
+  ,cpExecutionDate         :: Maybe MpTime --   The date when the payment is processed
   ,cpType                  :: Maybe TransactionType -- ^  The type of the transaction
   ,cpNature                :: Maybe TransactionNature -- ^  The nature of the transaction:
   ,cpPaymentType           :: Maybe Text -- ^  The type of the payment (which type of mean of payment is used).

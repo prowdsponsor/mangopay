@@ -11,7 +11,6 @@ import Data.CountryCodes (CountryCode)
 import Data.Text
 import Data.Typeable (Typeable)
 import Data.Aeson
-import Data.Time.Clock.POSIX (POSIXTime)
 import Control.Applicative
 
 
@@ -91,12 +90,12 @@ type NaturalUserId = Text
 -- <http://docs.mangopay.com/api-references/users/natural-users/>
 data NaturalUser=NaturalUser {
         uId                  :: Maybe NaturalUserId -- ^  The Id of the object
-        ,uCreationDate       :: Maybe POSIXTime -- ^  The creation date of the user object
+        ,uCreationDate       :: Maybe MpTime -- ^  The creation date of the user object
         ,uEmail              :: Text -- ^ User’s e-mail
         ,uFirstName          :: Text -- ^ User’s firstname
         ,uLastName           :: Text -- ^  User’s lastname
         ,uAddress            :: Maybe Text -- ^  User’s address
-        ,uBirthday           :: POSIXTime -- ^   User’s birthdate
+        ,uBirthday           :: MpTime -- ^   User’s birthdate
         ,uNationality        :: CountryCode -- ^ User’s Nationality
         ,uCountryOfResidence:: CountryCode -- ^User’s country of residence
         ,uOccupation         :: Maybe Text -- ^User’s occupation (ie. Work)
@@ -154,7 +153,7 @@ instance FromJSON LegalUserType where
 -- <http://docs.mangopay.com/api-references/users/legal-users/>
 data LegalUser=LegalUser {
         lId                                     :: Maybe Text -- ^   The Id of the object
-        ,lCreationDate                          :: Maybe POSIXTime -- ^ The creation date of the user object
+        ,lCreationDate                          :: Maybe MpTime -- ^ The creation date of the user object
         ,lEmail                                 :: Text -- ^ The email of the company or the organization
         ,lName                                  :: Text -- ^ The name of the company or the organization
         ,lLegalPersonType                       :: LegalUserType -- ^ The type of the legal user (‘BUSINESS’ or ’ORGANIZATION’)
@@ -163,7 +162,7 @@ data LegalUser=LegalUser {
         ,lLegalRepresentativeLastName           :: Text -- ^ The lastname of the company’s Legal representative person
         ,lLegalRepresentativeAddress            :: Maybe Text -- ^ The address of the company’s Legal representative person
         ,lLegalRepresentativeEmail              :: Maybe Text -- ^  The email of the company’s Legal representative person
-        ,lLegalRepresentativeBirthday           :: POSIXTime -- ^ The birthdate of the company’s Legal representative person
+        ,lLegalRepresentativeBirthday           :: MpTime -- ^ The birthdate of the company’s Legal representative person
         ,lLegalRepresentativeNationality        :: CountryCode -- ^ the nationality of the company’s Legal representative person
         ,lLegalRepresentativeCountryOfResidence :: CountryCode -- ^  The country of residence of the company’s Legal representative person
         ,lStatute                               :: Maybe Text -- ^  The business statute of the company
@@ -219,7 +218,7 @@ instance FromJSON PersonType where
 -- | a short user reference
 data UserRef=UserRef {
         urId             :: AnyUserId
-        , urCreationDate :: POSIXTime
+        , urCreationDate :: MpTime
         , urPersonType   :: PersonType
         , urEmail        :: Text
         , urTag          :: Maybe Text
